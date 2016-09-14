@@ -3022,7 +3022,7 @@ CONFIG_TOUCHSCREEN_ILI210X                      policy<{'amd64': 'm', 'arm64': '
 CONFIG_TOUCHSCREEN_IPROC                        policy<{'arm64': 'm'}>
 CONFIG_TOUCHSCREEN_GUNZE                        policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_TOUCHSCREEN_EKTF2127                     policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
-CONFIG_TOUCHSCREEN_ELAN                         policy<{'amd64': 'y', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
+CONFIG_TOUCHSCREEN_ELAN                         policy<{'amd64': '-', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_TOUCHSCREEN_ELO                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_TOUCHSCREEN_WACOM_W8001                  policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_TOUCHSCREEN_WACOM_I2C                    policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
