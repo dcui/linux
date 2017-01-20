@@ -16,6 +16,7 @@ do_tools_perf   = true
 do_tools_x86	= true
 do_tools_hyperv	= true
 do_extras_package = true
+ship_extras_package = false
 do_tools_common = true
 do_zfs		= true
 do_libc_dev_package=false
