@@ -15,6 +15,7 @@ drivers/ata/ahci_platform.ko
 drivers/ata/ata_generic.ko
 drivers/ata/libahci.ko
 drivers/ata/libahci_platform.ko
+drivers/ata/pata_acpi.ko
 drivers/block/brd.ko
 drivers/block/cryptoloop.ko
 drivers/block/floppy.ko
@@ -47,6 +48,7 @@ drivers/hid/hid.ko
 drivers/hid/usbhid/usbhid.ko
 drivers/hv/*
 drivers/hwmon/ibmpowernv.ko
+drivers/i2c/busses/i2c-piix4.ko
 drivers/infiniband/core/ib_addr.ko
 drivers/infiniband/core/ib_cm.ko
 drivers/infiniband/core/ib_core.ko
@@ -122,6 +124,7 @@ drivers/nvme/host/nvme.ko
 drivers/nvmem/nvmem_core.ko
 drivers/parport/parport.ko
 drivers/parport/parport_pc.ko
+drivers/pci/host/pci-hyperv.ko
 drivers/platform/x86/pvpanic.ko
 drivers/pps/pps_core.ko
 drivers/ptp/ptp.ko
@@ -160,6 +163,7 @@ drivers/scsi/virtio_scsi.ko
 drivers/scsi/vmw_pvscsi.ko
 drivers/target/target_core*.ko
 drivers/tty/serial/jsm/*
+drivers/uio/uio_hv_generic.ko
 drivers/uio/uio.ko
 drivers/uio/uio_pdrv_genirq.ko
 drivers/usb/host/*
