@@ -7900,7 +7900,7 @@ CONFIG_XEN_GNTDEV                               policy<{'amd64': 'm', 'arm64': '
 CONFIG_XEN_GRANT_DEV_ALLOC                      policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
 CONFIG_XEN_PCIDEV_BACKEND                       policy<{'amd64': 'm', 'i386': 'm'}>
 CONFIG_XEN_SCSI_BACKEND                         policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
-CONFIG_XEN_ACPI_PROCESSOR                       policy<{'amd64': 'y', 'i386': 'y'}>
+CONFIG_XEN_ACPI_PROCESSOR                       policy<{'amd64': '-', 'i386': 'y'}>
 CONFIG_XEN_MCE_LOG                              policy<{'amd64': 'y'}>
 CONFIG_XEN_SYMS                                 policy<{'amd64': 'y', 'i386': 'y'}>
 #
