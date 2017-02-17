@@ -3640,9 +3640,9 @@ CONFIG_MFD_ATMEL_FLEXCOM                        policy<{'arm64': 'm', 'armhf': '
 CONFIG_MFD_ATMEL_HLCDC                          policy<{'arm64': 'm', 'armhf': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_MFD_BCM590XX                             policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
 CONFIG_MFD_AXP20X_I2C                           policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm', 'powerpc': 'm', 'ppc64el': 'm'}>
-CONFIG_MFD_CROS_EC                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
-CONFIG_MFD_CROS_EC_I2C                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
-CONFIG_MFD_CROS_EC_SPI                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
+CONFIG_MFD_CROS_EC                              policy<{'amd64': '-', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
+CONFIG_MFD_CROS_EC_I2C                          policy<{'amd64': '-', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
+CONFIG_MFD_CROS_EC_SPI                          policy<{'amd64': '-', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
 CONFIG_MFD_ASIC3                                policy<{'armhf': 'y'}>
 CONFIG_PMIC_DA903X                              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'powerpc': 'y', 'ppc64el': 'y'}>
 CONFIG_MFD_DA9052_SPI                           policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'powerpc': 'y', 'ppc64el': 'y'}>
@@ -5583,7 +5583,7 @@ CONFIG_PINCTRL_UNIPHIER_LD11                    policy<{'armhf': 'm'}>
 CONFIG_PINCTRL_UNIPHIER_LD20                    policy<{'armhf': 'm'}>
 
 # Menu: Device Drivers >> Platform support for Chrome hardware
-CONFIG_CHROME_PLATFORMS                         policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
+CONFIG_CHROME_PLATFORMS                         policy<{'amd64': '-', 'arm64': 'y', 'armhf': 'y', 'i386': 'y'}>
 CONFIG_CHROMEOS_LAPTOP                          policy<{'amd64': 'm', 'i386': 'm'}>
 CONFIG_CHROMEOS_PSTORE                          policy<{'amd64': 'm', 'i386': 'm'}>
 CONFIG_CROS_EC_CHARDEV                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'i386': 'm'}>
