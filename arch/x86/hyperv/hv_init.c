@@ -34,9 +34,14 @@
 #define PKG_ABI 0
 #endif
 
-#ifdef CONFIG_X86_64
+#ifdef CONFIG_HYPERV_TSCPAGE
 
 static struct ms_hyperv_tsc_page *tsc_pg;
+
+struct ms_hyperv_tsc_page *hv_get_tsc_page(void)
+{
+	return tsc_pg;
+}
 
 static u64 read_hv_clock_tsc(struct clocksource *arg)
 {
@@ -146,7 +151,7 @@ void hyperv_init(void)
 	/*
 	 * Register Hyper-V specific clocksource.
 	 */
-#ifdef CONFIG_X86_64
+#ifdef CONFIG_HYPERV_TSCPAGE
 	if (ms_hyperv.features & HV_X64_MSR_REFERENCE_TSC_AVAILABLE) {
 		union hv_x64_msr_hypercall_contents tsc_msr;
 
