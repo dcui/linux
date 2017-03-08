@@ -8457,7 +8457,7 @@ CONFIG_FW_CFG_SYSFS_CMDLINE                     policy<{'amd64': 'n', 'arm64': '
 CONFIG_GOOGLE_FIRMWARE                          policy<{'amd64': 'n', 'i386': 'n'}>
 
 # Menu: Firmware Drivers >> EFI (Extensible Firmware Interface) Support
-CONFIG_EFI_VARS                                 policy<{'amd64': 'y', 'arm64': 'y', 'i386': 'y'}>
+CONFIG_EFI_VARS                                 policy<{'amd64': '-', 'arm64': 'y', 'i386': 'y'}>
 CONFIG_EFI_VARS_PSTORE                          policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
 CONFIG_EFI_VARS_PSTORE_DEFAULT_DISABLE          policy<{'amd64': 'n', 'arm64': 'n', 'i386': 'n'}>
 CONFIG_EFI_RUNTIME_MAP                          policy<{'amd64': 'y', 'i386': 'y'}>
@@ -8467,7 +8467,7 @@ CONFIG_EFI_CAPSULE_LOADER                       policy<{'amd64': 'm', 'arm64': '
 CONFIG_EFI_TEST                                 policy<{'amd64': 'm', 'arm64': 'm', 'i386': 'm'}>
 CONFIG_APPLE_PROPERTIES                         policy<{'amd64': 'y', 'i386': 'y'}>
 #
-CONFIG_EFI_VARS                                 mark<ENFORCED> note<EFI boot requirement (d-i) LP:#837332>
+CONFIG_EFI_VARS                                 mark<ENFORCED> note<EFI boot requirement (d-i) LP:#837332> note<until gen2 azure doesn't use this>
 
 # Menu: Firmware Drivers >> Google Firmware Drivers
 
