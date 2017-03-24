@@ -1,4 +1,5 @@
 repo_list=(
+	"http://ppa.launchpad.net/mhcerri/azure/ubuntu/pool/main/l/linux-azure"
 	"http://archive.ubuntu.com/ubuntu/pool/main/l/linux-azure"
 	"http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux-azure"
 	"http://archive.ubuntu.com/ubuntu/pool/universe/l/linux-azure"
@@ -6,7 +7,7 @@ repo_list=(
 	"http://ppa.launchpad.net/canonical-kernel-team/ppa/ubuntu/pool/main/l/linux-azure"
 )
 
-package_prefixes linux-image linux-image-extra
+package_prefixes linux-image
 
 getall amd64 azure
 
