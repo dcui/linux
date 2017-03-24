@@ -1,0 +1,16 @@
+firmware:       ast_dp501_fw.bin
+firmware:       bnx2x/bnx2x-e1-7.13.1.0.fw
+firmware:       bnx2x/bnx2x-e1h-7.13.1.0.fw
+firmware:       bnx2x/bnx2x-e2-7.13.1.0.fw
+firmware:       ql2100_fw.bin
+firmware:       ql2200_fw.bin
+firmware:       ql2300_fw.bin
+firmware:       ql2322_fw.bin
+firmware:       ql2400_fw.bin
+firmware:       ql2500_fw.bin
+firmware:       qlogic/1040.bin
+firmware:       qlogic/12160.bin
+firmware:       qlogic/1280.bin
+firmware:       tigon/tg3.bin
+firmware:       tigon/tg3_tso.bin
+firmware:       tigon/tg3_tso5.bin
