@@ -664,15 +664,13 @@ union hv_connection_id {
 };
 
 /* Definition of the hv_signal_event hypercall input structure. */
-struct hv_input_signal_event {
-	union hv_connection_id connectionid;
-	u16 flag_number;
-	u16 rsvdz;
-};
-
-struct hv_input_signal_event_buffer {
-	u64 align8;
-	struct hv_input_signal_event event;
+union hv_input_signal_event {
+	u64 as_uint64;
+	struct {
+		union hv_connection_id connectionid;
+		u16 flag_number;
+		u16 rsvdz;
+	};
 };
 
 enum hv_numa_policy {
@@ -757,8 +755,7 @@ struct vmbus_channel {
 	} callback_mode;
 
 	bool is_dedicated_interrupt;
-	struct hv_input_signal_event_buffer sig_buf;
-	struct hv_input_signal_event *sig_event;
+	union hv_input_signal_event sig_event;
 
 	/*
 	 * Starting with win8, this field will be used to specify
