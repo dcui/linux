@@ -3,6 +3,7 @@
 
 #include <linux/types.h>
 #include <linux/atomic.h>
+#include <linux/nmi.h>
 #include <asm/hyperv.h>
 
 /*
@@ -252,6 +253,31 @@ static inline u64 hv_do_fast_hypercall8(u16 code, u64 input1)
 		return hv_status_lo | ((u64)hv_status_hi << 32);
 	}
 #endif
+}
+
+/*
+ * Rep hypercalls. Callers of this functions are supposed to ensure that
+ * rep_count and vahead_size comply with union hv_hypercall_input definition.
+ */
+static inline u64 hv_do_rep_hypercall(u16 code, u16 rep_count, u16 varhead_size,
+				      void *input, void *output)
+{
+	union hv_hypercall_input hc_input = { .code = code,
+					      .varhead_size = varhead_size,
+					      .rep_count = rep_count};
+	u64 status;
+
+	do {
+		status = hv_do_hypercall(hc_input.as_uint64, input, output);
+		if ((status & 0xffff) != HV_STATUS_SUCCESS)
+			return status;
+
+		hc_input.rep_start = (status >> 32) & 0xfff;
+
+		touch_nmi_watchdog();
+	} while (hc_input.rep_start < hc_input.rep_count);
+
+	return status;
 }
 
 void hyperv_init(void);
