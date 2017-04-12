@@ -1,0 +1,34 @@
+#undef TRACE_SYSTEM
+#define TRACE_SYSTEM hyperv
+
+#if !defined(_TRACE_HYPERV_H) || defined(TRACE_HEADER_MULTI_READ)
+#define _TRACE_HYPERV_H
+
+#include <linux/tracepoint.h>
+
+#if IS_ENABLED(CONFIG_HYPERV)
+
+TRACE_EVENT(hyperv_mmu_flush_tlb_others,
+	    TP_PROTO(const struct cpumask *cpus, struct mm_struct *mm,
+		     unsigned long addr, unsigned long end),
+	    TP_ARGS(cpus, mm, addr, end),
+	    TP_STRUCT__entry(
+		    __field(unsigned int, ncpus)
+		    __field(struct mm_struct *, mm)
+		    __field(unsigned long, addr)
+		    __field(unsigned long, end)
+		    ),
+	    TP_fast_assign(__entry->ncpus = cpumask_weight(cpus);
+			   __entry->mm = mm;
+			   __entry->addr = addr,
+			   __entry->end = end),
+	    TP_printk("ncpus %d mm %p addr %lx, end %lx",
+		      __entry->ncpus, __entry->mm, __entry->addr, __entry->end)
+	);
+
+#endif /* CONFIG_HYPERV */
+
+#endif /* _TRACE_HYPERV_H */
+
+/* This part must be outside protection */
+#include <trace/define_trace.h>
