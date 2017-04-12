@@ -256,6 +256,25 @@
 #define HV_PROCESSOR_POWER_STATE_C2		2
 #define HV_PROCESSOR_POWER_STATE_C3		3
 
+/* Hypercall interface */
+union hv_hypercall_input {
+	u64 as_uint64;
+	struct {
+		__u32 as_uint32_lo;
+		__u32 as_uint32_hi;
+	};
+	struct {
+		__u64 code:16;
+		__u64 fast:1;
+		__u64 varhead_size:10;
+		__u64 reserved1:5;
+		__u64 rep_count:12;
+		__u64 reserved2:4;
+		__u64 rep_start:12;
+		__u64 reserved3:4;
+	};
+};
+
 /* hypercall status code */
 #define HV_STATUS_SUCCESS			0
 #define HV_STATUS_INVALID_HYPERCALL_CODE	2
