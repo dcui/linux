@@ -1291,7 +1291,7 @@ struct netvsc_device *netvsc_device_add(struct hv_device *device,
 				const struct netvsc_device_info *device_info)
 {
 	int i, ret = 0;
-	int ring_size = device_info->ring_size;
+	u32 ring_size = device_info->ring_size;
 	struct netvsc_device *net_device;
 	struct net_device *ndev = hv_get_drvdata(device);
 	struct net_device_context *net_device_ctx = netdev_priv(ndev);

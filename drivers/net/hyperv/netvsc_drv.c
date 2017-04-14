@@ -43,8 +43,8 @@
 #define RING_SIZE_MIN 64
 #define LINKCHANGE_INT (2 * HZ)
 
-static int ring_size = 128;
-module_param(ring_size, int, S_IRUGO);
+static unsigned int ring_size = 128;
+module_param(ring_size, uint, S_IRUGO);
 MODULE_PARM_DESC(ring_size, "Ring buffer size (# of pages)");
 
 static const u32 default_msg = NETIF_MSG_DRV | NETIF_MSG_PROBE |
@@ -1685,7 +1685,7 @@ static int __init netvsc_drv_init(void)
 
 	if (ring_size < RING_SIZE_MIN) {
 		ring_size = RING_SIZE_MIN;
-		pr_info("Increased ring_size to %d (min allowed)\n",
+		pr_notice("Increased ring_size to %u (min allowed)\n",
 			ring_size);
 	}
 	ret = vmbus_driver_register(&netvsc_drv);
