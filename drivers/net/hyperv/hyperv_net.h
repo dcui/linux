@@ -149,7 +149,8 @@ struct hv_netvsc_packet {
 
 struct netvsc_device_info {
 	unsigned char mac_adr[ETH_ALEN];
-	int  ring_size;
+	bool link_state;	/* 0 - link up, 1 - link down */
+	u32  ring_size;
 	u32  max_num_vrss_chns;
 	u32  num_chn;
 };
@@ -774,8 +775,7 @@ struct netvsc_device {
 
 	struct rndis_device *extension;
 
-	int ring_size;
-
+	u32 ring_size;
 	u32 max_pkt; /* max number of pkt in one send, e.g. 8 */
 	u32 pkt_align; /* alignment bytes, e.g. 8 */
 
