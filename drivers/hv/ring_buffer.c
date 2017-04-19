@@ -29,6 +29,7 @@
 #include <linux/uio.h>
 #include <linux/vmalloc.h>
 #include <linux/slab.h>
+#include <linux/prefetch.h>
 
 #include "hyperv_vmbus.h"
 
@@ -356,11 +357,15 @@ static u32 hv_pkt_iter_avail(const struct hv_ring_buffer_info *rbi)
 struct vmpacket_descriptor *hv_pkt_iter_first(struct vmbus_channel *channel)
 {
 	struct hv_ring_buffer_info *rbi = &channel->inbound;
+	struct vmpacket_descriptor *desc;
 
 	if (hv_pkt_iter_avail(rbi) < sizeof(struct vmpacket_descriptor))
 		return NULL;
 
-	return hv_get_ring_buffer(rbi) + rbi->priv_read_index;
+	desc = hv_get_ring_buffer(rbi) + rbi->priv_read_index;
+	prefetch((char *)desc + (desc->len8 << 3));
+
+	return desc;
 }
 EXPORT_SYMBOL_GPL(hv_pkt_iter_first);
 
