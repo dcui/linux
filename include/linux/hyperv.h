@@ -1596,10 +1596,6 @@ hv_pkt_iter_next(struct vmbus_channel *channel,
 	return nxt;
 }
 
-#define foreach_vmbus_pkt(pkt, channel) \
-	for (pkt = hv_pkt_iter_first(channel); pkt; \
-	    pkt = hv_pkt_iter_next(channel, pkt))
-
 struct vmpipe_proto_header {
 	u32 pkt_type;
 	u32 data_size;
@@ -1615,5 +1611,4 @@ struct vmpipe_proto_header {
 #define HVSOCK_PKT_LEN(payload_len)	(HVSOCK_HEADER_LEN + \
 					ALIGN((payload_len), 8) + \
 					PREV_INDICES_LEN)
-
 #endif /* _HYPERV_H */
