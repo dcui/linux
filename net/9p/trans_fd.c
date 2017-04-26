@@ -155,6 +155,26 @@ struct p9_trans_fd {
 	struct p9_conn conn;
 };
 
+// structures and defines for Hyperv socket
+#define HV_PROTOCOL_RAW 1
+
+// SOCKADDR_HV.VmId
+#define HV_GUID_PARENT UUID_LE(0xa42e7cda, 0xd03f, 0x480c,  0x9c, 0xc2, 0xa4, \
+			       0xde, 0x20, 0xab, 0xb8, 0x78)
+
+// SOCKADDR_HV.VmId: service Id used for Hyper-V socket communication between
+// the guest and its host. The last two bytes from the port parameters in the
+// mount option replace the last two bytes in HV_SERVICE_ID_TEMPLATE
+#define HV_SERVICE_ID_TEMPLATE UUID_LE(0xBCEf5661, 0x84A1, 0x4E44, 0x85, 0x6B, \
+				       0x62, 0x45, 0xE6, 0x9f, 0x00, 0x00)
+
+struct sockaddr_hv {
+	__kernel_sa_family_t  family;
+	unsigned short reserved;
+	uuid_le vm_id;
+	uuid_le service_id;
+};
+
 static void p9_poll_workfn(struct work_struct *work);
 
 static DEFINE_SPINLOCK(p9_poll_lock);
@@ -1035,6 +1055,82 @@ p9_fd_create(struct p9_client *client, const char *addr, char *args)
 	return 0;
 }
 
+static int
+p9_fd_create_hv(struct p9_client *client, const char *addr, char *args)
+{
+	int err;
+	struct socket *csocket;
+	struct sockaddr_hv server_socket_addr;
+	struct p9_fd_opts opts;
+
+	err = parse_opts(args, &opts);
+	if (err < 0)
+		return err;
+
+	csocket = NULL;
+
+	// for debugging purpose only
+	// pr_err("%s:%s\n", __func__, addr);
+	// kgdb_breakpoint();
+
+	// create socket
+	err = __sock_create(current->nsproxy->net_ns,
+			    AF_HYPERV,
+			    SOCK_STREAM,
+			    HV_PROTOCOL_RAW,
+			    &csocket, 1);
+	if (err) {
+		pr_err("%s:__sock_create (%d): problem creating socket (err=%d)\n",
+		       __func__, task_pid_nr(current), err);
+		return err;
+	}
+
+	// server socket address information
+	memset((char *)&server_socket_addr, 0, sizeof(struct sockaddr_hv));
+	server_socket_addr.family = AF_HYPERV;
+	server_socket_addr.vm_id = HV_GUID_PARENT;
+
+	// create service id from the input port number
+	server_socket_addr.service_id = HV_SERVICE_ID_TEMPLATE;
+
+	server_socket_addr.service_id.b[14] = (__u8)((opts.port & 0xff00) >> 8);
+	server_socket_addr.service_id.b[15] = (__u8)(opts.port & 0x00ff);
+
+	pr_err("%s: service_id:(hex) %x%x%x%x-%x%x-%x%x-%x%x-%x%x%x%x%x%x\n",
+	       __func__,
+	       server_socket_addr.service_id.b[3], //DWORD
+	       server_socket_addr.service_id.b[2],
+	       server_socket_addr.service_id.b[1],
+	       server_socket_addr.service_id.b[0],
+	       server_socket_addr.service_id.b[5], //WORD
+	       server_socket_addr.service_id.b[4],
+	       server_socket_addr.service_id.b[7],
+	       server_socket_addr.service_id.b[6],
+	       server_socket_addr.service_id.b[9], //WORD
+	       server_socket_addr.service_id.b[8],
+	       server_socket_addr.service_id.b[10], //Bytes
+	       server_socket_addr.service_id.b[11],
+	       server_socket_addr.service_id.b[12],
+	       server_socket_addr.service_id.b[13],
+	       server_socket_addr.service_id.b[14],
+	       server_socket_addr.service_id.b[15]);
+
+	err = csocket->ops->connect(csocket,
+				    (struct sockaddr *)&server_socket_addr,
+				    sizeof(struct sockaddr_hv), 0);
+	if (err < 0) {
+		pr_err("%s:connect (%d): problem connecting socket to %s (err = %d)\n",
+		       __func__, task_pid_nr(current), addr, err);
+		sock_release(csocket);
+		return err;
+	}
+
+	err = p9_socket_open(client, csocket);
+	if (err < 0)
+		pr_err("%s: p9_socket_open failed\n", __func__);
+	return err;
+}
+
 static struct p9_trans_module p9_tcp_trans = {
 	.name = "tcp",
 	.maxsize = MAX_SOCK_BUF,
@@ -1064,6 +1160,18 @@ static struct p9_trans_module p9_fd_trans = {
 	.maxsize = MAX_SOCK_BUF,
 	.def = 0,
 	.create = p9_fd_create,
+	.close = p9_fd_close,
+	.request = p9_fd_request,
+	.cancel = p9_fd_cancel,
+	.cancelled = p9_fd_cancelled,
+	.owner = THIS_MODULE,
+};
+
+static struct p9_trans_module p9_hv_trans = {
+	.name = "hyperv",
+	.maxsize = MAX_SOCK_BUF,
+	.def = 0,
+	.create = p9_fd_create_hv,
 	.close = p9_fd_close,
 	.request = p9_fd_request,
 	.cancel = p9_fd_cancel,
@@ -1108,6 +1216,7 @@ int p9_trans_fd_init(void)
 	v9fs_register_trans(&p9_tcp_trans);
 	v9fs_register_trans(&p9_unix_trans);
 	v9fs_register_trans(&p9_fd_trans);
+	v9fs_register_trans(&p9_hv_trans);
 
 	return 0;
 }
@@ -1118,4 +1227,5 @@ void p9_trans_fd_exit(void)
 	v9fs_unregister_trans(&p9_tcp_trans);
 	v9fs_unregister_trans(&p9_unix_trans);
 	v9fs_unregister_trans(&p9_fd_trans);
+	v9fs_unregister_trans(&p9_hv_trans);
 }
