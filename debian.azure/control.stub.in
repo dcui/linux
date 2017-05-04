@@ -36,6 +36,7 @@ Build-Depends:
  automake <!stage1>,
  libtool <!stage1>,
  uuid-dev <!stage1>,
+ binutils-dev <!stage1>,
 Build-Depends-Indep:
  xmlto <!stage1>,
  docbook-utils <!stage1>,
@@ -48,7 +49,7 @@ Vcs-Git: git://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/azure
 XS-Testsuite: autopkgtest
 #XS-Testsuite-Depends: gcc-4.7 binutils
 
-Package: SRCPKGNAME-source-PKGVER
+Package: linux-source-PKGVER
 Build-Profiles: <!stage1>
 Architecture: all
 Section: devel
@@ -90,7 +91,7 @@ Architecture: all
 Multi-Arch: foreign
 Section: kernel
 Priority: optional
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, lsb-release
 Description: Linux kernel version specific tools for version PKGVER
  This package provides the architecture independent parts for kernel
  version locked tools (such as perf and x86_energy_perf_policy) for
