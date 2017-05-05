@@ -171,6 +171,49 @@ void hv_remove_crash_handler(void);
 
 #if IS_ENABLED(CONFIG_HYPERV)
 extern struct clocksource *hyperv_cs;
+extern void *hv_hypercall_pg;
+
+static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
+{
+	u64 input_address = (input) ? virt_to_phys(input) : 0;
+	u64 output_address = (output) ? virt_to_phys(output) : 0;
+#ifdef CONFIG_X86_64
+	u64 hv_status;
+
+	if (!hv_hypercall_pg)
+		return (u64)ULLONG_MAX;
+
+	__asm__ __volatile__("mov %3, %%r8\n"
+			     "call *%4"
+			     : "=a" (hv_status),
+			       "+c" (control), "+d" (input_address)
+			     :  "r" (output_address), "m" (hv_hypercall_pg)
+			     : "cc", "memory", "r8", "r9", "r10", "r11");
+
+	return hv_status;
+
+#else
+	u32 control_hi = control >> 32;
+	u32 control_lo = control & 0xFFFFFFFF;
+	u32 input_address_hi = input_address >> 32;
+	u32 input_address_lo = input_address & 0xFFFFFFFF;
+	u32 output_address_hi = output_address >> 32;
+	u32 output_address_lo = output_address & 0xFFFFFFFF;
+
+	if (!hv_hypercall_pg)
+		return (u64)ULLONG_MAX;
+
+	__asm__ __volatile__("call *%6"
+			     : "+a" (control_lo), "+d" (control_hi),
+			       "+c" (input_address_lo)
+			     : "b" (input_address_hi),
+			       "D"(output_address_hi), "S"(output_address_lo),
+			       "m" (hv_hypercall_pg)
+			     : "cc", "memory");
+
+	return control_lo | ((u64)control_hi << 32);
+#endif /* !x86_64 */
+}
 
 void hyperv_init(void);
 void hyperv_report_panic(struct pt_regs *regs);
