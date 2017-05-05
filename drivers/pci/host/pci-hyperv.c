@@ -809,7 +809,7 @@ static void hv_irq_unmask(struct irq_data *data)
 	params->vector = cfg->vector;
 
 	for_each_cpu_and(cpu, dest, cpu_online_mask)
-		params->vp_mask |= (1ULL << vmbus_cpu_number_to_vp_number(cpu));
+		params->vp_mask |= (1ULL << hv_cpu_number_to_vp_number(cpu));
 
 	hv_do_hypercall(HVCALL_RETARGET_INTERRUPT, params, NULL);
 
@@ -904,7 +904,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	} else {
 		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
 			int_pkt->int_desc.cpu_mask |=
-				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
+				(1ULL << hv_cpu_number_to_vp_number(cpu));
 		}
 	}
 
