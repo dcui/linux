@@ -182,6 +182,8 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 		goto error_free_gpadl;
 	}
 
+	hv_percpu_channel_enq(newchannel);
+
 	ret = vmbus_post_msg(open_msg,
 			     sizeof(struct vmbus_channel_open_channel), true);
 
@@ -194,23 +196,25 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 
 	if (ret != 0) {
 		err = ret;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	if (newchannel->rescind) {
 		err = -ENODEV;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	if (open_info->response.open_result.status) {
 		err = -EAGAIN;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	newchannel->state = CHANNEL_OPENED_STATE;
 	kfree(open_info);
 	return 0;
 
+error_deq_channel:
+	hv_percpu_channel_deq(newchannel);
 error_free_gpadl:
 	vmbus_teardown_gpadl(newchannel, newchannel->ringbuffer_gpadlhandle);
 	kfree(open_info);
@@ -564,6 +568,8 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
 		ret = -EINVAL;
 		goto out;
 	}
+
+	hv_percpu_channel_deq(channel);
 
 	channel->state = CHANNEL_OPEN_STATE;
 	channel->sc_creation_callback = NULL;
