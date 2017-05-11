@@ -231,9 +231,7 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
-hv_storvsc
 hv_utils
-hv_vmbus
 hyperv_fb
 hyperv-keyboard
 i2c-algo-bit
@@ -621,7 +619,6 @@ scsi_dh_alua
 scsi_dh_emc
 scsi_dh_hp_sw
 scsi_dh_rdac
-scsi_transport_fc
 scsi_transport_iscsi
 scsi_transport_sas
 scsi_transport_spi
