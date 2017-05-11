@@ -20,3 +20,5 @@ do_tools_common = true
 do_zfs		= true
 do_libc_dev_package=false
 disable_d_i=true
+do_source_package = false
+do_doc_package  = false
