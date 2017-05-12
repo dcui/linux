@@ -757,6 +757,7 @@ EXPORT_SYMBOL drivers/iio/buffer/kfifo_buf 0x00000000	devm_iio_kfifo_allocate
 EXPORT_SYMBOL drivers/iio/buffer/kfifo_buf 0x00000000	devm_iio_kfifo_free
 EXPORT_SYMBOL drivers/iio/buffer/kfifo_buf 0x00000000	iio_kfifo_allocate
 EXPORT_SYMBOL drivers/iio/buffer/kfifo_buf 0x00000000	iio_kfifo_free
+EXPORT_SYMBOL drivers/iio/common/hid-sensors/hid-sensor-iio-common 0x00000000	hid_sensor_convert_timestamp
 EXPORT_SYMBOL drivers/iio/common/hid-sensors/hid-sensor-iio-common 0x00000000	hid_sensor_format_scale
 EXPORT_SYMBOL drivers/iio/common/hid-sensors/hid-sensor-iio-common 0x00000000	hid_sensor_parse_common_attributes
 EXPORT_SYMBOL drivers/iio/common/hid-sensors/hid-sensor-iio-common 0x00000000	hid_sensor_read_poll_value
@@ -5306,6 +5307,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	devfreq_resume_device
 EXPORT_SYMBOL vmlinux 0x00000000	devfreq_suspend_device
 EXPORT_SYMBOL vmlinux 0x00000000	devfreq_unregister_notifier
 EXPORT_SYMBOL vmlinux 0x00000000	devfreq_unregister_opp_notifier
+EXPORT_SYMBOL vmlinux 0x00000000	devfreq_update_status
 EXPORT_SYMBOL vmlinux 0x00000000	device_add_disk
 EXPORT_SYMBOL vmlinux 0x00000000	device_get_mac_address
 EXPORT_SYMBOL vmlinux 0x00000000	devm_backlight_device_register
@@ -6732,6 +6734,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	napi_get_frags
 EXPORT_SYMBOL vmlinux 0x00000000	napi_gro_flush
 EXPORT_SYMBOL vmlinux 0x00000000	napi_gro_frags
 EXPORT_SYMBOL vmlinux 0x00000000	napi_gro_receive
+EXPORT_SYMBOL vmlinux 0x00000000	napi_schedule_prep
 EXPORT_SYMBOL vmlinux 0x00000000	native_io_delay
 EXPORT_SYMBOL vmlinux 0x00000000	native_load_gs_index
 EXPORT_SYMBOL vmlinux 0x00000000	native_queued_spin_lock_slowpath
@@ -9187,7 +9190,6 @@ EXPORT_SYMBOL_GPL drivers/hsi/hsi 0x00000000	hsi_remove_client
 EXPORT_SYMBOL_GPL drivers/hsi/hsi 0x00000000	hsi_unregister_controller
 EXPORT_SYMBOL_GPL drivers/hsi/hsi 0x00000000	hsi_unregister_port_event
 EXPORT_SYMBOL_GPL drivers/hv/hv_vmbus 0x00000000	__vmbus_driver_register
-EXPORT_SYMBOL_GPL drivers/hv/hv_vmbus 0x00000000	hv_do_hypercall
 EXPORT_SYMBOL_GPL drivers/hv/hv_vmbus 0x00000000	vmbus_allocate_mmio
 EXPORT_SYMBOL_GPL drivers/hv/hv_vmbus 0x00000000	vmbus_are_subchannels_present
 EXPORT_SYMBOL_GPL drivers/hv/hv_vmbus 0x00000000	vmbus_close
@@ -10019,6 +10021,7 @@ EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	m
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_hca_vport_node_guid
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_hca_vport_pkey
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_hca_vport_system_image_guid
+EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_min_inline
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_module_eeprom
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_nic_vport_mac_address
 EXPORT_SYMBOL_GPL drivers/net/ethernet/mellanox/mlx5/core/mlx5_core 0x00000000	mlx5_query_nic_vport_mac_list
@@ -13652,6 +13655,8 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	hrtimer_start_range_ns
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hrtimer_try_to_cancel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hugetlb_cgrp_subsys_enabled_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hugetlb_cgrp_subsys_on_dfl_key
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_do_hypercall
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_is_hypercall_page_setup
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_remove_crash_handler
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_remove_kexec_handler
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_remove_vmbus_irq
@@ -13672,6 +13677,9 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	hwpoison_filter_flags_value
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hwpoison_filter_memcg
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hwrng_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hwrng_unregister
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hyperv_cleanup
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hyperv_cs
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hyperv_report_panic
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	i2c_acpi_find_bus_speed
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	i2c_adapter_depth
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	i2c_adapter_type
@@ -13786,6 +13794,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_fwspec_add_ids
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_fwspec_free
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_fwspec_init
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_get_domain_for_dev
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_get_group_resv_regions
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_group_add_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_group_alloc
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	iommu_group_for_each_dev
@@ -13869,6 +13878,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_alloc_fwnode
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_alloc_irqs_parent
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_associate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_associate_many
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_check_msi_remap
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_create_hierarchy
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_free_fwnode
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	irq_domain_free_irqs_common
@@ -15123,6 +15133,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_autopm_get_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_autopm_put_device
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_bus_type
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_check_sense
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_device_from_queue
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_dh_activate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_dh_attach
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	scsi_dh_attached_handler_name
