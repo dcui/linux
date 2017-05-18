@@ -28,6 +28,9 @@
 #include <linux/hyperv.h>
 #include <linux/rndis.h>
 
+/* Include refcount here to avoid backporting a bunch of kref commits. */
+#include <linux/refcount.h>
+
 /* RSS related */
 #define OID_GEN_RECEIVE_SCALE_CAPABILITIES 0x00010203  /* query only */
 #define OID_GEN_RECEIVE_SCALE_PARAMETERS 0x00010204  /* query and set */
