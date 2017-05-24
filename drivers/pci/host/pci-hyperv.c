@@ -245,7 +245,7 @@ struct pci_packet {
 
 struct pci_version_request {
 	struct pci_message message_type;
-	enum pci_message_type protocol_version;
+	u32 protocol_version;
 } __packed;
 
 /*
