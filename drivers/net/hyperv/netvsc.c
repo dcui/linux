@@ -472,19 +472,16 @@ static int negotiate_nvsp_ver(struct hv_device *device,
 }
 
 static int netvsc_connect_vsp(struct hv_device *device,
+			      struct netvsc_device *net_device,
 			      const struct netvsc_device_info *device_info)
 {
-	struct netvsc_device *net_device;
-	struct nvsp_message *init_packet;
 	const u32 ver_list[] = {
 		NVSP_PROTOCOL_VERSION_1, NVSP_PROTOCOL_VERSION_2,
-		NVSP_PROTOCOL_VERSION_4, NVSP_PROTOCOL_VERSION_5 };
-	u32 max_recv_buf_size, ndis_version;
-	int i, ret;
-
-	net_device = hv_device_to_netvsc_device(device);
-	if (!net_device)
-		return -ENODEV;
+		NVSP_PROTOCOL_VERSION_4, NVSP_PROTOCOL_VERSION_5
+	};
+	struct nvsp_message *init_packet;
+	u32 max_recv_buf_size;
+	int ndis_version, i, ret;
 
 	init_packet = &net_device->channel_init_pkt;
 
@@ -1300,7 +1297,7 @@ struct netvsc_device *netvsc_device_add(struct hv_device *device,
 	rcu_assign_pointer(net_device_ctx->nvdev, net_device);
 
 	/* Connect with the NetVsp */
-	ret = netvsc_connect_vsp(device, device_info);
+	ret = netvsc_connect_vsp(device, net_device, device_info);
 	if (ret != 0) {
 		netdev_err(ndev,
 			"unable to connect to NetVSP - %d\n", ret);
