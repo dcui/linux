@@ -8,6 +8,7 @@
 9p
 9pnet
 9pnet_rdma
+9pnet_virtio
 aacraid
 ablk_helper
 acpi_ipmi
@@ -78,6 +79,7 @@ bsd_comp
 btrfs
 BusLogic
 cachefiles
+caif_virtio
 camellia-aesni-avx2
 camellia-aesni-avx-x86_64
 camellia_generic
@@ -86,6 +88,7 @@ can
 can-bcm
 can-gw
 can-raw
+capsule-loader
 cast5-avx-x86_64
 cast5_generic
 cast6-avx-x86_64
@@ -199,6 +202,9 @@ ebt_vlan
 ecdh_generic
 echainiv
 ec_sys
+efibc
+efi-pstore
+efi_test
 em_canid
 em_cmp
 em_ipset
@@ -231,6 +237,7 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
+hv_sock
 hv_utils
 hyperv_fb
 hyperv-keyboard
@@ -720,12 +727,21 @@ vfio_virqfd
 vhost
 vhost_net
 vhost_scsi
+vhost_vsock
 viafb
 video
+virtio_blk
+virtio_input
+virtio_net
+virtio-rng
+virtio_scsi
 vmac
+vmw_vsock_virtio_transport
+vmw_vsock_virtio_transport_common
 vport-geneve
 vport-gre
 vport-vxlan
+vringh
 vsock
 vxlan
 wp512
