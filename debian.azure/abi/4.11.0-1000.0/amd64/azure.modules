@@ -32,7 +32,6 @@ aes-x86_64
 af_alg
 af_key
 af_packet_diag
-af-rxrpc
 ah4
 ah6
 ahci
@@ -237,7 +236,6 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
-hv_sock
 hv_utils
 hyperv_fb
 hyperv-keyboard
@@ -595,6 +593,7 @@ rmd256
 rmd320
 rose
 rpcsec_gss_krb5
+rxrpc
 salsa20_generic
 salsa20-x86_64
 sch_atm
