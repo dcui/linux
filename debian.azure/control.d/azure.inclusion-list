@@ -220,7 +220,6 @@ net/ceph/libceph.ko
 net/core/*
 net/dccp/*
 net/decnet/*
-net/hv_sock/*
 net/ieee802154/*
 net/ipv4/*
 net/ipv6/*
