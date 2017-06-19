@@ -22,6 +22,7 @@ act_mirred
 act_nat
 act_pedit
 act_police
+act_sample
 act_simple
 act_skbedit
 act_skbmod
@@ -126,6 +127,7 @@ crc8
 crc-itu-t
 crct10dif-pclmul
 cryptd
+crypto_engine
 cryptoloop
 crypto_simd
 crypto_user
@@ -213,7 +215,9 @@ em_text
 em_u32
 eql
 esp4
+esp4_offload
 esp6
+esp6_offload
 evbug
 faulty
 fb_ddc
@@ -336,6 +340,7 @@ ip_vs_sed
 ip_vs_sh
 ip_vs_wlc
 ip_vs_wrr
+ipvtap
 ip_vti
 ipx
 ircomm
@@ -525,6 +530,7 @@ nft_reject_inet
 nft_reject_ipv4
 nft_reject_ipv6
 nft_rt
+nft_set_bitmap
 nft_set_hash
 nft_set_rbtree
 nhc_dest
@@ -536,7 +542,12 @@ nhc_routing
 nhc_udp
 nls_iso8859-1
 notifier-error-inject
+nvme-core
+nvme-fabrics
+nvme-fc
 nvmem_core
+nvmet
+nvmet-fc
 nvram
 objlayoutdriver
 openvswitch
@@ -545,6 +556,7 @@ osd
 overlay
 p8022
 p8023
+parman
 parport
 parport_pc
 pata_acpi
@@ -569,6 +581,7 @@ pppox
 ppp_synctty
 pps_core
 pptp
+psample
 psnap
 ptp
 pvpanic
@@ -658,6 +671,7 @@ sunrpc
 syscopyarea
 sysfillrect
 sysimgblt
+tap
 target_core_file
 target_core_iblock
 target_core_mod
@@ -688,6 +702,7 @@ test_hash
 test_hexdump
 test-kstrtox
 test_module
+test_siphash
 test_static_key_base
 test_static_keys
 test-string_helpers
