@@ -240,6 +240,7 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
+hv_sock
 hv_utils
 hyperv_fb
 hyperv-keyboard
