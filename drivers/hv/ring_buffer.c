@@ -423,10 +423,6 @@ void hv_pkt_iter_close(struct vmbus_channel *channel)
 	 */
 	virt_mb();
 
-	/* If host has disabled notifications then skip */
-	if (rbi->ring_buffer->interrupt_mask)
-		return;
-
 	if (rbi->ring_buffer->feature_bits.feat_pending_send_sz) {
 		u32 pending_sz = READ_ONCE(rbi->ring_buffer->pending_send_sz);
 
