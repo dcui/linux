@@ -244,7 +244,7 @@ static int rndis_filter_send_request(struct rndis_device *dev,
 			pb[0].len;
 	}
 
-	ret = netvsc_send(net_device_ctx->device_ctx, packet, NULL, &pb, NULL);
+	ret = netvsc_send(net_device_ctx, packet, NULL, &pb, NULL);
 	return ret;
 }
 
