@@ -132,7 +132,6 @@ cryptoloop
 crypto_simd
 crypto_user
 cuse
-dca
 dccp
 dccp_diag
 dccp_ipv4
@@ -809,7 +808,6 @@ xt_ipcomp
 xt_iprange
 xt_ipvs
 xt_l2tp
-xt_LED
 xt_length
 xt_limit
 xt_LOG
