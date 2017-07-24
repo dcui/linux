@@ -31,6 +31,7 @@
 #include <linux/vmalloc.h>
 #include <linux/prefetch.h>
 #include <linux/rtnetlink.h>
+#include <linux/prefetch.h>
 
 #include <asm/sync_bitops.h>
 
