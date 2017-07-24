@@ -357,9 +357,6 @@ struct vmpacket_descriptor *hv_pkt_iter_first(struct vmbus_channel *channel)
 {
 	struct hv_ring_buffer_info *rbi = &channel->inbound;
 
-	/* set state for later hv_signal_on_read() */
-	rbi->cached_read_index = rbi->ring_buffer->read_index;
-
 	if (hv_pkt_iter_avail(rbi) < sizeof(struct vmpacket_descriptor))
 		return NULL;
 
@@ -386,29 +383,63 @@ __hv_pkt_iter_next(struct vmbus_channel *channel,
 	if (rbi->priv_read_index >= dsize)
 		rbi->priv_read_index -= dsize;
 
-	/* more data? */
-	if (hv_pkt_iter_avail(rbi) < sizeof(struct vmpacket_descriptor))
-		return NULL;
-	else
-		return hv_get_ring_buffer(rbi) + rbi->priv_read_index;
+	return hv_pkt_iter_first(channel);
 }
 EXPORT_SYMBOL_GPL(__hv_pkt_iter_next);
 
 /*
  * Update host ring buffer after iterating over packets.
+ *
+ * Avoid unnecessary signaling of the host by making sure that all
+ * data is read, and the host has not masked off the interrupt.
+ *
+ * In addition, in Windows 8 or later there is an extension for the
+ * host to indicate how much space needs to be available before
+ * signaling. The hos sets pending_send_sz to the number of bytes
+ * that it is waiting to send.
  */
 void hv_pkt_iter_close(struct vmbus_channel *channel)
 {
 	struct hv_ring_buffer_info *rbi = &channel->inbound;
+	u32 orig_write_sz, pending_sz;
+
+	orig_write_sz = hv_get_bytes_to_write(rbi);
 
 	/*
-	 * Make sure all reads are done before we update the read index since
-	 * the writer may start writing to the read area once the read index
-	 * is updated.
+	 * Make sure all reads are done before we update the read
+	 * index since the writer may start writing to the read area
+	 * once the read index is updated.
 	 */
 	virt_rmb();
+
+	/* Update the position where ring buffer has been read from */
 	rbi->ring_buffer->read_index = rbi->priv_read_index;
 
-	hv_signal_on_read(channel);
+	/* If more data is available then no need to signal */
+	if (hv_get_bytes_to_read(rbi))
+		return;
+
+	if (rbi->ring_buffer->feature_bits.feat_pending_send_sz) {
+		/*
+		 * Make sure reading of the pend_sz is not reordered
+		 * before we commit the new read index.
+		 */
+		virt_wmb();
+
+		pending_sz = READ_ONCE(rbi->ring_buffer->pending_send_sz);
+
+		/*
+		 * If there was space before we began iteration, then host was not blocked.
+		 * also handles case wheer pending_sz is zero then host has nothing pending
+		 */
+		if (orig_write_sz > pending_sz)
+			return;
+
+		/* If pending write will not fit, don't give false hope. */
+		if (hv_get_bytes_to_write(rbi) < pending_sz)
+			return;
+	}
+
+	vmbus_setevent(channel);
 }
 EXPORT_SYMBOL_GPL(hv_pkt_iter_close);

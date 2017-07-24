@@ -1233,8 +1233,12 @@ int netvsc_poll(struct napi_struct *napi, int budget)
 	while (nvchan->desc && work_done < budget) {
 		work_done += netvsc_process_raw_pkt(device, channel, net_device,
 						    ndev, nvchan->desc, budget);
-		nvchan->desc = hv_pkt_iter_next(channel, nvchan->desc);
+		nvchan->desc = __hv_pkt_iter_next(channel, nvchan->desc);
 	}
+
+	hv_pkt_iter_close(channel);
+
+	netvsc_chk_recv_comp(net_device, channel, q_idx);
 
 	/* If receive ring was exhausted
 	 * and not doing busy poll
@@ -1243,10 +1247,11 @@ int netvsc_poll(struct napi_struct *napi, int budget)
 	 */
 	if (work_done < budget &&
 	    napi_complete_done(napi, work_done) &&
-	    hv_end_read(&channel->inbound) != 0)
+	    hv_end_read(&channel->inbound) != 0) {
+		/* special case if new messages are available */
+		hv_begin_read(&channel->inbound);
 		napi_reschedule(napi);
-
-	netvsc_chk_recv_comp(net_device, channel, q_idx);
+	}
 
 	/* Driver may overshoot since multiple packets per descriptor */
 	return min(work_done, budget);
