@@ -1,0 +1,131 @@
+Overview
+--------
+This document covers the common tasks in keeping the Microsoft kernel
+git tree in sync with upstream changes.
+
+Conventions
+-----------
+The Microsoft Linux kernel git tree for stable releases is organized
+in a similar manner. The names and tags correspond to upstream; i.e the
+stable branch for 4.13 kernel upstream is called "linux-4.13.y" and
+the branch with Microsoft related patches is "msft-4.13.y".
+The actual versions are also tagged (linux-4.13.1 and msft-4.13.1).
+
+Updating the master branch
+--------------------------
+The master branch should be an exact match of Linus upstream tree.
+This helps when tracking commit id's and doing cherry-picks.
+The merge for this is straight forward.
+
+  # Get Microsoft kernel tree 
+  $ git clone linuxonhyperv.com:/home/msftkernel/git/linux-msft.git
+  
+  # Merge from upstream
+  $ git pull \
+	git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+  # Get any tags
+  $ git fetch --tags \
+  	git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+  # Push results
+  $ git push; git push --tags
+
+Updating from upstream stable
+-----------------------------
+The upstream Linux stable kernel updates often (about weekly) based on
+bug and security fixes from upstream. The stable kernels are found on
+separate branches per version in:
+ http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git
+ 
+To update the Microsoft kernel when a new stable kernel is released
+involves merging the branches. The steps for 4.13 would be:
+
+  # Get Microsoft kernel tree 
+  $ git clone linuxonhyperv.com:/home/msftkernel/git/linux-msft.git
+  
+  # Checkout the the stable branch
+  $ git checkout msft-4.13.y
+  
+  # Merge in branch from upstream
+  $ git pull \
+	git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
+	linux-4.13.y
+
+  # Get stable tags
+  $ git fetch --tags \
+  	git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+
+  # Do a test build
+  $ cp Microsoft/config-azure .config
+  $ make oldconfig
+  $ make
+  
+  # Tag and push result
+  $ git tag msft-4.13.3
+  $ git push; git push --tags
+  
+Note: These steps are simplified, feel free to use local clones and
+git worktree if you understand how to use these.
+
+Creating release candidate branches
+-----------------------------------
+When Linus puts out a new release candidate, the process is a little
+more complex because some of the patches in the Microsoft kernel may
+have been incorporated (or overlap other changes). These assume master
+branch already is updated from Linus tree.
+
+In general, the process for a new rc release is most complex:
+
+  # Get latest Microsoft kernel tree
+  $ git clone linuxonhyperv.com:/home/msftkernel/git/linux-msft.git
+  
+  # Get patch files for all the MSFT patches
+  $ git checkout msft-4.13.y
+  $ git format-patch v4.13.3
+
+There will now be a lot of files starting with 0001-... that are the
+individual patches. The next step is to apply them to a new branch
+either with 'git am' or use patch and commit manually.
+
+  # Make new rc branch
+  $ git checkout -b msft-4.14-rc1 v4.14-rc1
+  
+  # Apply one or more patches (repeat until done)
+  $ git am 0001-*.patch
+  
+One important step is that the kernel config options often change
+between versions. Therefore you should update the archived
+kernel config
+  $ cd <linux-msft directory>
+  $ cp Microsoft/config-azure .config
+  $ make oldconfig
+  $ cp .config Microsoft/config-azure
+  $ git commit Microsoft/config-azure
+
+Since this requires lots of patches, make sure and do build
+and test before pushing the result for others to use.
+  
+You could in theory do 'git am *.patch' but not all patches will apply
+cleanly. Some need to be skipped, and others may require rework by
+merging with patch command then redoing commit.
+
+Updating from -rc1 to -rc2 is usually much simpler. Assuming you
+have already updated master.
+ $ git clone linuxonhyperv.com:/home/msftkernel/git/linux-msft.git
+ $ git checkout -b msft-4.14-rc2 v4.14-rc2
+
+ # Now get Microsoft changes from -rc1
+ $ git pull . msft-4.14-rc1
+ 
+ # Finally rebase to move patch tree
+ $ git rebase -i v4.14-rc2
+
+This last step also allows combining or dropping patches that are no
+longer appropriate. Make sure and test the resulting tree.
+
+Creating new release branches
+-----------------------------
+Creating a new release branch follows same merge and rebase as the
+-rc branches. The only difference is the naming since the release
+branch is the start of a new stable branch.
