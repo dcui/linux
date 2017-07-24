@@ -150,7 +150,6 @@ struct netvsc_device_info {
 	u32  ring_size;
 	u32  recv_buf_size;
 	u32  send_buf_size;
-	u32  max_num_vrss_chns;
 	u32  num_chn;
 };
 
