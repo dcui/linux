@@ -913,14 +913,11 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 
 void vmbus_hvsock_device_unregister(struct vmbus_channel *channel)
 {
-	mutex_lock(&vmbus_connection.channel_mutex);
-
 	BUG_ON(!is_hvsock_channel(channel));
 
+	/* XXX: need to sync with onoffer/onrescind */
 	channel->rescind = true;
 	vmbus_device_unregister(channel->device_obj);
-
-	mutex_unlock(&vmbus_connection.channel_mutex);
 }
 EXPORT_SYMBOL_GPL(vmbus_hvsock_device_unregister);
 
