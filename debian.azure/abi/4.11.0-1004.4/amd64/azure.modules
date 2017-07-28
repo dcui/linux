@@ -132,6 +132,7 @@ cryptoloop
 crypto_simd
 crypto_user
 cuse
+dca
 dccp
 dccp_diag
 dccp_ipv4
@@ -239,11 +240,14 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
+hv_network_direct_142.0
+hv_network_direct_144.0
 hv_sock
 hv_utils
 hyperv_fb
 hyperv-keyboard
 i2c-algo-bit
+i2c-core
 i2c-piix4
 i40e
 ib_cm
@@ -808,6 +812,7 @@ xt_ipcomp
 xt_iprange
 xt_ipvs
 xt_l2tp
+xt_LED
 xt_length
 xt_limit
 xt_LOG
