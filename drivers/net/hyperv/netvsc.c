@@ -698,7 +698,7 @@ static u32 netvsc_copy_to_send_buf(struct netvsc_device *net_device,
 				   u32 pend_size,
 				   struct hv_netvsc_packet *packet,
 				   struct rndis_message *rndis_msg,
-				   struct hv_page_buffer **pb,
+				   struct hv_page_buffer *pb,
 				   struct sk_buff *skb)
 {
 	char *start = net_device->send_buf;
@@ -719,9 +719,9 @@ static u32 netvsc_copy_to_send_buf(struct netvsc_device *net_device,
 	}
 
 	for (i = 0; i < page_count; i++) {
-		char *src = phys_to_virt((*pb)[i].pfn << PAGE_SHIFT);
-		u32 offset = (*pb)[i].offset;
-		u32 len = (*pb)[i].len;
+		char *src = phys_to_virt(pb[i].pfn << PAGE_SHIFT);
+		u32 offset = pb[i].offset;
+		u32 len = pb[i].len;
 
 		memcpy(dest, (src + offset), len);
 		msg_size += len;
@@ -740,7 +740,7 @@ static inline int netvsc_send_pkt(
 	struct hv_device *device,
 	struct hv_netvsc_packet *packet,
 	struct netvsc_device *net_device,
-	struct hv_page_buffer **pb,
+	struct hv_page_buffer *pb,
 	struct sk_buff *skb)
 {
 	struct nvsp_message nvmsg;
@@ -751,7 +751,6 @@ static inline int netvsc_send_pkt(
 	struct netdev_queue *txq = netdev_get_tx_queue(ndev, packet->q_idx);
 	u64 req_id;
 	int ret;
-	struct hv_page_buffer *pgbuf;
 	u32 ring_avail = hv_ringbuf_avail_percent(&out_channel->outbound);
 
 	nvmsg.hdr.msg_type = NVSP_MSG1_TYPE_SEND_RNDIS_PKT;
@@ -777,11 +776,12 @@ static inline int netvsc_send_pkt(
 		return -ENODEV;
 
 	if (packet->page_buf_cnt) {
-		pgbuf = packet->cp_partial ? (*pb) +
-			packet->rmsg_pgcnt : (*pb);
+		if (packet->cp_partial)
+			pb += packet->rmsg_pgcnt;
+
 		ret = vmbus_sendpacket_pagebuffer(out_channel,
-						  pgbuf, packet->page_buf_cnt,
-						  &nvmsg, sizeof(nvmsg),
+						  pb, packet->page_buf_cnt,
+						  &nvmsg, sizeof(struct nvsp_message),
 						  req_id);
 	} else {
 		ret = vmbus_sendpacket(out_channel, &nvmsg,
@@ -827,7 +827,7 @@ static inline void move_pkt_msd(struct hv_netvsc_packet **msd_send,
 int netvsc_send(struct net_device_context *ndev_ctx,
 		struct hv_netvsc_packet *packet,
 		struct rndis_message *rndis_msg,
-		struct hv_page_buffer **pb,
+		struct hv_page_buffer *pb,
 		struct sk_buff *skb)
 {
 	struct netvsc_device *net_device
