@@ -410,6 +410,7 @@ static int netvsc_vf_xmit(struct net_device *net, struct net_device *vf_netdev,
 			  struct sk_buff *skb)
 {
 	struct net_device_context *ndev_ctx = netdev_priv(net);
+	unsigned int len = skb->len;
 	int rc;
 
 	skb->dev = vf_netdev;
@@ -422,7 +423,7 @@ static int netvsc_vf_xmit(struct net_device *net, struct net_device *vf_netdev,
 
 		u64_stats_update_begin(&pcpu_stats->syncp);
 		pcpu_stats->tx_packets++;
-		pcpu_stats->tx_bytes += skb->len;
+		pcpu_stats->tx_bytes += len;
 		u64_stats_update_end(&pcpu_stats->syncp);
 	} else {
 		this_cpu_inc(ndev_ctx->vf_stats->tx_dropped);
