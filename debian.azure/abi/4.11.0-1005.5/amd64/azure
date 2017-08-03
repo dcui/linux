@@ -12076,7 +12076,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	hrtimer_start_range_ns
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hrtimer_try_to_cancel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hugetlb_cgrp_subsys_enabled_key
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hugetlb_cgrp_subsys_on_dfl_key
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_do_hypercall
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_hypercall_pg
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_is_hypercall_page_setup
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_pkt_iter_close
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_pkt_iter_first
@@ -12087,6 +12087,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_ringbuffer_get_debuginfo
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_setup_crash_handler
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_setup_kexec_handler
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_setup_vmbus_irq
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	hv_vp_index
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hvc_alloc
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hvc_instantiate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	hvc_kick
@@ -14118,7 +14119,6 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_allocate_mmio
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_are_subchannels_present
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_close
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_connection
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_cpu_number_to_vp_number
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_driver_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_establish_gpadl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_free_mmio
