@@ -177,6 +177,9 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 		      &vmbus_connection.chn_msg_list);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
+	/* We must enqueue the channel before opening it. */
+	hv_percpu_channel_enq(newchannel);
+
 	ret = vmbus_post_msg(open_msg,
 			     sizeof(struct vmbus_channel_open_channel), true);
 
@@ -189,23 +192,25 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 
 	if (ret != 0) {
 		err = ret;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	if (newchannel->rescind) {
 		err = -ENODEV;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	if (open_info->response.open_result.status) {
 		err = -EAGAIN;
-		goto error_free_gpadl;
+		goto error_deq_channel;
 	}
 
 	newchannel->state = CHANNEL_OPENED_STATE;
 	kfree(open_info);
 	return 0;
 
+error_deq_channel:
+	hv_percpu_channel_deq(newchannel);
 error_free_gpadl:
 	vmbus_teardown_gpadl(newchannel, newchannel->ringbuffer_gpadlhandle);
 	kfree(open_info);
@@ -551,6 +556,15 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
 		goto out;
 	}
 
+	hv_percpu_channel_deq(channel);
+	/*
+	 * vmbus_chan_sched() can't schedule the per-channel tasklet any more,
+	 * but it might have already scheduled the tasklet, so we need to
+	 * call tasklet_kill() to "flush" the possible pending tasklet with
+	 * channel->onchannel_callback == NULL, just after the tasklet_enable()
+	 * at the end of this function().
+	 */
+
 	channel->state = CHANNEL_OPEN_STATE;
 	channel->sc_creation_callback = NULL;
 	/* Stop callback and cancel the timer asap */
@@ -606,6 +620,9 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
 out:
 	/* re-enable tasklet for use on re-open */
 	tasklet_enable(&channel->callback_event);
+
+	/* flush the possible scheduled event, if any. */
+	tasklet_kill(&channel->callback_event);
 	return ret;
 }
 
