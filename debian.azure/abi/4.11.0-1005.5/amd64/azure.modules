@@ -240,8 +240,8 @@ hid-generic
 hid-hyperv
 hv_balloon
 hv_netvsc
-hv_network_direct_142.0
-hv_network_direct_144.0
+hv_network_direct_142_0
+hv_network_direct_144_0
 hv_sock
 hv_utils
 hyperv_fb
