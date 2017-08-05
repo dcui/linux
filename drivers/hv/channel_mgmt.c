@@ -364,11 +364,16 @@ static void percpu_channel_enq(void *arg)
 
 void hv_percpu_channel_enq(struct vmbus_channel *channel)
 {
+	unsigned long flags;
+
 	if (channel->target_cpu != get_cpu())
 		smp_call_function_single(channel->target_cpu,
 					 percpu_channel_enq, channel, true);
-	else
+	else {
+		local_irq_save(flags);
 		percpu_channel_enq(channel);
+		local_irq_restore(flags);
+	}
 
 	put_cpu();
 }
@@ -382,11 +387,16 @@ static void percpu_channel_deq(void *arg)
 
 void hv_percpu_channel_deq(struct vmbus_channel *channel)
 {
+	unsigned long flags;
+
 	if (channel->target_cpu != get_cpu())
 		smp_call_function_single(channel->target_cpu,
 					 percpu_channel_deq, channel, true);
-	else
+	else {
+		local_irq_save(flags);
 		percpu_channel_deq(channel);
+		local_irq_restore(flags);
+	}
 
 	put_cpu();
 }
