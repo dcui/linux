@@ -407,10 +407,10 @@ EXPORT_SYMBOL_GPL(__hv_pkt_iter_next);
 void hv_pkt_iter_close(struct vmbus_channel *channel)
 {
 	struct hv_ring_buffer_info *rbi = &channel->inbound;
-	u32 orig_write_sz;
+	u32 cached_write_sz, cur_write_sz, pending_sz;
 
 	/* Available space before read_index update */
-	orig_write_sz = hv_get_bytes_to_write(rbi);
+	cached_write_sz = hv_get_bytes_to_write(rbi);
 
 	/*
 	 * Make sure all reads are done before we update the read index since
@@ -422,10 +422,6 @@ void hv_pkt_iter_close(struct vmbus_channel *channel)
 	/* Update the position where ring buffer has been read from */
 	rbi->ring_buffer->read_index = rbi->priv_read_index;
 
-	/* If more data is available then no need to signal */
-	if (hv_get_bytes_to_read(rbi))
-		return;
-
 	/*
 	 * If the reading of the pend_sz were to be reordered and read
 	 * before we commit the new read index.
@@ -435,18 +431,22 @@ void hv_pkt_iter_close(struct vmbus_channel *channel)
 	virt_wmb();
 
 	if (rbi->ring_buffer->feature_bits.feat_pending_send_sz) {
-		u32 pending_sz = READ_ONCE(rbi->ring_buffer->pending_send_sz);
+		pending_sz = READ_ONCE(rbi->ring_buffer->pending_send_sz);
 
-		/*
-		 * If there was space before we began iteration, then
-		 * host was not blocked. Also handles the case where
-		 * pending_sz is zero because host has nothing pending.
-		 */
-		if (orig_write_sz > pending_sz)
+		/* If the other end is not blocked on write don't bother. */
+		if (pending_sz == 0)
 			return;
 
 		/* If pending write will not fit, don't give false hope. */
-		if (hv_get_bytes_to_write(rbi) < pending_sz)
+		cur_write_sz = hv_get_bytes_to_write(rbi);
+		if (cur_write_sz < pending_sz)
+			return;
+
+		/*
+		 * If there was space before we began iteration, then
+		 * host was not blocked.
+		 */
+		if (cached_write_sz >= pending_sz)
 			return;
 	}
 
