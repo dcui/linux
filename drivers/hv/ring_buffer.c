@@ -389,18 +389,28 @@ __hv_pkt_iter_next(struct vmbus_channel *channel,
 	if (rbi->priv_read_index >= dsize)
 		rbi->priv_read_index -= dsize;
 
-	/* more data? */
 	return hv_pkt_iter_first(channel);
 }
 EXPORT_SYMBOL_GPL(__hv_pkt_iter_next);
 
 /*
  * Update host ring buffer after iterating over packets.
+ *
+ * Avoid unnecessary signaling of the host by making sure that all
+ * data is read, and the host has not masked off the interrupt.
+ *
+ * In addition, in Windows 8 or later there is an extension for the
+ * host to indicate how much space needs to be available before
+ * signaling. The hos sets pending_send_sz to the number of bytes
+ * that it is waiting to send.
  */
 void hv_pkt_iter_close(struct vmbus_channel *channel)
 {
 	struct hv_ring_buffer_info *rbi = &channel->inbound;
-	u32 orig_write_sz = hv_get_bytes_to_write(rbi);
+	u32 orig_write_sz;
+
+	/* Available space before read_index update */
+	orig_write_sz = hv_get_bytes_to_write(rbi);
 
 	/*
 	 * Make sure all reads are done before we update the read index since
@@ -408,29 +418,29 @@ void hv_pkt_iter_close(struct vmbus_channel *channel)
 	 * is updated.
 	 */
 	virt_rmb();
+
+	/* Update the position where ring buffer has been read from */
 	rbi->ring_buffer->read_index = rbi->priv_read_index;
 
+	/* If more data is available then no need to signal */
+	if (hv_get_bytes_to_read(rbi))
+		return;
+
 	/*
-	 * Issue a full memory barrier before making the signaling decision.
-	 * Here is the reason for having this barrier:
-	 * If the reading of the pend_sz (in this function)
-	 * were to be reordered and read before we commit the new read
-	 * index (in the calling function)  we could
-	 * have a problem. If the host were to set the pending_sz after we
-	 * have sampled pending_sz and go to sleep before we commit the
-	 * read index, we could miss sending the interrupt. Issue a full
-	 * memory barrier to address this.
+	 * If the reading of the pend_sz were to be reordered and read
+	 * before we commit the new read index.
+	 * Then we could have if the host were to set the pending_sz
+	 * after we have already sampled pending_sz.
 	 */
-	virt_mb();
+	virt_wmb();
 
 	if (rbi->ring_buffer->feature_bits.feat_pending_send_sz) {
 		u32 pending_sz = READ_ONCE(rbi->ring_buffer->pending_send_sz);
 
 		/*
-		 * If there was space before we began iteration,
-		 * then host was not blocked. Also handles case where
-		 * pending_sz is zero then host has nothing pending
-		 * and does not need to be signaled.
+		 * If there was space before we began iteration, then
+		 * host was not blocked. Also handles the case where
+		 * pending_sz is zero because host has nothing pending.
 		 */
 		if (orig_write_sz > pending_sz)
 			return;

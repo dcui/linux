@@ -126,7 +126,7 @@ struct hv_ring_buffer_info {
 	u32 ring_datasize;		/* < ring_size */
 	u32 ring_data_startoffset;
 	u32 priv_write_index;
-	u32 priv_read_index;
+	u32 priv_read_index;		/* read cursor */
 };
 
 /*
