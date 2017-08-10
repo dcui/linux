@@ -47,10 +47,11 @@
 
 #define RING_SIZE_MIN		64
 #define NETVSC_MIN_TX_SECTIONS	10
-#define NETVSC_DEFAULT_TX	160	/* ~1M */
+#define NETVSC_DEFAULT_TX	192	/* ~1M */
 #define NETVSC_MIN_RX_SECTIONS	10	/* ~64K */
 #define NETVSC_DEFAULT_RX	2048	/* ~4M */
-#define LINKCHANGE_INT		(2 * HZ)
+
+#define LINKCHANGE_INT (2 * HZ)
 #define VF_TAKEOVER_INT (HZ / 10)
 
 static int ring_size = 128;
