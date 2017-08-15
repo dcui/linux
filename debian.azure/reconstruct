@@ -120,4 +120,5 @@ rm -f 'firmware/yam/9600.bin.ihex'
 rm -f 'firmware/yamaha/ds1_ctrl.fw.ihex'
 rm -f 'firmware/yamaha/ds1_dsp.fw.ihex'
 rm -f 'firmware/yamaha/ds1e_ctrl.fw.ihex'
+rm -f 'tools/hv/bondvf.sh'
 exit 0
