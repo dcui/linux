@@ -28,9 +28,6 @@
 #include <linux/hyperv.h>
 #include <linux/rndis.h>
 
-/* Include refcount here to avoid backporting a bunch of kref commits. */
-#include <linux/refcount.h>
-
 /* RSS related */
 #define OID_GEN_RECEIVE_SCALE_CAPABILITIES 0x00010203  /* query only */
 #define OID_GEN_RECEIVE_SCALE_PARAMETERS 0x00010204  /* query and set */
@@ -779,7 +776,8 @@ struct netvsc_device {
 	u32 max_chn;
 	u32 num_chn;
 
-	refcount_t sc_offered;
+	atomic_t open_chn;
+	wait_queue_head_t subchan_open;
 
 	/* Holds rndis device info */
 	void *extension;
