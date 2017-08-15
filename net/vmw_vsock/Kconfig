@@ -17,7 +17,7 @@ config VSOCKETS
 
 config VMWARE_VMCI_VSOCKETS
 	tristate "VMware VMCI transport for Virtual Sockets"
-	depends on VSOCKETS && VMWARE_VMCI
+	depends on VSOCKETS && VMWARE_VMCI && HYPERVISOR_GUEST
 	help
 	  This module implements a VMCI transport for Virtual Sockets.
 

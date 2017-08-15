@@ -16,6 +16,7 @@
 #include <linux/types.h>
 #include <linux/bitops.h>
 #include <linux/cred.h>
+#include <linux/hypervisor.h>
 #include <linux/init.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
@@ -72,6 +73,10 @@ struct vmci_transport_recv_pkt_info {
 	struct sock *sk;
 	struct vmci_transport_packet pkt;
 };
+
+static bool skip_hypervisor_check;
+module_param(skip_hypervisor_check, bool, 0444);
+MODULE_PARM_DESC(hot_add, "If set, attempt to load on non-VMware platforms");
 
 static LIST_HEAD(vmci_transport_cleanup_list);
 static DEFINE_SPINLOCK(vmci_transport_cleanup_lock);
@@ -2084,6 +2089,12 @@ static const struct vsock_transport vmci_transport = {
 static int __init vmci_transport_init(void)
 {
 	int err;
+
+	/* Check if we are running on VMware's hypervisor and bail out
+	 * if we are not.
+	 */
+	if (!skip_hypervisor_check && x86_hyper != &x86_hyper_vmware)
+		return -ENODEV;
 
 	/* Create the datagram handle that we will use to send and receive all
 	 * VSocket control messages for this context.
