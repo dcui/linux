@@ -1174,6 +1174,8 @@ int vmbus_device_register(struct hv_device *child_device_obj)
 	child_device_obj->device.parent = &hv_acpi_dev->dev;
 	child_device_obj->device.release = vmbus_device_release;
 
+	if (is_hvsock_channel(child_device_obj->channel))
+		dev_set_uevent_suppress(&child_device_obj->device, 1);
 	/*
 	 * Register with the LDM. This will kick off the driver/device
 	 * binding...which will eventually call vmbus_match() and vmbus_probe()
