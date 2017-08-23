@@ -996,6 +996,8 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
 			if (channel->rescind)
 				continue;
 
+			++channel->interrupts_in;
+
 			switch (channel->callback_mode) {
 			case HV_CALL_ISR:
 				vmbus_channel_isr(channel);
@@ -1289,6 +1291,24 @@ static ssize_t channel_latency_show(const struct vmbus_channel *channel,
 }
 VMBUS_CHAN_ATTR(lantency, S_IRUGO, channel_latency_show, NULL);
 
+static ssize_t interrupts_in_show(const struct vmbus_channel *channel, char *buf)
+{
+	return sprintf(buf, "%u\n", channel->interrupts_in);
+}
+VMBUS_CHAN_ATTR_RO(interrupts_in);
+
+static ssize_t interrupts_out_show(const struct vmbus_channel *channel, char *buf)
+{
+	return sprintf(buf, "%u\n", channel->interrupts_out);
+}
+VMBUS_CHAN_ATTR_RO(interrupts_out);
+
+static ssize_t events_out_show(const struct vmbus_channel *channel, char *buf)
+{
+	return sprintf(buf, "%u\n", channel->events_out);
+}
+VMBUS_CHAN_ATTR_RO(events_out);
+
 static struct attribute *vmbus_chan_attrs[] = {
 	&chan_attr_out_mask.attr,
 	&chan_attr_in_mask.attr,
@@ -1297,6 +1317,9 @@ static struct attribute *vmbus_chan_attrs[] = {
 	&chan_attr_cpu.attr,
 	&chan_attr_pending.attr,
 	&chan_attr_lantency.attr,
+	&chan_attr_interrupts_in.attr,
+	&chan_attr_interrupts_out.attr,
+	&chan_attr_events_out.attr,
 	NULL
 };
 

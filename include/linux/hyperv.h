@@ -731,6 +731,11 @@ struct vmbus_channel {
 
 	struct vmbus_close_msg close_msg;
 
+	/* Statistics */
+	unsigned int	interrupts_in;		/* Host to Guest interrupts */
+	unsigned int	interrupts_out;		/* Guest to Host via interrupt */
+	unsigned int	events_out;		/* Guest to Host via hypercall */
+
 	/* Channel callback's invoked in softirq context */
 	struct tasklet_struct callback_event;
 	void (*onchannel_callback)(void *context);
