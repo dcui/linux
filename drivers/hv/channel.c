@@ -29,11 +29,24 @@
 #include <linux/hyperv.h>
 #include <linux/uio.h>
 #include <linux/interrupt.h>
+#include <asm/mshyperv.h>
 
 #include "hyperv_vmbus.h"
 
-#define NUM_PAGES_SPANNED(addr, len) \
-((PAGE_ALIGN(addr + len) >> PAGE_SHIFT) - (addr >> PAGE_SHIFT))
+/*
+ * vmbus_set_event - Send an event notification to the parent
+ */
+static void vmbus_set_event(struct vmbus_channel *channel)
+{
+	u32 child_relid = channel->offermsg.child_relid;
+
+	if (!channel->is_dedicated_interrupt)
+		vmbus_send_interrupt(child_relid);
+
+	++channel->events_out;
+	hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT,
+			      channel->sig_event.as_uint64);
+}
 
 /*
  * vmbus_setevent- Trigger an event notification on the specified

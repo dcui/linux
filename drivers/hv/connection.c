@@ -407,18 +407,3 @@ int vmbus_post_msg(void *buffer, size_t buflen, bool can_sleep)
 	return ret;
 }
 
-/*
- * vmbus_set_event - Send an event notification to the parent
- */
-void vmbus_set_event(struct vmbus_channel *channel)
-{
-	u32 child_relid = channel->offermsg.child_relid;
-
-	if (!channel->is_dedicated_interrupt)
-		vmbus_send_interrupt(child_relid);
-
-	++channel->events_out;
-	hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT,
-			      channel->sig_event.as_uint64);
-}
-EXPORT_SYMBOL_GPL(vmbus_set_event);
