@@ -254,6 +254,7 @@ ib_cm
 ib_core
 ib_iser
 ib_isert
+ib_uverbs
 ieee802154
 ieee802154_6lowpan
 ieee802154_socket
@@ -603,6 +604,7 @@ raw_diag
 rbd
 rbtree_test
 rdma_cm
+rdma_ucm
 reed_solomon
 rmd128
 rmd160

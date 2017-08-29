@@ -3065,6 +3065,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	__dev_getfirstbyhwtype
 EXPORT_SYMBOL vmlinux 0x00000000	__dev_kfree_skb_any
 EXPORT_SYMBOL vmlinux 0x00000000	__dev_kfree_skb_irq
 EXPORT_SYMBOL vmlinux 0x00000000	__dev_remove_pack
+EXPORT_SYMBOL vmlinux 0x00000000	__dev_set_mtu
 EXPORT_SYMBOL vmlinux 0x00000000	__devm_release_region
 EXPORT_SYMBOL vmlinux 0x00000000	__devm_request_region
 EXPORT_SYMBOL vmlinux 0x00000000	__do_once_done
@@ -4036,6 +4037,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	cpufreq_update_policy
 EXPORT_SYMBOL vmlinux 0x00000000	cpumask_any_but
 EXPORT_SYMBOL vmlinux 0x00000000	cpumask_local_spread
 EXPORT_SYMBOL vmlinux 0x00000000	cpumask_next_and
+EXPORT_SYMBOL vmlinux 0x00000000	cpumask_next_wrap
 EXPORT_SYMBOL vmlinux 0x00000000	crc16
 EXPORT_SYMBOL vmlinux 0x00000000	crc16_table
 EXPORT_SYMBOL vmlinux 0x00000000	crc32_be
@@ -5846,8 +5848,10 @@ EXPORT_SYMBOL vmlinux 0x00000000	num_registered_fb
 EXPORT_SYMBOL vmlinux 0x00000000	numa_node
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_bus_lock
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_bus_unlock
+EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_namespace_attach_btt
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_namespace_capacity
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_namespace_common_probe
+EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_namespace_detach_btt
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_namespace_disk_name
 EXPORT_SYMBOL vmlinux 0x00000000	nvdimm_revalidate_disk
 EXPORT_SYMBOL vmlinux 0x00000000	of_find_mipi_dsi_device_by_node
@@ -6389,6 +6393,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	register_sysctl_table
 EXPORT_SYMBOL vmlinux 0x00000000	register_sysrq_key
 EXPORT_SYMBOL vmlinux 0x00000000	register_tcf_proto_ops
 EXPORT_SYMBOL vmlinux 0x00000000	registered_fb
+EXPORT_SYMBOL vmlinux 0x00000000	release_dentry_name_snapshot
 EXPORT_SYMBOL vmlinux 0x00000000	release_evntsel_nmi
 EXPORT_SYMBOL vmlinux 0x00000000	release_firmware
 EXPORT_SYMBOL vmlinux 0x00000000	release_pages
@@ -7053,6 +7058,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	t10_pi_type1_ip
 EXPORT_SYMBOL vmlinux 0x00000000	t10_pi_type3_crc
 EXPORT_SYMBOL vmlinux 0x00000000	t10_pi_type3_ip
 EXPORT_SYMBOL vmlinux 0x00000000	tag_pages_for_writeback
+EXPORT_SYMBOL vmlinux 0x00000000	take_dentry_name_snapshot
 EXPORT_SYMBOL vmlinux 0x00000000	task_tgid_nr_ns
 EXPORT_SYMBOL vmlinux 0x00000000	tasklet_init
 EXPORT_SYMBOL vmlinux 0x00000000	tasklet_kill
@@ -10655,6 +10661,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	alarm_start_relative
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	alarm_try_to_cancel
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	alg_test
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	all_vm_events
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	alloc_dax_region
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	alloc_iova
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	alloc_iova_fast
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	alloc_page_buffers
@@ -11424,6 +11431,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	da9052_request_irq
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dax_iomap_fault
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dax_iomap_rw
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dax_pfn_mkwrite
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	dax_region_put
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dax_writeback_mapping_range
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dbs_update
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	dcookie_register
@@ -11582,6 +11590,7 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_clk_hw_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_clk_hw_unregister
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_clk_register
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_clk_unregister
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_create_dax_dev
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_devfreq_event_add_edev
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_devfreq_event_remove_edev
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	devm_free_pages
