@@ -901,6 +901,9 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	if (channel->device_obj) {
 		if (channel->chn_rescind_callback) {
 			channel->chn_rescind_callback(channel);
+
+			vmbus_device_unregister(channel->device_obj);
+
 			return;
 		}
 		/*
@@ -938,8 +941,13 @@ void vmbus_hvsock_device_unregister(struct vmbus_channel *channel)
 {
 	BUG_ON(!is_hvsock_channel(channel));
 
-	channel->rescind = true;
-	vmbus_device_unregister(channel->device_obj);
+	/*
+	 * The hv_sock protocol changed on the host: now Linux VM should only
+	 * destroy the channel after the host agrees (the host always sends a
+	 * RESCIND_OFFER message for this), i.e. now we call
+	 * vmbus_device_unregister() after the chn_rescind_callback in
+	 * vmbus_onoffer_rescind().
+	 */
 }
 EXPORT_SYMBOL_GPL(vmbus_hvsock_device_unregister);
 
