@@ -172,7 +172,6 @@ struct rndis_device {
 	struct list_head req_list;
 
 	struct work_struct mcast_work;
-	struct work_struct subchan_work;
 
 	bool link_state;        /* 0 - link up, 1 - link down */
 
@@ -205,6 +204,8 @@ int netvsc_recv_callback(struct net_device *net,
 			 const struct ndis_pkt_8021q_info *vlan);
 void netvsc_channel_cb(void *context);
 int netvsc_poll(struct napi_struct *napi, int budget);
+
+void rndis_set_subchannel(struct work_struct *w);
 bool rndis_filter_opened(const struct netvsc_device *nvdev);
 int rndis_filter_open(struct netvsc_device *nvdev);
 int rndis_filter_close(struct netvsc_device *nvdev);
@@ -638,12 +639,10 @@ struct nvsp_message {
 #define NETVSC_INVALID_INDEX			-1
 
 #define NETVSC_SEND_SECTION_SIZE		6144
-#define NETVSC_RECV_SECTION_SIZE   		1728
+#define NETVSC_RECV_SECTION_SIZE		1728
 
 #define NETVSC_RECEIVE_BUFFER_ID		0xcafe
 #define NETVSC_SEND_BUFFER_ID			0
-
-#define NETVSC_PACKET_SIZE                      4096
 
 #define VRSS_SEND_TAB_SIZE 16  /* must be power of 2 */
 #define VRSS_CHANNEL_MAX 64
@@ -785,6 +784,7 @@ struct netvsc_device {
 	u32 num_chn;
 
 	atomic_t open_chn;
+	struct work_struct subchan_work;
 	wait_queue_head_t subchan_open;
 
 	struct rndis_device *extension;

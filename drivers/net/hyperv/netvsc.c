@@ -29,7 +29,6 @@
 #include <linux/netdevice.h>
 #include <linux/if_ether.h>
 #include <linux/vmalloc.h>
-#include <linux/prefetch.h>
 #include <linux/rtnetlink.h>
 #include <linux/prefetch.h>
 
@@ -82,6 +81,7 @@ static struct netvsc_device *alloc_net_device(void)
 
 	init_completion(&net_device->channel_init_wait);
 	init_waitqueue_head(&net_device->subchan_open);
+	INIT_WORK(&net_device->subchan_work, rndis_set_subchannel);
 
 	return net_device;
 }
@@ -557,6 +557,8 @@ void netvsc_device_remove(struct hv_device *device)
 	struct netvsc_device *net_device
 		= rtnl_dereference(net_device_ctx->nvdev);
 	int i;
+
+	cancel_work_sync(&net_device->subchan_work);
 
 	netvsc_disconnect_vsp(device);
 
