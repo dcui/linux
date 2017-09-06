@@ -1053,8 +1053,8 @@ static void netvsc_sc_open(struct vmbus_channel *new_sc)
 	else
 		netif_napi_del(&nvchan->napi);
 
-	atomic_inc(&nvscdev->open_chn);
-	wake_up(&nvscdev->subchan_open);
+	if (atomic_inc_return(&nvscdev->open_chn) == nvscdev->num_chn)
+		wake_up(&nvscdev->subchan_open);
 }
 
 /*
