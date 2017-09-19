@@ -7176,6 +7176,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	to_nd_btt
 EXPORT_SYMBOL vmlinux 0x00000000	to_nd_dax
 EXPORT_SYMBOL vmlinux 0x00000000	to_nd_pfn
 EXPORT_SYMBOL vmlinux 0x00000000	to_ndd
+EXPORT_SYMBOL vmlinux 0x00000000	to_nfit_uuid
 EXPORT_SYMBOL vmlinux 0x00000000	topology_phys_to_logical_pkg
 EXPORT_SYMBOL vmlinux 0x00000000	totalram_pages
 EXPORT_SYMBOL vmlinux 0x00000000	touch_atime
@@ -10303,7 +10304,9 @@ EXPORT_SYMBOL_GPL virt/lib/irqbypass 0x00000000	irq_bypass_unregister_consumer
 EXPORT_SYMBOL_GPL virt/lib/irqbypass 0x00000000	irq_bypass_unregister_producer
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	PageHuge
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__ablkcipher_walk_complete
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__acpi_nfit_notify
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__acpi_node_get_property_reference
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	__acpi_nvdimm_notify
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__add_pages
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__alloc_percpu
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	__alloc_percpu_gfp
@@ -10593,6 +10596,9 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_lpat_get_conversion_table
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_lpat_raw_to_temp
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_lpat_temp_to_raw
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_match_device
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_nfit_ctl
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_nfit_desc_init
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_nfit_init
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_os_get_iomem
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_os_map_iomem
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	acpi_os_map_memory
