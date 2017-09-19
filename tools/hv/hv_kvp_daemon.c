@@ -95,7 +95,7 @@ static struct utsname uts_buf;
 #define KVP_CONFIG_LOC	"/var/lib/hyperv"
 
 #ifndef KVP_SCRIPTS_PATH
-#define KVP_SCRIPTS_PATH "/usr/libexec/hypervkvpd/"
+#define KVP_SCRIPTS_PATH "/usr/sbin/"
 #endif
 
 #define KVP_NET_DIR "/sys/class/net/"
