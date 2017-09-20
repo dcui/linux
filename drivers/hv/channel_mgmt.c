@@ -901,6 +901,8 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	if (channel->device_obj) {
 		if (channel->chn_rescind_callback) {
 			channel->chn_rescind_callback(channel);
+			channel->rescind_done = true;
+
 			return;
 		}
 		/*
@@ -938,7 +940,9 @@ void vmbus_hvsock_device_unregister(struct vmbus_channel *channel)
 {
 	BUG_ON(!is_hvsock_channel(channel));
 
-	channel->rescind = true;
+	while (!READ_ONCE(channel->probe_done) || !READ_ONCE(channel->rescind_done))
+		msleep(1);
+
 	vmbus_device_unregister(channel->device_obj);
 }
 EXPORT_SYMBOL_GPL(vmbus_hvsock_device_unregister);

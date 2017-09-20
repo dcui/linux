@@ -867,6 +867,7 @@ struct vmbus_channel {
 	enum hv_numa_policy affinity_policy;
 
 	bool probe_done;
+	bool rescind_done;
 
 };
 
