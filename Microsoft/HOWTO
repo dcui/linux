@@ -94,6 +94,15 @@ either with 'git am' or use patch and commit manually.
   # Apply one or more patches (repeat until done)
   $ git am 0001-*.patch
   
+One important step is that the kernel config options often change
+between versions. Therefore you should update the archived
+kernel config
+  $ cd <linux-msft directory>
+  $ cp Microsoft/config-azure .config
+  $ make oldconfig
+  $ cp .config Microsoft/config-azure
+  $ git commit Microsoft/config-azure
+
 Since this requires lots of patches, make sure and do build
 and test before pushing the result for others to use.
   
