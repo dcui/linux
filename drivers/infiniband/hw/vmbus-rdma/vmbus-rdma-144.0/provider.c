@@ -331,7 +331,7 @@ static void debug_check(const char *func, int line)
 }
 
 static struct ib_ah *hvnd_ah_create(struct ib_pd *pd,
-				    struct ib_ah_attr *ah_attr,
+				    struct rdma_ah_attr *ah_attr,
 				    struct ib_udata *udata)
 {
 	debug_check(__func__, __LINE__);
