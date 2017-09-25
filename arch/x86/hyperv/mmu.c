@@ -71,15 +71,15 @@ static inline int cpumask_to_vp_set(struct hv_flush_pcpu_ex *flush,
 }
 
 static void hyperv_flush_tlb_others(const struct cpumask *cpus,
-				    struct mm_struct *mm, unsigned long start,
-				    unsigned long end)
+				    const struct flush_tlb_info *info)
 {
 	struct hv_flush_pcpu *flush;
 	unsigned long cur, flags;
 	u64 status = -1ULL;
 	int cpu, vcpu, gva_n, max_gvas;
 
-	trace_hyperv_mmu_flush_tlb_others(cpus, mm, start, end);
+	trace_hyperv_mmu_flush_tlb_others(cpus, info->mm, info->start,
+					  info->end);
 
 	if (!pcpu_flush || !hv_hypercall_pg)
 		goto do_native;
@@ -91,8 +91,8 @@ static void hyperv_flush_tlb_others(const struct cpumask *cpus,
 
 	flush = this_cpu_ptr(pcpu_flush);
 
-	if (mm) {
-		flush->address_space = virt_to_phys(mm->pgd);
+	if (info->mm) {
+		flush->address_space = virt_to_phys(info->mm->pgd);
 		flush->flags = 0;
 	} else {
 		flush->address_space = 0;
@@ -118,14 +118,15 @@ static void hyperv_flush_tlb_others(const struct cpumask *cpus,
 	 */
 	max_gvas = (PAGE_SIZE - sizeof(*flush)) / 8;
 
-	if (end == TLB_FLUSH_ALL ||
-	    (end && ((end - start)/(PAGE_SIZE*PAGE_SIZE)) > max_gvas)) {
-		if (end == TLB_FLUSH_ALL)
+	if (info->end == TLB_FLUSH_ALL ||
+	    (info->end &&
+	     ((info->end - info->start)/(PAGE_SIZE*PAGE_SIZE)) > max_gvas)) {
+		if (info->end == TLB_FLUSH_ALL)
 			flush->flags |= HV_FLUSH_NON_GLOBAL_MAPPINGS_ONLY;
 		status = hv_do_hypercall(HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE,
 					 flush, NULL);
 	} else {
-		cur = start;
+		cur = info->start;
 		gva_n = 0;
 		do {
 			flush->gva_list[gva_n] = cur & PAGE_MASK;
@@ -133,16 +134,16 @@ static void hyperv_flush_tlb_others(const struct cpumask *cpus,
 			 * Lower 12 bits encode the number of additional
 			 * pages to flush (in addition to the 'cur' page).
 			 */
-			if (end >= cur + PAGE_SIZE * PAGE_SIZE)
+			if (info->end >= cur + PAGE_SIZE * PAGE_SIZE)
 				flush->gva_list[gva_n] |= ~PAGE_MASK;
-			else if (end > cur)
+			else if (info->end > cur)
 				flush->gva_list[gva_n] |=
-					(end - cur - 1) >> PAGE_SHIFT;
+					(info->end - cur - 1) >> PAGE_SHIFT;
 
 			cur += PAGE_SIZE * PAGE_SIZE;
 			++gva_n;
 
-		} while (cur < end);
+		} while (cur < info->end);
 
 		status = hv_do_rep_hypercall(HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST,
 					     gva_n, 0, flush, NULL);
@@ -154,20 +155,19 @@ static void hyperv_flush_tlb_others(const struct cpumask *cpus,
 	if (!(status & 0xffff))
 		return;
 do_native:
-	native_flush_tlb_others(cpus, mm, start, end);
+	native_flush_tlb_others(cpus, info);
 }
 
 static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
-				       struct mm_struct *mm,
-				       unsigned long start,
-				       unsigned long end)
+				       const struct flush_tlb_info *info)
 {
 	struct hv_flush_pcpu_ex *flush;
 	unsigned long cur, flags;
 	u64 status = -1ULL;
 	int nr_bank = 0, max_gvas, gva_n;
 
-	trace_hyperv_mmu_flush_tlb_others(cpus, mm, start, end);
+	trace_hyperv_mmu_flush_tlb_others(cpus, info->mm, info->start,
+					  info->end);
 
 	if (!pcpu_flush_ex || !hv_hypercall_pg)
 		goto do_native;
@@ -179,8 +179,8 @@ static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
 
 	flush = this_cpu_ptr(pcpu_flush_ex);
 
-	if (mm) {
-		flush->address_space = virt_to_phys(mm->pgd);
+	if (info->mm) {
+		flush->address_space = virt_to_phys(info->mm->pgd);
 		flush->flags = 0;
 	} else {
 		flush->address_space = 0;
@@ -203,16 +203,17 @@ static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
 	 */
 	max_gvas = (PAGE_SIZE - sizeof(*flush) - nr_bank*8) / 8;
 
-	if (end == TLB_FLUSH_ALL ||
-	    (end && ((end - start)/(PAGE_SIZE*PAGE_SIZE)) > max_gvas)) {
-		if (end == TLB_FLUSH_ALL)
+	if (info->end == TLB_FLUSH_ALL ||
+	    (info->end &&
+	     ((info->end - info->start)/(PAGE_SIZE*PAGE_SIZE)) > max_gvas)) {
+		if (info->end == TLB_FLUSH_ALL)
 			flush->flags |= HV_FLUSH_NON_GLOBAL_MAPPINGS_ONLY;
 
 		status = hv_do_rep_hypercall(
 			HVCALL_FLUSH_VIRTUAL_ADDRESS_SPACE_EX,
 			0, nr_bank + 2, flush, NULL);
 	} else {
-		cur = start;
+		cur = info->start;
 		gva_n = nr_bank;
 		do {
 			flush->gva_list[gva_n] = cur & PAGE_MASK;
@@ -220,16 +221,16 @@ static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
 			 * Lower 12 bits encode the number of additional
 			 * pages to flush (in addition to the 'cur' page).
 			 */
-			if (end >= cur + PAGE_SIZE * PAGE_SIZE)
+			if (info->end >= cur + PAGE_SIZE * PAGE_SIZE)
 				flush->gva_list[gva_n] |= ~PAGE_MASK;
-			else if (end > cur)
+			else if (info->end > cur)
 				flush->gva_list[gva_n] |=
-					(end - cur - 1) >> PAGE_SHIFT;
+					(info->end - cur - 1) >> PAGE_SHIFT;
 
 			cur += PAGE_SIZE * PAGE_SIZE;
 			++gva_n;
 
-		} while (cur < end);
+		} while (cur < info->end);
 
 		status = hv_do_rep_hypercall(
 			HVCALL_FLUSH_VIRTUAL_ADDRESS_LIST_EX,
@@ -241,7 +242,7 @@ static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
 	if (!(status & 0xffff))
 		return;
 do_native:
-	native_flush_tlb_others(cpus, mm, start, end);
+	native_flush_tlb_others(cpus, info);
 }
 
 void hyperv_setup_mmu_ops(void)
