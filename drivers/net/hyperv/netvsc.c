@@ -490,7 +490,7 @@ static int netvsc_connect_vsp(struct hv_device *device,
 	u32 max_recv_buf_size, ndis_version;
 	int i, ret;
 
-	net_device = get_outbound_net_device(device);
+	net_device = hv_device_to_netvsc_device(device);
 	if (!net_device)
 		return -ENODEV;
 
