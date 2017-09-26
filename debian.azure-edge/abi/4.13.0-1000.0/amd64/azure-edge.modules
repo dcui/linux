@@ -117,7 +117,6 @@ cls_rsvp6
 cls_tcindex
 cls_u32
 cmac
-configfs
 cordic
 cpuid
 crc-itu-t
@@ -144,12 +143,10 @@ defxx
 des3_ede-x86_64
 des_generic
 devlink
-dh_generic
 dlm
 dm-bio-prison
 dm-bufio
 dm-cache
-dm-cache-cleaner
 dm-cache-smq
 dm-crypt
 dm-delay
@@ -553,11 +550,9 @@ notifier-error-inject
 nvme-core
 nvme-fabrics
 nvme-fc
-nvmem_core
 nvmet
 nvmet-fc
 nvram
-objlayoutdriver
 openvswitch
 oprofile
 osd

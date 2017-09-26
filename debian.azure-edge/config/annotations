@@ -10179,7 +10179,6 @@ CONFIG_PPC_BOOK3E_64                            policy<{'ppc64el': 'n'}>
 
 # Menu: Processor type and features
 CONFIG_SPARSEMEM_VMEMMAP                        policy<{'amd64': 'y', 'arm64': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_MOVABLE_NODE                             policy<{'amd64': 'y', 'arm64': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_BALLOON_COMPACTION                       policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_COMPACTION                               policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_MIGRATION                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
@@ -10214,7 +10213,6 @@ CONFIG_PARAVIRT                                 policy<{'amd64': 'y', 'arm64': '
 CONFIG_PARAVIRT_TIME_ACCOUNTING                 policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n'}>
 CONFIG_XEN                                      policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'n', 'i386': 'y'}>
 #
-CONFIG_MOVABLE_NODE                             mark<ENFORCED> note<LP:1667081>
 CONFIG_DEFAULT_MMAP_MIN_ADDR                    mark<ENFORCED> note<LP:1418140 LP:1531327>
 CONFIG_TRANSPARENT_HUGEPAGE                     flag<REVIEW>
 CONFIG_MEM_SOFT_DIRTY                           flag<REVIEW>
