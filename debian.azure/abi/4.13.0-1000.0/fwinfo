@@ -12,5 +12,5 @@ firmware:       qlogic/1040.bin
 firmware:       qlogic/12160.bin
 firmware:       qlogic/1280.bin
 firmware:       tigon/tg3.bin
-firmware:       tigon/tg3_tso5.bin
 firmware:       tigon/tg3_tso.bin
+firmware:       tigon/tg3_tso5.bin
