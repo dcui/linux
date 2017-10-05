@@ -714,11 +714,12 @@ static void netvsc_copy_to_send_buf(struct netvsc_device *net_device,
 		     + pend_size;
 	int i;
 	u32 padding = 0;
-	u32 remain = packet->total_data_buflen % net_device->pkt_align;
 	u32 page_count = packet->cp_partial ? packet->rmsg_pgcnt :
 		packet->page_buf_cnt;
+	u32 remain;
 
 	/* Add padding */
+	remain = packet->total_data_buflen & (net_device->pkt_align - 1);
 	if (skb->xmit_more && remain && !packet->cp_partial) {
 		padding = net_device->pkt_align - remain;
 		rndis_msg->msg_len += padding;
