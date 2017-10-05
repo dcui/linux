@@ -206,6 +206,8 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 	list_del(&open_info->msglistentry);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
+	trace_vmbus_open(open_msg, ret);
+
 	if (ret != 0) {
 		err = ret;
 		goto error_free_gpadl;
