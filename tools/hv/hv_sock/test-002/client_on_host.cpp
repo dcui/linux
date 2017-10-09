@@ -4,26 +4,11 @@
 #include <stdint.h>
 #include <winsock2.h>
 #include <ws2def.h>
+#include <hvsocket.h>
 #include <initguid.h>
 #include <rpc.h> /* for UuidFromStringA() */
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "rpcrt4.lib")
-
-#ifndef AF_HYPERV
-#define AF_HYPERV 34
-#define HV_PROTOCOL_RAW 1
-
-typedef struct _SOCKADDR_HV
-{
-	ADDRESS_FAMILY Family;
-	USHORT Reserved;
-	GUID VmId;
-	GUID ServiceId;
-}SOCKADDR_HV, *PSOCKADDR_HV;
-
-DEFINE_GUID(HV_GUID_SELF, 0x00000000, 0x0000, 0x0000,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
-#endif /* AF_HYPERV */
 
 #define VMADDR_PORT_ANY 0xFFFFFFFF
 

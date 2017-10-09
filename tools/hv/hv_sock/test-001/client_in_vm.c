@@ -12,7 +12,7 @@ int main()
 	struct sockaddr_vm sa = {
 		.svm_family = AF_VSOCK,
 		.svm_reserved1 = 0,
-		.svm_cid = VMADDR_CID_ANY,
+		.svm_cid = VMADDR_CID_HOST,
 	};
 
 	/* Connecting to the host's 00000808-facb-11e6-bd58-64006a7986d3 */
