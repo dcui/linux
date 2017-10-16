@@ -35,6 +35,7 @@
 #include <asm/sync_bitops.h>
 
 #include "hyperv_net.h"
+#include "netvsc_trace.h"
 
 /*
  * Switch the data path from the synthetic interface to the VF
@@ -624,6 +625,8 @@ static void netvsc_send_tx_complete(struct netvsc_device *net_device,
 		u32 send_index = packet->send_buf_index;
 		struct netvsc_stats *tx_stats;
 
+		trace_netvsc_send_complete(ndev, packet, skb);
+
 		if (send_index != NETVSC_INVALID_INDEX)
 			netvsc_free_send_slot(net_device, send_index);
 		q_idx = packet->q_idx;
@@ -741,7 +744,7 @@ static u32 netvsc_copy_to_send_buf(struct netvsc_device *net_device,
 	return msg_size;
 }
 
-static inline int netvsc_send_pkt(
+static int netvsc_send_pkt(
 	struct hv_device *device,
 	struct hv_netvsc_packet *packet,
 	struct netvsc_device *net_device,
@@ -772,6 +775,8 @@ static inline int netvsc_send_pkt(
 		rpkt->send_buf_section_size = 0;
 	else
 		rpkt->send_buf_section_size = packet->total_data_buflen;
+
+	trace_netvsc_send_packet(ndev, packet, skb);
 
 	req_id = (ulong)skb;
 
@@ -831,12 +836,13 @@ static inline void move_pkt_msd(struct hv_netvsc_packet **msd_send,
 }
 
 /* RCU already held by caller */
-int netvsc_send(struct net_device_context *ndev_ctx,
+int netvsc_send(struct net_device *ndev,
 		struct hv_netvsc_packet *packet,
 		struct rndis_message *rndis_msg,
 		struct hv_page_buffer *pb,
 		struct sk_buff *skb)
 {
+	struct net_device_context *ndev_ctx = netdev_priv(ndev);
 	struct netvsc_device *net_device
 		= rcu_dereference_bh(ndev_ctx->nvdev);
 	struct hv_device *device = ndev_ctx->device_ctx;
@@ -864,6 +870,7 @@ int netvsc_send(struct net_device_context *ndev_ctx,
 	nvchan = &net_device->chan_table[packet->q_idx];
 	packet->send_buf_index = NETVSC_INVALID_INDEX;
 	packet->cp_partial = false;
+	packet->sent_at = ktime_get();
 
 	/* Send control message directly without accessing msd (Multi-Send
 	 * Data) field which may be changed during data packet processing.
@@ -980,6 +987,7 @@ static int send_recv_completions(struct net_device *ndev,
 		msg.status = rcd->status;
 		ret = vmbus_sendpacket(nvchan->channel, &msg, sizeof(msg),
 				       rcd->tid, VM_PKT_COMP, 0);
+
 		if (unlikely(ret)) {
 			struct net_device_context *ndev_ctx = netdev_priv(ndev);
 
@@ -1087,6 +1095,8 @@ static int netvsc_receive(struct net_device *ndev,
 		/* Pass it to the upper layer */
 		status = rndis_filter_receive(ndev, net_device, device,
 					      channel, data, buflen);
+
+		trace_netvsc_receive(ndev, q_idx, buflen);
 	}
 
 	enq_receive_complete(ndev, net_device, q_idx,
