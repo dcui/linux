@@ -6,10 +6,6 @@
 #include <asm/tlbflush.h>
 #include <asm/msr.h>
 #include <asm/fpu/api.h>
-#include <asm/trace/hyperv.h>
-
-#define CREATE_TRACE_POINTS
-DEFINE_TRACE(hyperv_mmu_flush_tlb_others);
 
 /* HvFlushVirtualAddressSpace, HvFlushVirtualAddressList hypercalls */
 struct hv_flush_pcpu {
@@ -78,8 +74,6 @@ static void hyperv_flush_tlb_others(const struct cpumask *cpus,
 	unsigned long cur, flags;
 	u64 status = -1ULL;
 	int cpu, vcpu, gva_n, max_gvas;
-
-	trace_hyperv_mmu_flush_tlb_others(cpus, mm, start, end);
 
 	if (!pcpu_flush || !hv_hypercall_pg)
 		goto do_native;
@@ -166,8 +160,6 @@ static void hyperv_flush_tlb_others_ex(const struct cpumask *cpus,
 	unsigned long cur, flags;
 	u64 status = -1ULL;
 	int nr_bank = 0, max_gvas, gva_n;
-
-	trace_hyperv_mmu_flush_tlb_others(cpus, mm, start, end);
 
 	if (!pcpu_flush_ex || !hv_hypercall_pg)
 		goto do_native;
