@@ -122,6 +122,7 @@ cpuid
 crc-itu-t
 crc32-pclmul
 crc32_generic
+crc4
 crc7
 crc8
 crct10dif-pclmul
@@ -152,6 +153,7 @@ dm-crypt
 dm-delay
 dm-era
 dm-flakey
+dm-integrity
 dm-log
 dm-log-userspace
 dm-log-writes
@@ -168,6 +170,7 @@ dm-switch
 dm-thin-pool
 dm-verity
 dm-zero
+dm-zoned
 dn_rtmsg
 dptf_power
 drm
@@ -406,6 +409,7 @@ mip6
 mlx4_core
 mlx4_en
 mlx5_core
+mlxfw
 mlxsw_core
 mlxsw_i2c
 mlxsw_minimal
