@@ -770,8 +770,7 @@ static void vmbus_device_release(struct device *device)
 	struct vmbus_channel *channel = hv_dev->channel;
 
 	mutex_lock(&vmbus_connection.channel_mutex);
-	hv_process_channel_removal(channel,
-				   channel->offermsg.child_relid);
+	hv_process_channel_removal(channel->offermsg.child_relid);
 	mutex_unlock(&vmbus_connection.channel_mutex);
 	kfree(hv_dev);
 
@@ -943,6 +942,9 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
 				continue;
 
 			++channel->interrupts_in;
+
+			if (channel->rescind)
+				continue;
 
 			switch (channel->callback_mode) {
 			case HV_CALL_ISR:

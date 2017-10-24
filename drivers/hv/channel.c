@@ -191,6 +191,11 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 		      &vmbus_connection.chn_msg_list);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
+	if (newchannel->rescind) {
+		err = -ENODEV;
+		goto error_free_gpadl;
+	}
+
 	ret = vmbus_post_msg(open_msg,
 			     sizeof(struct vmbus_channel_open_channel), true);
 
@@ -433,6 +438,11 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
 
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
+	if (channel->rescind) {
+		ret = -ENODEV;
+		goto cleanup;
+	}
+
 	ret = vmbus_post_msg(gpadlmsg, msginfo->msgsize -
 			     sizeof(*msginfo), true);
 	if (ret != 0)
@@ -506,6 +516,10 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
 	list_add_tail(&info->msglistentry,
 		      &vmbus_connection.chn_msg_list);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
+
+	if (channel->rescind)
+		goto post_msg_err;
+
 	ret = vmbus_post_msg(msg, sizeof(struct vmbus_channel_gpadl_teardown),
 			     true);
 
@@ -638,6 +652,7 @@ void vmbus_close(struct vmbus_channel *channel)
 		 */
 		return;
 	}
+	mutex_lock(&vmbus_connection.channel_mutex);
 	/*
 	 * Close all the sub-channels first and then close the
 	 * primary channel.
@@ -646,16 +661,15 @@ void vmbus_close(struct vmbus_channel *channel)
 		cur_channel = list_entry(cur, struct vmbus_channel, sc_list);
 		vmbus_close_internal(cur_channel);
 		if (cur_channel->rescind) {
-			mutex_lock(&vmbus_connection.channel_mutex);
-			hv_process_channel_removal(cur_channel,
+			hv_process_channel_removal(
 					   cur_channel->offermsg.child_relid);
-			mutex_unlock(&vmbus_connection.channel_mutex);
 		}
 	}
 	/*
 	 * Now close the primary.
 	 */
 	vmbus_close_internal(channel);
+	mutex_unlock(&vmbus_connection.channel_mutex);
 }
 EXPORT_SYMBOL_GPL(vmbus_close);
 
