@@ -379,6 +379,10 @@ static int rndis_filter_receive_data(struct net_device *ndev,
 		return NVSP_STAT_FAIL;
 	}
 
+	/* silently drop frame if not opened */
+	if (unlikely(dev->state != RNDIS_DEV_DATAINITIALIZED))
+		return 0;
+
 	vlan = rndis_get_ppi(rndis_pkt, IEEE_8021Q_INFO);
 
 	/*

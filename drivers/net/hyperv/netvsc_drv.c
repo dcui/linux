@@ -752,9 +752,6 @@ int netvsc_recv_callback(struct net_device *net,
 	struct sk_buff *skb;
 	struct netvsc_stats *rx_stats;
 
-	if (net->reg_state != NETREG_REGISTERED)
-		return NVSP_STAT_FAIL;
-
 	/* Allocate a skb - TODO direct I/O to pages? */
 	skb = netvsc_alloc_recv_skb(net, &nvchan->napi,
 				    csum_info, vlan, data, len);
