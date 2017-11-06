@@ -227,10 +227,8 @@ fou
 fou6
 fscache
 garp
-gcm
 geneve
 ghash-clmulni-intel
-ghash-generic
 glue_helper
 grace
 gre
