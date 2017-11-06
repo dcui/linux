@@ -550,6 +550,7 @@ nhc_mobility
 nhc_routing
 nhc_udp
 nls_iso8859-1
+nls_utf8
 notifier-error-inject
 nvme-core
 nvme-fabrics

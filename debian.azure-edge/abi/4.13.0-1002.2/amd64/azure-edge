@@ -3382,6 +3382,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	__tracepoint_rdpmc
 EXPORT_SYMBOL vmlinux 0x00000000	__tracepoint_read_msr
 EXPORT_SYMBOL vmlinux 0x00000000	__tracepoint_write_msr
 EXPORT_SYMBOL vmlinux 0x00000000	__tty_alloc_driver
+EXPORT_SYMBOL vmlinux 0x00000000	__tty_insert_flip_char
 EXPORT_SYMBOL vmlinux 0x00000000	__udelay
 EXPORT_SYMBOL vmlinux 0x00000000	__udp_disconnect
 EXPORT_SYMBOL vmlinux 0x00000000	__unregister_chrdev
