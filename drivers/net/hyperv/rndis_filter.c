@@ -951,11 +951,20 @@ static void rndis_filter_halt_device(struct rndis_device *dev)
 	struct net_device_context *net_device_ctx = netdev_priv(dev->ndev);
 	struct netvsc_device *nvdev = rtnl_dereference(net_device_ctx->nvdev);
 
+	/* tell bottom half that deice is being closed */
+	nvdev->destroy = true;
+
+	/* Force flag to be ordered before waiting */
+	wmb();
+
+	/* Wait for all send completions */
+	wait_event(nvdev->wait_drain, netvsc_device_idle(nvdev));
+
 	/* Attempt to do a rndis device halt */
 	request = get_rndis_request(dev, RNDIS_MSG_HALT,
 				RNDIS_MESSAGE_SIZE(struct rndis_halt_request));
 	if (!request)
-		goto cleanup;
+		return;
 
 	/* Setup the rndis set */
 	halt = &request->request_msg.msg.halt_req;
@@ -966,17 +975,7 @@ static void rndis_filter_halt_device(struct rndis_device *dev)
 
 	dev->state = RNDIS_DEV_UNINITIALIZED;
 
-cleanup:
-	nvdev->destroy = true;
-
-	/* Force flag to be ordered before waiting */
-	wmb();
-
-	/* Wait for all send completions */
-	wait_event(nvdev->wait_drain, netvsc_device_idle(nvdev));
-
-	if (request)
-		put_rndis_request(dev, request);
+	put_rndis_request(dev, request);
 }
 
 static int rndis_filter_open_device(struct rndis_device *dev)

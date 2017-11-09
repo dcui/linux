@@ -829,8 +829,10 @@ static int netvsc_set_channels(struct net_device *net,
 
 	orig = nvdev->num_chn;
 	was_opened = rndis_filter_opened(nvdev);
-	if (was_opened)
+	if (was_opened) {
+		netif_tx_disable(net);
 		rndis_filter_close(nvdev);
+	}
 
 	memset(&device_info, 0, sizeof(device_info));
 	device_info.num_chn = count;
@@ -853,8 +855,13 @@ static int netvsc_set_channels(struct net_device *net,
 		}
 	}
 
-	if (was_opened)
-		rndis_filter_open(nvdev);
+	if (was_opened) {
+		ret = rndis_filter_open(nvdev);
+		if (ret)
+			netdev_err(net, "reopening device failed: %d\n", ret);
+		else
+			netif_tx_start_all_queues(net);
+	}
 
 	/* We may have missed link change notifications */
 	net_device_ctx->last_reconfig = 0;
@@ -943,8 +950,10 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 
 	netif_device_detach(ndev);
 	was_opened = rndis_filter_opened(nvdev);
-	if (was_opened)
+	if (was_opened) {
+		netif_tx_disable(ndev);
 		rndis_filter_close(nvdev);
+	}
 
 	memset(&device_info, 0, sizeof(device_info));
 	device_info.ring_size = ring_size;
@@ -974,8 +983,13 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 		}
 	}
 
-	if (was_opened)
-		rndis_filter_open(nvdev);
+	if (was_opened) {
+		ret = rndis_filter_open(nvdev);
+		if (ret)
+			netdev_err(ndev, "reopening device failed: %d\n", ret);
+		else
+			netif_tx_start_all_queues(ndev);
+	}
 
 	netif_device_attach(ndev);
 
@@ -1516,8 +1530,10 @@ static int netvsc_set_ringparam(struct net_device *ndev,
 
 	netif_device_detach(ndev);
 	was_opened = rndis_filter_opened(nvdev);
-	if (was_opened)
+	if (was_opened) {
+		netif_tx_disable(ndev);
 		rndis_filter_close(nvdev);
+	}
 
 	rndis_filter_device_remove(hdev, nvdev);
 
@@ -1535,8 +1551,14 @@ static int netvsc_set_ringparam(struct net_device *ndev,
 		}
 	}
 
-	if (was_opened)
-		rndis_filter_open(nvdev);
+	if (was_opened) {
+		ret = rndis_filter_open(nvdev);
+		if (ret)
+			netdev_err(ndev, "reopening device failed: %d\n", ret);
+		else
+			netif_tx_start_all_queues(ndev);
+	}
+
 	netif_device_attach(ndev);
 
 	/* We may have missed link change notifications */
