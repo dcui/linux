@@ -5591,6 +5591,7 @@ EXPORT_SYMBOL vmlinux 0x00000000	md_done_sync
 EXPORT_SYMBOL vmlinux 0x00000000	md_error
 EXPORT_SYMBOL vmlinux 0x00000000	md_finish_reshape
 EXPORT_SYMBOL vmlinux 0x00000000	md_flush_request
+EXPORT_SYMBOL vmlinux 0x00000000	md_handle_request
 EXPORT_SYMBOL vmlinux 0x00000000	md_integrity_add_rdev
 EXPORT_SYMBOL vmlinux 0x00000000	md_integrity_register
 EXPORT_SYMBOL vmlinux 0x00000000	md_reap_sync_thread
