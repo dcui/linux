@@ -589,14 +589,11 @@ void netvsc_device_remove(struct hv_device *device)
  * Get the percentage of available bytes to write in the ring.
  * The return value is in range from 0 to 100.
  */
-static inline u32 hv_ringbuf_avail_percent(
-		struct hv_ring_buffer_info *ring_info)
+static inline u32 hv_ringbuf_avail_percent(const struct hv_ring_buffer_info *rbi)
 {
-	u32 avail_read, avail_write;
+	u32 avail_write = hv_get_bytes_to_write(rbi);
 
-	hv_get_ringbuffer_availbytes(ring_info, &avail_read, &avail_write);
-
-	return avail_write * 100 / ring_info->ring_datasize;
+	return (avail_write * 100)/ rbi->ring_datasize;
 }
 
 static inline void netvsc_free_send_slot(struct netvsc_device *net_device,
