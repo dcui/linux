@@ -198,7 +198,8 @@ int netvsc_send(struct net_device *ndev,
 		struct hv_page_buffer *page_buffer,
 		struct sk_buff *skb);
 void netvsc_linkstatus_callback(struct net_device *net,
-				struct rndis_message *resp);
+				struct rndis_device *rdev,
+				const struct rndis_message *resp);
 int netvsc_recv_callback(struct net_device *net,
 			 struct netvsc_device *nvdev,
 			 struct vmbus_channel *channel,
@@ -723,14 +724,6 @@ struct net_device_context {
 	struct hv_device *device_ctx;
 	/* netvsc_device */
 	struct netvsc_device __rcu *nvdev;
-	/* reconfigure work */
-	struct delayed_work dwork;
-	/* last reconfig time */
-	unsigned long last_reconfig;
-	/* reconfig events */
-	struct list_head reconfig_events;
-	/* list protection */
-	spinlock_t lock;
 
 	u32 msg_enable; /* debug level */
 
