@@ -215,43 +215,44 @@ static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
 #endif /* !x86_64 */
 }
 
+#define HV_HYPERCALL_RESULT_MASK	GENMASK_ULL(15, 0)
+#define HV_HYPERCALL_FAST_BIT		BIT(16)
+#define HV_HYPERCALL_VARHEAD_OFFSET	17
+#define HV_HYPERCALL_REP_COMP_OFFSET	32
+#define HV_HYPERCALL_REP_COMP_MASK	GENMASK_ULL(43, 32)
+#define HV_HYPERCALL_REP_START_OFFSET	48
+#define HV_HYPERCALL_REP_START_MASK	GENMASK_ULL(59, 48)
+
 /* Fast hypercall with 8 bytes of input and no output */
 static inline u64 hv_do_fast_hypercall8(u16 code, u64 input1)
 {
-	union hv_hypercall_input control = {0};
+	u64 hv_status, control = (u64)code | HV_HYPERCALL_FAST_BIT;
+	register void *__sp asm(_ASM_SP);
 
-	control.code = code;
-	control.fast = 1;
 #ifdef CONFIG_X86_64
 	{
-		u64 hv_status;
-
-		__asm__ __volatile__("call *%3"
-				     : "=a" (hv_status),
-				       "+c" (control.as_uint64), "+d" (input1)
+		__asm__ __volatile__("call *%4"
+				     : "=a" (hv_status), "+r" (__sp),
+				       "+c" (control), "+d" (input1)
 				     : "m" (hv_hypercall_pg)
 				     : "cc", "r8", "r9", "r10", "r11");
-		return hv_status;
 	}
 #else
 	{
-		u32 hv_status_hi, hv_status_lo;
-		u32 input1_hi = (u32)(input1 >> 32);
-		u32 input1_lo = (u32)input1;
+		u32 input1_hi = upper_32_bits(input1);
+		u32 input1_lo = lower_32_bits(input1);
 
-		__asm__ __volatile__ ("call *%6"
-				      : "=d"(hv_status_hi),
-					"=a"(hv_status_lo),
-					"+c"(input1_lo)
-				      :	"d" (control.as_uint32_hi),
-					"a" (control.as_uint32_lo),
+		__asm__ __volatile__ ("call *%5"
+				      : "=A"(hv_status),
+					"+c"(input1_lo),
+					"+r"(__sp)
+				      :	"A" (control),
 					"b" (input1_hi),
 					"m" (hv_hypercall_pg)
 				      : "cc", "edi", "esi");
-
-		return hv_status_lo | ((u64)hv_status_hi << 32);
 	}
 #endif
+		return hv_status;
 }
 
 /*
