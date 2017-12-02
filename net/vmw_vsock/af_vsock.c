@@ -1544,7 +1544,7 @@ static int vsock_stream_sendmsg(struct socket *sock, struct msghdr *msg,
 	struct sock *sk;
 	struct vsock_sock *vsk;
 	ssize_t total_written;
-	long timeout, timeout_once;
+	long timeout;
 	int err;
 	struct vsock_transport_send_notify_data send_data;
 	DEFINE_WAIT_FUNC(wait, woken_wake_function);
@@ -1613,7 +1613,7 @@ static int vsock_stream_sendmsg(struct socket *sock, struct msghdr *msg,
 			}
 
 			release_sock(sk);
-			timeout_once = schedule_timeout(1);
+			timeout = wait_woken(&wait, TASK_INTERRUPTIBLE, timeout);
 			lock_sock(sk);
 			if (signal_pending(current)) {
 				err = sock_intr_errno(timeout);
@@ -1623,9 +1623,6 @@ static int vsock_stream_sendmsg(struct socket *sock, struct msghdr *msg,
 				err = -EAGAIN;
 				remove_wait_queue(sk_sleep(sk), &wait);
 				goto out_err;
-			} else {
-				if (timeout_once == 0)
-					timeout--;
 			}
 		}
 		remove_wait_queue(sk_sleep(sk), &wait);
