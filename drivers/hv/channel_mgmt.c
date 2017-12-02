@@ -564,7 +564,6 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 	return;
 
 err_deq_chan:
-	atomic_dec(&vmbus_connection.offer_in_progress);
 	mutex_lock(&vmbus_connection.channel_mutex);
 	list_del(&newchannel->listentry);
 	mutex_unlock(&vmbus_connection.channel_mutex);
@@ -945,28 +944,12 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	}
 }
 
-static void vmbus_stop_rescind_handling_work(struct work_struct *work)
-{
-	atomic_inc(&vmbus_connection.offer_in_progress);
-}
-
 void vmbus_hvsock_device_unregister(struct vmbus_channel *channel)
 {
-	struct work_struct work;
-
 	BUG_ON(!is_hvsock_channel(channel));
-
-	/* Prevent chn_rescind_callback from running in the rescind path */
-	INIT_WORK(&work, vmbus_stop_rescind_handling_work);
-	queue_work_on(vmbus_connection.connect_cpu,
-		      vmbus_connection.work_queue_rescind, &work);
-	flush_work(&work);
 
 	channel->rescind = true;
 	vmbus_device_unregister(channel->device_obj);
-
-	/* Unblock the rescind handling */
-	atomic_dec(&vmbus_connection.offer_in_progress);
 }
 EXPORT_SYMBOL_GPL(vmbus_hvsock_device_unregister);
 

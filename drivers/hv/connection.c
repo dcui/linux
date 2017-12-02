@@ -159,12 +159,6 @@ int vmbus_connect(void)
 		goto cleanup;
 	}
 
-	vmbus_connection.work_queue_rescind = create_workqueue("hv_vmbus_rsd");
-	if (!vmbus_connection.work_queue_rescind) {
-		ret = -ENOMEM;
-		goto cleanup;
-	}
-
 	INIT_LIST_HEAD(&vmbus_connection.chn_msg_list);
 	spin_lock_init(&vmbus_connection.channelmsg_lock);
 
@@ -254,11 +248,6 @@ void vmbus_disconnect(void)
 	 * First send the unload request to the host.
 	 */
 	vmbus_initiate_unload(false);
-
-	if (vmbus_connection.work_queue_rescind) {
-		drain_workqueue(vmbus_connection.work_queue_rescind);
-		destroy_workqueue(vmbus_connection.work_queue_rescind);
-	}
 
 	if (vmbus_connection.work_queue) {
 		drain_workqueue(vmbus_connection.work_queue);
