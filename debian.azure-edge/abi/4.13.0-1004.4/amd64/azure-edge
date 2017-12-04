@@ -7595,7 +7595,6 @@ EXPORT_SYMBOL vmlinux 0x00000000	vmalloc_user
 EXPORT_SYMBOL vmlinux 0x00000000	vmap
 EXPORT_SYMBOL vmlinux 0x00000000	vmbus_recvpacket
 EXPORT_SYMBOL vmlinux 0x00000000	vmbus_sendpacket
-EXPORT_SYMBOL vmlinux 0x00000000	vmbus_sendpacket_ctl
 EXPORT_SYMBOL vmlinux 0x00000000	vme_alloc_consistent
 EXPORT_SYMBOL vmlinux 0x00000000	vme_bus_error_handler
 EXPORT_SYMBOL vmlinux 0x00000000	vme_bus_num
@@ -14749,11 +14748,9 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_proto_version
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_recvpacket_raw
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_send_tl_connect_request
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_sendpacket_mpb_desc
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_sendpacket_multipagebuffer
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_sendpacket_pagebuffer
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_sendpacket_pagebuffer_ctl
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_set_chn_rescind_callback
-EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_set_event
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_set_sc_create_callback
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_setevent
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	vmbus_teardown_gpadl
