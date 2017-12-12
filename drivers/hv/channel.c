@@ -529,7 +529,8 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
 	if (ret)
 		goto post_msg_err;
 
-	wait_for_completion(&info->waitevent);
+	if (wait_for_completion_timeout(&info->waitevent, 30 * HZ) == 0)
+		ret = -ETIMEDOUT;
 
 post_msg_err:
 	/*
