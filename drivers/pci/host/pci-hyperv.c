@@ -525,6 +525,8 @@ struct hv_pci_dev {
 	 * read it back, for each of the BAR offsets within config space.
 	 */
 	u32 probed_bar[6];
+
+	bool intr_mapping_err;
 };
 
 struct hv_pci_compl {
@@ -1026,6 +1028,8 @@ static u32 hv_compose_msi_req_v2(
 	return sizeof(*int_pkt);
 }
 
+static void hv_pci_onchannelcallback(void *context);
+
 /**
  * hv_compose_msi_msg() - Supplies a valid MSI address/data
  * @data:	Everything about this MSI
@@ -1054,6 +1058,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 			struct pci_create_interrupt2 v2;
 		} int_pkts;
 	} __packed ctxt;
+	u64 tick_start, tick_end, tick_now;
 
 	u32 size;
 	int ret;
@@ -1064,6 +1069,16 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
 	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
 	if (!hpdev)
+		goto return_null_message;
+
+	/*
+	 * We logged the timeout error when it first happened, and we
+	 * already know the device can't work, so let's not try to map any
+	 * further interrupt. Normally this timeout happens because the
+	 * device has been rescinded by the host, and now we expect
+	 * vmbus_onoffer_rescind() will clean everything up.
+	 */
+	if (hpdev->intr_mapping_err)
 		goto return_null_message;
 
 	/* Free any previous message that might have already been composed. */
@@ -1120,10 +1135,40 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 
 	/*
 	 * Since this function is called with IRQ locks held, can't
-	 * do normal wait for completion; instead poll.
+	 * do normal wait for completion; instead poll the host_event.
+	 *
+	 * With the recent x86 reservation mode for irq (see
+	 * "x86/vector/msi: Switch to global reservation mode" (4900be8360)),
+	 * the kernel delays the allocation of irq until it's being
+	 * really used: now when we reach here, local interrupt is disabled by
+	 * __setup_irq() -> raw_spin_lock_irqsave(&desc->lock, flags), and if
+	 * the current cpu is channel->target_cpu, we have to poll the
+	 * ringbuffer by calling the channel callback.
+	 *
+	 * And we also need to set a timeout (here let's use 5 seconds), in
+	 * case the channel is rescinded by the host because the host doesn't
+	 * respond at all to the rescinded channel. We expect the rescind
+	 * handler vmbus_onoffer_rescind() will clean everything up.
 	 */
-	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
+	rdmsrl(HV_X64_MSR_TIME_REF_COUNT, tick_start);
+	tick_end = tick_start + (NSEC_PER_SEC/100) * 5;
+
+	while (!try_wait_for_completion(&comp.comp_pkt.host_event)) {
+		if (irqs_disabled() &&
+		    hbus->hdev->channel->target_cpu == smp_processor_id())
+			hv_pci_onchannelcallback(hbus);
+
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, tick_now);
+		if (tick_now > tick_end) {
+			hpdev->intr_mapping_err = true;
+			comp.comp_pkt.completion_status = -1;
+			dev_err(&hbus->hdev->device,
+				"Request for interrupt timed out\n");
+			break;
+		}
+
 		udelay(100);
+	}
 
 	if (comp.comp_pkt.completion_status < 0) {
 		dev_err(&hbus->hdev->device,
@@ -2486,6 +2531,20 @@ static int hv_pci_probe(struct hv_device *hdev,
 		goto free_bus;
 	}
 
+	/*
+	 * If the current cpu is channel->target_cpu, there is a race
+	 * condition in hv_compose_msi_msg() if we run the callback in tasklet:
+	 * if the kernel has been running too long in softirq, __do_softirq()
+	 * will offload the callback to ksoftirqd: see __do_softirq() ->
+	 * wakeup_softirqd(); but because hv_compose_msi_msg() may be polling
+	 * comp.comp_pkt.host_event busily, ksoftirqd has no chance to run
+	 * (note: typically CONFIG_PREEMPT is not enabled), and the host_event
+	 * can't be completed. The worse thing is that: any other tasklet is
+	 * effectively blocked too: see irq_exit() -> invoke_softirq() ->
+	 * if (ksoftirqd_running()) return;
+	 * So we should run the callback in the hard irq context.
+	 */
+	set_channel_read_mode(hdev->channel, HV_CALL_ISR);
 	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
 			 hv_pci_onchannelcallback, hbus);
 	if (ret)
