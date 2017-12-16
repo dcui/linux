@@ -127,6 +127,7 @@ u64 hv_do_hypercall(u64 control, void *input, void *output)
 	return hv_status_lo | ((u64)hv_status_hi << 32);
 #endif /* !x86_64 */
 }
+EXPORT_SYMBOL_GPL(hv_do_hypercall);
 
 
 /*

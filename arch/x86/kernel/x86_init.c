@@ -115,6 +115,7 @@ struct x86_msi_ops x86_msi = {
 	.restore_msi_irqs	= default_restore_msi_irqs,
 	.setup_hpet_msi		= default_setup_hpet_msi,
 };
+EXPORT_SYMBOL_GPL(x86_msi);
 
 struct x86_io_apic_ops x86_io_apic_ops = {
 	.init			= native_io_apic_init_mappings,
