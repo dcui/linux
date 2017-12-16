@@ -1502,36 +1502,6 @@ hv_get_ring_buffer(const struct hv_ring_buffer_info *ring_info)
 }
 
 /*
- * Mask off host interrupt callback notifications
- */
-static inline void hv_begin_read(struct hv_ring_buffer_info *rbi)
-{
-        rbi->ring_buffer->interrupt_mask = 1;
-
-        /* make sure mask update is not reordered */
-        mb();
-}
-
-/*
- * Re-enable host callback and return number of outstanding bytes
- */
-static inline u32 hv_end_read(struct hv_ring_buffer_info *rbi)
-{
-
-        rbi->ring_buffer->interrupt_mask = 0;
-
-        /* make sure mask update is not reordered */
-        mb();
-
-        /*
-         * Now check to see if the ring buffer is still empty.
-         * If it is not, we raced and we need to process new
-         * incoming messages.
-         */
-        return hv_get_bytes_to_read(rbi);
-}
-
-/*
  * To optimize the flow management on the send-side,
  * when the sender is blocked because of lack of
  * sufficient space in the ring buffer, potential the
