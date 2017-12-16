@@ -338,6 +338,22 @@ source "net/ceph/Kconfig"
 source "net/nfc/Kconfig"
 
 
+config NET_DEVLINK
+       tristate "Network physical/parent device Netlink interface"
+       default m
+       help
+         Network physical/parent device Netlink interface provides
+         infrastructure to support access to physical chip-wide config and
+         monitoring.
+
+config MAY_USE_DEVLINK
+        tristate
+        default m 
+        help
+          Drivers using the devlink infrastructure should have a dependency
+          on MAY_USE_DEVLINK to ensure they do not cause link errors when
+          devlink is a loadable module and the driver using it is built-in.
+
 endif   # if NET
 
 # Used by archs to tell that they support BPF_JIT
