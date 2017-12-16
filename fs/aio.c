@@ -21,6 +21,7 @@
 #include <linux/uio.h>
 
 #include <linux/sched.h>
+#include <linux/pagemap.h>
 #include <linux/fs.h>
 #include <linux/file.h>
 #include <linux/mm.h>

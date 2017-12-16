@@ -35,6 +35,10 @@ typedef uint32_t	__u32;
 typedef uint16_t	__u16;
 typedef unsigned char	__u8;
 
+typedef struct {
+        __u8 b[16];
+} uuid_le; 
+
 /* Big exception to the "don't include kernel headers into userspace, which
  * even potentially has different endianness and word sizes, since
  * we handle those differences explicitly below */
@@ -874,7 +878,7 @@ static int do_vmbus_entry(const char *filename, void *symval,
 	char guid_name[(sizeof(*guid) + 1) * 2];
 
 	for (i = 0; i < (sizeof(*guid) * 2); i += 2)
-		sprintf(&guid_name[i], "%02x", TO_NATIVE((*guid)[i/2]));
+		sprintf(&guid_name[i], "%02x", TO_NATIVE((guid->b)[i/2]));
 
 	strcpy(alias, "vmbus:");
 	strcat(alias, guid_name);

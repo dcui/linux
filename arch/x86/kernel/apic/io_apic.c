@@ -2330,7 +2330,7 @@ int __ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
 
 	return 0;
 }
-
+EXPORT_SYMBOL_GPL(__ioapic_set_affinity);
 
 int native_ioapic_set_affinity(struct irq_data *data,
 			       const struct cpumask *mask,
