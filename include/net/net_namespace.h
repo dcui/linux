@@ -215,6 +215,7 @@ int net_eq(const struct net *net1, const struct net *net2)
 #define net_drop_ns NULL
 #endif
 
+#define possible_net_t  struct net *
 
 #ifdef NETNS_REFCNT_DEBUG
 static inline struct net *hold_net(struct net *net)

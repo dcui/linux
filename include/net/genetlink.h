@@ -51,10 +51,10 @@ struct genl_family {
 	unsigned int		maxattr;
 	bool			netnsok;
 	bool			parallel_ops;
-	int			(*pre_doit)(struct genl_ops *ops,
+	int			(*pre_doit)(const struct genl_ops *ops,
 					    struct sk_buff *skb,
 					    struct genl_info *info);
-	void			(*post_doit)(struct genl_ops *ops,
+	void			(*post_doit)(const struct genl_ops *ops,
 					     struct sk_buff *skb,
 					     struct genl_info *info);
 	struct nlattr **	attrbuf;	/* private */
@@ -139,6 +139,49 @@ static inline int genl_register_family_with_ops(struct genl_family *family,
 	family->module = THIS_MODULE;
 	return __genl_register_family_with_ops(family, ops, n_ops);
 }
+
+
+/**
+ * genl_register_family_with_ops - register a generic netlink family with ops
+ * @family: generic netlink family
+ * @ops: operations to be registered
+ * @n_ops: number of elements to register
+ *
+ * Registers the specified family and operations from the specified table.
+ * Only one family may be registered with the same family name or identifier.
+ *
+ * The family id may equal GENL_ID_GENERATE causing an unique id to
+ * be automatically generated and assigned.
+ *
+ * Either a doit or dumpit callback must be specified for every registered
+ * operation or the function will fail. Only one operation structure per
+ * command identifier may be registered.
+ *
+ * See include/net/genetlink.h for more documenation on the operations
+ * structure.
+ *
+ * Return 0 on success or a negative error code.
+ */
+static inline int
+_genl_register_family_with_ops_grps(struct genl_family *family,
+                                    const struct genl_ops *ops, size_t n_ops,
+                                    const struct genl_multicast_group *mcgrps,
+                                    size_t n_mcgrps)
+{
+        family->module = THIS_MODULE;
+#if 0
+        family->ops = ops;
+        family->n_ops = n_ops;
+        family->mcgrps = mcgrps;
+        family->n_mcgrps = n_mcgrps;
+#endif
+        return __genl_register_family(family);
+}
+
+#define genl_register_family_with_ops_groups(family, ops, grps) \
+        _genl_register_family_with_ops_grps((family),                   \
+                                            (ops), ARRAY_SIZE(ops),     \
+                                            (grps), ARRAY_SIZE(grps))
 
 extern int genl_unregister_family(struct genl_family *family);
 extern int genl_register_ops(struct genl_family *, struct genl_ops *ops);
