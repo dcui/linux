@@ -68,6 +68,38 @@ static unsigned int ip_tunnel_hash(struct ip_tunnel_net *itn,
 			 IP_TNL_HASH_BITS);
 }
 
+int iptunnel_handle_offloads(struct sk_buff *skb,
+                             int gso_type_mask)
+{
+        int err;
+
+        if (likely(!skb->encapsulation)) {
+                skb_reset_inner_headers(skb);
+                skb->encapsulation = 1;
+        }
+
+        if (skb_is_gso(skb)) {
+                err = skb_header_unclone(skb, GFP_ATOMIC);
+                if (unlikely(err))
+                        return err;
+                skb_shinfo(skb)->gso_type |= gso_type_mask;
+                return 0;
+        }
+
+        if (skb->ip_summed != CHECKSUM_PARTIAL) {
+                skb->ip_summed = CHECKSUM_NONE;
+                /* We clear encapsulation here to prevent badly-written
+                 * drivers potentially deciding to offload an inner checksum
+                 * if we set CHECKSUM_PARTIAL on the outer header.
+                 * This should go away when the drivers are all fixed.
+                 */
+                skb->encapsulation = 0;
+        }
+
+        return 0;
+}
+EXPORT_SYMBOL_GPL(iptunnel_handle_offloads);
+
 /* Often modified stats are per cpu, other are shared (netdev->stats) */
 struct rtnl_link_stats64 *ip_tunnel_get_stats64(struct net_device *dev,
 						struct rtnl_link_stats64 *tot)

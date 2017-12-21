@@ -33,11 +33,14 @@
 
 #include <linux/mlx4/device.h>
 #include <linux/clocksource.h>
+#include <linux/time64.h>
+
 
 #include "mlx4_en.h"
 
 /* mlx4_en_read_clock - read raw cycle counter (to be used by time counter)
  */
+#if 0
 static cycle_t mlx4_en_read_clock(const struct cyclecounter *tc)
 {
 	struct mlx4_en_dev *mdev =
@@ -46,7 +49,7 @@ static cycle_t mlx4_en_read_clock(const struct cyclecounter *tc)
 
 	return mlx4_read_clock(dev) & tc->mask;
 }
-
+#endif
 u64 mlx4_en_get_cqe_ts(struct mlx4_cqe *cqe)
 {
 	u64 hi, lo;
@@ -109,6 +112,7 @@ void mlx4_en_ptp_overflow_check(struct mlx4_en_dev *mdev)
 	}
 }
 
+#if 0
 /**
  * mlx4_en_phc_adjfreq - adjust the frequency of the hardware clock
  * @ptp: ptp clock structure
@@ -299,3 +303,10 @@ void mlx4_en_init_timestamp(struct mlx4_en_dev *mdev)
 	}
 
 }
+#else
+
+void mlx4_en_init_timestamp(struct mlx4_en_dev *mdev)
+{
+
+}
+#endif

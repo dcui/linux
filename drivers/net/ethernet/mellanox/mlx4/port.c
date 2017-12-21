@@ -1656,6 +1656,7 @@ int mlx4_SET_PORT_VXLAN(struct mlx4_dev *dev, u8 port, u8 steering, int enable)
 	struct mlx4_cmd_mailbox *mailbox;
 	struct mlx4_set_port_vxlan_context  *context;
 
+	WARN(1, "FIXME!!!");
 	mailbox = mlx4_alloc_cmd_mailbox(dev);
 	if (IS_ERR(mailbox))
 		return PTR_ERR(mailbox);

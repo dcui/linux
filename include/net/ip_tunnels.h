@@ -160,4 +160,6 @@ static inline void iptunnel_xmit(struct sk_buff *skb, struct net_device *dev)
 		dev->stats.tx_aborted_errors++;
 	}
 }
+
+int iptunnel_handle_offloads(struct sk_buff *skb, int gso_type_mask);
 #endif /* __NET_IP_TUNNELS_H */

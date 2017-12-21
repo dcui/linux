@@ -59,6 +59,26 @@ enum ethtool_phys_id_state {
 	ETHTOOL_ID_OFF
 };
 
+enum {
+        ETH_RSS_HASH_TOP_BIT, /* Configurable RSS hash function - Toeplitz */
+        ETH_RSS_HASH_XOR_BIT, /* Configurable RSS hash function - Xor */
+
+        /*
+         * Add your fresh new hash function bits above and remember to update
+         * rss_hash_func_strings[] in ethtool.c
+         */
+        ETH_RSS_HASH_FUNCS_COUNT
+};
+
+#define __ETH_RSS_HASH_BIT(bit) ((u32)1 << (bit))
+#define __ETH_RSS_HASH(name)    __ETH_RSS_HASH_BIT(ETH_RSS_HASH_##name##_BIT)
+
+#define ETH_RSS_HASH_TOP        __ETH_RSS_HASH(TOP)
+#define ETH_RSS_HASH_XOR        __ETH_RSS_HASH(XOR)
+
+#define ETH_RSS_HASH_UNKNOWN    0
+#define ETH_RSS_HASH_NO_CHANGE  0
+
 struct net_device;
 
 /* Some generic methods drivers may use in their ethtool_ops */
@@ -77,6 +97,67 @@ static inline u32 ethtool_rxfh_indir_default(u32 index, u32 n_rx_rings)
 	return index % n_rx_rings;
 }
 
+/* number of link mode bits/ulongs handled internally by kernel */
+#define __ETHTOOL_LINK_MODE_MASK_NBITS                  \
+        (__ETHTOOL_LINK_MODE_LAST + 1)
+
+/* declare a link mode bitmap */
+#define __ETHTOOL_DECLARE_LINK_MODE_MASK(name)          \
+        DECLARE_BITMAP(name, __ETHTOOL_LINK_MODE_MASK_NBITS)
+
+/* drivers must ignore base.cmd and base.link_mode_masks_nwords
+ * fields, but they are allowed to overwrite them (will be ignored).
+ */
+struct ethtool_link_ksettings {
+        struct ethtool_link_settings base;
+        struct {
+                __ETHTOOL_DECLARE_LINK_MODE_MASK(supported);
+                __ETHTOOL_DECLARE_LINK_MODE_MASK(advertising);
+                __ETHTOOL_DECLARE_LINK_MODE_MASK(lp_advertising);
+        } link_modes;
+};
+
+/**
+ * ethtool_link_ksettings_zero_link_mode - clear link_ksettings link mode mask
+ *   @ptr : pointer to struct ethtool_link_ksettings
+ *   @name : one of supported/advertising/lp_advertising
+ */
+#define ethtool_link_ksettings_zero_link_mode(ptr, name)                \
+        bitmap_zero((ptr)->link_modes.name, __ETHTOOL_LINK_MODE_MASK_NBITS)
+
+/**
+ * ethtool_link_ksettings_add_link_mode - set bit in link_ksettings
+ * link mode mask
+ *   @ptr : pointer to struct ethtool_link_ksettings
+ *   @name : one of supported/advertising/lp_advertising
+ *   @mode : one of the ETHTOOL_LINK_MODE_*_BIT
+ * (not atomic, no bound checking)
+ */
+#define ethtool_link_ksettings_add_link_mode(ptr, name, mode)           \
+        __set_bit(ETHTOOL_LINK_MODE_ ## mode ## _BIT, (ptr)->link_modes.name)
+
+/**
+ * ethtool_link_ksettings_test_link_mode - test bit in ksettings link mode mask
+ *   @ptr : pointer to struct ethtool_link_ksettings
+ *   @name : one of supported/advertising/lp_advertising
+ *   @mode : one of the ETHTOOL_LINK_MODE_*_BIT
+ * (not atomic, no bound checking)
+ *
+ * Returns true/false.
+ */
+#define ethtool_link_ksettings_test_link_mode(ptr, name, mode)          \
+        test_bit(ETHTOOL_LINK_MODE_ ## mode ## _BIT, (ptr)->link_modes.name)
+
+extern int
+__ethtool_get_link_ksettings(struct net_device *dev,
+                             struct ethtool_link_ksettings *link_ksettings);
+
+void ethtool_convert_legacy_u32_to_link_mode(unsigned long *dst,
+                                             u32 legacy_u32);
+
+/* return false if src had higher bits set. lower bits always updated. */
+bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
+                                     const unsigned long *src);
 /**
  * struct ethtool_ops - optional netdev operations
  * @get_settings: Get various device settings including Ethernet link

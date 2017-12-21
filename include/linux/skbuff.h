@@ -40,6 +40,9 @@
 #define CHECKSUM_COMPLETE 2
 #define CHECKSUM_PARTIAL 3
 
+/* Maximum value in skb->csum_level */
+#define SKB_MAX_CSUM_LEVEL      3
+
 #define SKB_DATA_ALIGN(X)	(((X) + (SMP_CACHE_BYTES - 1)) & \
 				 ~(SMP_CACHE_BYTES - 1))
 #define SKB_WITH_OVERHEAD(X)	\
@@ -503,6 +506,9 @@ struct sk_buff {
 	sk_buff_data_t		inner_transport_header;
 	sk_buff_data_t		inner_network_header;
 	sk_buff_data_t		inner_mac_header;
+
+	__u8     csum_level:2;
+
 	sk_buff_data_t		transport_header;
 	sk_buff_data_t		network_header;
 	sk_buff_data_t		mac_header;
@@ -2686,6 +2692,27 @@ static inline __sum16 skb_checksum_complete(struct sk_buff *skb)
 {
 	return skb_csum_unnecessary(skb) ?
 	       0 : __skb_checksum_complete(skb);
+}
+
+static inline void __skb_decr_checksum_unnecessary(struct sk_buff *skb)
+{
+        if (skb->ip_summed == CHECKSUM_UNNECESSARY) {
+                if (skb->csum_level == 0)
+                        skb->ip_summed = CHECKSUM_NONE;
+                else
+                        skb->csum_level--;
+        }
+}
+
+static inline void __skb_incr_checksum_unnecessary(struct sk_buff *skb)
+{
+        if (skb->ip_summed == CHECKSUM_UNNECESSARY) {
+                if (skb->csum_level < SKB_MAX_CSUM_LEVEL)
+                        skb->csum_level++;
+        } else if (skb->ip_summed == CHECKSUM_NONE) {
+                skb->ip_summed = CHECKSUM_UNNECESSARY;
+                skb->csum_level = 0;
+        }
 }
 
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)

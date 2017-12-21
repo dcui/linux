@@ -153,7 +153,9 @@ io_mapping_unmap_atomic(void __iomem *vaddr)
 
 /* Non-atomic map/unmap */
 static inline void __iomem *
-io_mapping_map_wc(struct io_mapping *mapping, unsigned long offset)
+io_mapping_map_wc(struct io_mapping *mapping,
+		  unsigned long offset,
+		  unsigned long size)
 {
 	return ((char __force __iomem *) mapping) + offset;
 }

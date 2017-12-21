@@ -184,6 +184,9 @@ struct net_device_stats {
 	unsigned long	tx_window_errors;
 	unsigned long	rx_compressed;
 	unsigned long	tx_compressed;
+#if 1
+	unsigned long	rx_nohandler;
+#endif
 };
 
 
@@ -327,10 +330,14 @@ struct napi_struct {
 };
 
 enum {
-	NAPI_STATE_SCHED,	/* Poll is scheduled */
-	NAPI_STATE_DISABLE,	/* Disable pending */
-	NAPI_STATE_NPSVC,	/* Netpoll - don't dequeue from poll_list */
+        NAPI_STATE_SCHED,       /* Poll is scheduled */
+        NAPI_STATE_DISABLE,     /* Disable pending */
+        NAPI_STATE_NPSVC,       /* Netpoll - don't dequeue from poll_list */
+        NAPI_STATE_HASHED,      /* In NAPI hash */
+        NAPI_STATE_EXT,         /* Extended napi_struct */
+        NAPI_STATE_NO_BUSY_POLL,/* Do not add in napi_hash, no busy polling */
 };
+
 
 enum gro_result {
 	GRO_MERGED,
@@ -392,6 +399,7 @@ typedef enum rx_handler_result rx_handler_result_t;
 typedef rx_handler_result_t rx_handler_func_t(struct sk_buff **pskb);
 
 extern void __napi_schedule(struct napi_struct *n);
+void __napi_schedule_irqoff(struct napi_struct *n);
 
 static inline bool napi_disable_pending(struct napi_struct *n)
 {
@@ -424,6 +432,18 @@ static inline void napi_schedule(struct napi_struct *n)
 {
 	if (napi_schedule_prep(n))
 		__napi_schedule(n);
+}
+
+/**
+ *      napi_schedule_irqoff - schedule NAPI poll
+ *      @n: napi context
+ *
+ * Variant of napi_schedule(), assuming hard irqs are masked.
+ */
+static inline void napi_schedule_irqoff(struct napi_struct *n)
+{
+        if (napi_schedule_prep(n))
+                __napi_schedule_irqoff(n);
 }
 
 /* Try to reschedule poll. Called by dev->poll() after napi_complete().  */
@@ -698,6 +718,9 @@ struct netdev_fcoe_hbainfo {
 	char	model_description[256];
 };
 #endif
+
+typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
+                                       struct sk_buff *skb);
 
 /*
  * This structure defines the management hooks for network devices.
@@ -1493,6 +1516,27 @@ void netif_napi_add(struct net_device *dev, struct napi_struct *napi,
 		    int (*poll)(struct napi_struct *, int), int weight);
 
 /**
+ *      netif_tx_napi_add - initialize a napi context
+ *      @dev:  network device
+ *      @napi: napi context
+ *      @poll: polling function
+ *      @weight: default weight
+ *
+ * This variant of netif_napi_add() should be used from drivers using NAPI
+ * to exclusively poll a TX queue.
+ * This will avoid we add it into napi_hash[], thus polluting this hash table.
+ */
+static inline void netif_tx_napi_add(struct net_device *dev,
+                                     struct napi_struct *napi,
+                                     int (*poll)(struct napi_struct *, int),
+                                     int weight)
+{
+        set_bit(NAPI_STATE_NO_BUSY_POLL, &napi->state);
+        netif_napi_add(dev, napi, poll, weight);
+}
+
+
+/**
  *  netif_napi_del - remove a napi context
  *  @napi: napi context
  *
@@ -1593,11 +1637,63 @@ struct packet_offload {
 #define NETDEV_RELEASE		0x0012
 #define NETDEV_NOTIFY_PEERS	0x0013
 #define NETDEV_JOIN		0x0014
+#define NETDEV_CHANGEUPPER      0x0015
+#define NETDEV_RESEND_IGMP      0x0016
+#define NETDEV_PRECHANGEMTU     0x0017 /* notify before mtu change happened */
+#define NETDEV_CHANGEINFODATA   0x0018
+#define NETDEV_BONDING_INFO     0x0019
+#define NETDEV_PRECHANGEUPPER   0x001A
+#define NETDEV_CHANGELOWERSTATE 0x001B
+#define NETDEV_OFFLOAD_PUSH_VXLAN       0x001C
+#define NETDEV_OFFLOAD_PUSH_GENEVE      0x001D
+#define NETDEV_UDP_TUNNEL_PUSH_INFO     0x001E
+#define NETDEV_CHANGE_TX_QUEUE_LEN      0x001F
+
 
 extern int register_netdevice_notifier(struct notifier_block *nb);
 extern int unregister_netdevice_notifier(struct notifier_block *nb);
 extern int call_netdevice_notifiers(unsigned long val, struct net_device *dev);
 
+int register_netdevice_notifier_rh(struct notifier_block *nb);
+int unregister_netdevice_notifier_rh(struct notifier_block *nb);
+
+struct netdev_notifier_info {
+        struct net_device *dev;
+};
+
+struct netdev_notifier_change_info {
+        struct netdev_notifier_info info; /* must be first */
+        unsigned int flags_changed;
+};
+
+struct netdev_notifier_changeupper_info {
+        struct netdev_notifier_info info; /* must be first */
+        struct net_device *upper_dev; /* new upper dev */
+        bool master; /* is upper dev master */
+        bool linking; /* is the nofication for link or unlink */
+        void *upper_info; /* upper dev info */
+};
+
+struct netdev_notifier_changelowerstate_info {
+        struct netdev_notifier_info info; /* must be first */
+        void *lower_state_info; /* is lower dev state */
+};
+
+static inline void netdev_notifier_info_init(struct netdev_notifier_info *info,
+                                             struct net_device *dev)
+{
+        info->dev = dev;
+}
+
+static inline struct net_device *
+netdev_notifier_info_to_dev(const struct netdev_notifier_info *info)
+{
+        return info->dev;
+}
+
+int call_netdevice_notifiers_info(unsigned long val, struct net_device *dev,
+                                  struct netdev_notifier_info *info);
+int call_netdevice_notifiers(unsigned long val, struct net_device *dev);
 
 extern rwlock_t				dev_base_lock;		/* Device list lock */
 
@@ -1972,6 +2068,34 @@ static inline bool netif_xmit_stopped(const struct netdev_queue *dev_queue)
 static inline bool netif_xmit_frozen_or_stopped(const struct netdev_queue *dev_queue)
 {
 	return dev_queue->state & QUEUE_STATE_ANY_XOFF_OR_FROZEN;
+}
+
+/**
+ *      netdev_txq_bql_enqueue_prefetchw - prefetch bql data for write
+ *      @dev_queue: pointer to transmit queue
+ *
+ * BQL enabled drivers might use this helper in their ndo_start_xmit(),
+ * to give appropriate hint to the cpu.
+ */
+static inline void netdev_txq_bql_enqueue_prefetchw(struct netdev_queue *dev_queue)
+{
+#ifdef CONFIG_BQL
+        prefetchw(&dev_queue->dql.num_queued);
+#endif
+}
+
+/**
+ *      netdev_txq_bql_complete_prefetchw - prefetch bql data for write
+ *      @dev_queue: pointer to transmit queue
+ *
+ * BQL enabled drivers might use this helper in their TX completion path,
+ * to give appropriate hint to the cpu.
+ */
+static inline void netdev_txq_bql_complete_prefetchw(struct netdev_queue *dev_queue)
+{
+#ifdef CONFIG_BQL
+        prefetchw(&dev_queue->dql.limit);
+#endif
 }
 
 static inline void netdev_tx_sent_queue(struct netdev_queue *dev_queue,

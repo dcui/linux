@@ -39,7 +39,7 @@
 #include <linux/hash.h>
 #include <net/ip.h>
 #include <net/busy_poll.h>
-#include <net/vxlan.h>
+//#include <net/vxlan.h>
 #include <net/devlink.h>
 
 #include <linux/mlx4/driver.h>
@@ -82,6 +82,7 @@ int mlx4_en_setup_tc(struct net_device *dev, u8 up)
 	return 0;
 }
 
+#if 0
 static int __mlx4_en_setup_tc(struct net_device *dev, u32 handle, __be16 proto,
 			      struct tc_to_netdev *tc)
 {
@@ -90,6 +91,7 @@ static int __mlx4_en_setup_tc(struct net_device *dev, u32 handle, __be16 proto,
 
 	return mlx4_en_setup_tc(dev, tc->tc);
 }
+#endif
 
 #ifdef CONFIG_RFS_ACCEL
 
@@ -479,6 +481,9 @@ static int mlx4_en_tunnel_steer_add(struct mlx4_en_priv *priv, unsigned char *ad
 	if (priv->mdev->dev->caps.tunnel_offload_mode != MLX4_TUNNEL_OFFLOAD_MODE_VXLAN ||
 	    priv->mdev->dev->caps.dmfs_high_steer_mode == MLX4_STEERING_DMFS_A0_STATIC)
 		return 0; /* do nothing */
+
+	WARN(1, "mlx4_en_tunnel_steer_add: FIXME!!!");
+	return 0;
 
 	err = mlx4_tunnel_steer_add(priv->mdev->dev, addr, priv->port, qpn,
 				    MLX4_DOMAIN_NIC, reg_id);
@@ -2505,6 +2510,8 @@ static int mlx4_en_get_phys_port_id(struct net_device *dev,
 	return 0;
 }
 
+#if 0
+XXX:
 static void mlx4_en_add_vxlan_offloads(struct work_struct *work)
 {
 	int ret;
@@ -2602,6 +2609,7 @@ static void mlx4_en_del_vxlan_port(struct  net_device *dev,
 
 	queue_work(priv->mdev->workqueue, &priv->vxlan_del_task);
 }
+#endif
 
 static netdev_features_t mlx4_en_features_check(struct sk_buff *skb,
 						struct net_device *dev,
@@ -2674,13 +2682,13 @@ static const struct net_device_ops mlx4_netdev_ops = {
 #endif
 	.ndo_set_features	= mlx4_en_set_features,
 	.ndo_fix_features	= mlx4_en_fix_features,
-	.ndo_setup_tc		= __mlx4_en_setup_tc,
+	.ndo_setup_tc		= mlx4_en_setup_tc,
 #ifdef CONFIG_RFS_ACCEL
 	.ndo_rx_flow_steer	= mlx4_en_filter_rfs,
 #endif
 	.ndo_get_phys_port_id	= mlx4_en_get_phys_port_id,
-	.extended.ndo_udp_tunnel_add	= mlx4_en_add_vxlan_port,
-	.extended.ndo_udp_tunnel_del	= mlx4_en_del_vxlan_port,
+	//.extended.ndo_udp_tunnel_add	= mlx4_en_add_vxlan_port,
+	//.extended.ndo_udp_tunnel_del	= mlx4_en_del_vxlan_port,
 	.ndo_features_check	= mlx4_en_features_check,
 	.extended.ndo_set_tx_maxrate	= mlx4_en_set_tx_maxrate,
 };
@@ -2711,13 +2719,13 @@ static const struct net_device_ops mlx4_netdev_ops_master = {
 #endif
 	.ndo_set_features	= mlx4_en_set_features,
 	.ndo_fix_features	= mlx4_en_fix_features,
-	.ndo_setup_tc		= __mlx4_en_setup_tc,
+	.ndo_setup_tc		= mlx4_en_setup_tc,
 #ifdef CONFIG_RFS_ACCEL
 	.ndo_rx_flow_steer	= mlx4_en_filter_rfs,
 #endif
 	.ndo_get_phys_port_id	= mlx4_en_get_phys_port_id,
-	.extended.ndo_udp_tunnel_add	= mlx4_en_add_vxlan_port,
-	.extended.ndo_udp_tunnel_del	= mlx4_en_del_vxlan_port,
+	//.extended.ndo_udp_tunnel_add	= mlx4_en_add_vxlan_port,
+	//.extended.ndo_udp_tunnel_del	= mlx4_en_del_vxlan_port,
 	.ndo_features_check	= mlx4_en_features_check,
 	.extended.ndo_set_tx_maxrate	= mlx4_en_set_tx_maxrate,
 };
@@ -3009,8 +3017,8 @@ int mlx4_en_init_netdev(struct mlx4_en_dev *mdev, int port,
 	INIT_WORK(&priv->linkstate_task, mlx4_en_linkstate);
 	INIT_DELAYED_WORK(&priv->stats_task, mlx4_en_do_get_stats);
 	INIT_DELAYED_WORK(&priv->service_task, mlx4_en_service_task);
-	INIT_WORK(&priv->vxlan_add_task, mlx4_en_add_vxlan_offloads);
-	INIT_WORK(&priv->vxlan_del_task, mlx4_en_del_vxlan_offloads);
+	//INIT_WORK(&priv->vxlan_add_task, mlx4_en_add_vxlan_offloads);
+	//INIT_WORK(&priv->vxlan_del_task, mlx4_en_del_vxlan_offloads);
 #ifdef CONFIG_RFS_ACCEL
 	INIT_LIST_HEAD(&priv->filters);
 	spin_lock_init(&priv->filters_lock);

@@ -31,6 +31,7 @@
 extern __be16		eth_type_trans(struct sk_buff *skb, struct net_device *dev);
 extern const struct header_ops eth_header_ops;
 
+u32 eth_get_headlen(void *data, unsigned int max_len);
 extern int eth_header(struct sk_buff *skb, struct net_device *dev,
 		      unsigned short type,
 		      const void *daddr, const void *saddr, unsigned len);

@@ -264,6 +264,14 @@ static void mlx4_en_stamp_wqe(struct mlx4_en_priv *priv,
 	}
 }
 
+#if 1
+static inline void dev_consume_skb_any(struct sk_buff *skb)
+{
+        dev_kfree_skb_any(skb);
+}
+
+#define napi_consume_skb(skb, budget)     dev_consume_skb_any(skb)
+#endif
 
 static u32 mlx4_en_free_tx_desc(struct mlx4_en_priv *priv,
 				struct mlx4_en_tx_ring *ring,
@@ -688,8 +696,8 @@ u16 mlx4_en_select_queue(struct net_device *dev, struct sk_buff *skb,
 	if (dev->num_tc)
 		return skb_tx_hash(dev, skb);
 
-	if (skb_vlan_tag_present(skb))
-		up = skb_vlan_tag_get(skb) >> VLAN_PRIO_SHIFT;
+	if (vlan_tx_tag_present(skb))
+		up = vlan_tx_tag_get(skb) >> VLAN_PRIO_SHIFT;
 
 	return fallback(dev, skb) % rings_p_up + up * rings_p_up;
 }
@@ -806,8 +814,8 @@ netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev)
 	}
 
 	bf_ok = ring->bf_enabled;
-	if (skb_vlan_tag_present(skb)) {
-		qpn_vlan.vlan_tag = cpu_to_be16(skb_vlan_tag_get(skb));
+	if (vlan_tx_tag_present(skb)) {
+		qpn_vlan.vlan_tag = cpu_to_be16(vlan_tx_tag_get(skb));
 		vlan_proto = be16_to_cpu(skb->vlan_proto);
 		if (vlan_proto == ETH_P_8021AD)
 			qpn_vlan.ins_vlan = MLX4_WQE_CTRL_INS_SVLAN;
@@ -1006,7 +1014,8 @@ netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev)
 		netif_tx_stop_queue(ring->tx_queue);
 		ring->queue_stopped++;
 	}
-	send_doorbell = !skb->xmit_more || netif_xmit_stopped(ring->tx_queue);
+	//send_doorbell = !skb->xmit_more || netif_xmit_stopped(ring->tx_queue);
+	send_doorbell = 1;
 
 	real_size = (real_size / 16) & 0x3f;
 
