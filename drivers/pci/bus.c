@@ -137,6 +137,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
 		if (!r)
 			continue;
 
+#if 0
 		/* type_mask must match */
 		if ((res->flags ^ r->flags) & type_mask)
 			continue;
@@ -146,6 +147,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
 		if ((r->flags & IORESOURCE_PREFETCH) &&
 		    !(res->flags & IORESOURCE_PREFETCH))
 			continue;
+#endif
 
 		/* Ok, try it out.. */
 		ret = allocate_resource(r, res, size,
