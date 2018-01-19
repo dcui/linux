@@ -180,91 +180,118 @@ static u16 hv_get_dev_type(const struct vmbus_channel *channel)
  * @buf: Raw buffer channel data
  *
  * @icmsghdrp is of type &struct icmsg_hdr.
- * @negop is of type &struct icmsg_negotiate.
  * Set up and fill in default negotiate response message.
  *
- * The fw_version specifies the  framework version that
- * we can support and srv_version specifies the service
- * version we can support.
+ * The fw_version and fw_vercnt specifies the framework version that
+ * we can support.
+ *
+ * The srv_version and srv_vercnt specifies the service
+ * versions we can support.
+ *
+ * Versions are given in decreasing order.
+ *
+ * nego_fw_version and nego_srv_version store the selected protocol versions.
  *
  * Mainly used by Hyper-V drivers.
  */
 bool vmbus_prep_negotiate_resp(struct icmsg_hdr *icmsghdrp,
-				struct icmsg_negotiate *negop, u8 *buf,
-				int fw_version, int srv_version)
+                                u8 *buf, const int *fw_version, int fw_vercnt,
+                                const int *srv_version, int srv_vercnt,
+                                int *nego_fw_version, int *nego_srv_version)
 {
-	int icframe_major, icframe_minor;
-	int icmsg_major, icmsg_minor;
-	int fw_major, fw_minor;
-	int srv_major, srv_minor;
-	int i;
-	bool found_match = false;
+        int icframe_major, icframe_minor;
+        int icmsg_major, icmsg_minor;
+        int fw_major, fw_minor;
+        int srv_major, srv_minor;
+        int i, j;
+        bool found_match = false;
+        struct icmsg_negotiate *negop;
 
-	icmsghdrp->icmsgsize = 0x10;
-	fw_major = (fw_version >> 16);
-	fw_minor = (fw_version & 0xFFFF);
+        icmsghdrp->icmsgsize = 0x10;
+        negop = (struct icmsg_negotiate *)&buf[
+                sizeof(struct vmbuspipe_hdr) +
+                sizeof(struct icmsg_hdr)];
 
-	srv_major = (srv_version >> 16);
-	srv_minor = (srv_version & 0xFFFF);
+        icframe_major = negop->icframe_vercnt;
+        icframe_minor = 0;
 
-	negop = (struct icmsg_negotiate *)&buf[
-		sizeof(struct vmbuspipe_hdr) +
-		sizeof(struct icmsg_hdr)];
+        icmsg_major = negop->icmsg_vercnt;
+        icmsg_minor = 0;
 
-	icframe_major = negop->icframe_vercnt;
-	icframe_minor = 0;
+        /*
+         * Select the framework version number we will
+         * support.
+         */
+        for (i = 0; i < fw_vercnt; i++) {
+                fw_major = (fw_version[i] >> 16);
+                fw_minor = (fw_version[i] & 0xFFFF);
 
-	icmsg_major = negop->icmsg_vercnt;
-	icmsg_minor = 0;
+                for (j = 0; j < negop->icframe_vercnt; j++) {
+                        if ((negop->icversion_data[j].major == fw_major) &&
+                            (negop->icversion_data[j].minor == fw_minor)) {
+                                icframe_major = negop->icversion_data[j].major;
+                                icframe_minor = negop->icversion_data[j].minor;
+                                found_match = true;
+                                break;
+                        }
+                }
 
-	/*
-	 * Select the framework version number we will
-	 * support.
-	 */
+                if (found_match)
+                        break;
+        }
 
-	for (i = 0; i < negop->icframe_vercnt; i++) {
-		if ((negop->icversion_data[i].major == fw_major) &&
-		   (negop->icversion_data[i].minor == fw_minor)) {
-			icframe_major = negop->icversion_data[i].major;
-			icframe_minor = negop->icversion_data[i].minor;
-			found_match = true;
-		}
-	}
+        if (!found_match)
+                goto fw_error;
 
-	if (!found_match)
-		goto fw_error;
+        found_match = false;
 
-	found_match = false;
+        for (i = 0; i < srv_vercnt; i++) {
+                srv_major = (srv_version[i] >> 16);
+                srv_minor = (srv_version[i] & 0xFFFF);
 
-	for (i = negop->icframe_vercnt;
-		 (i < negop->icframe_vercnt + negop->icmsg_vercnt); i++) {
-		if ((negop->icversion_data[i].major == srv_major) &&
-		   (negop->icversion_data[i].minor == srv_minor)) {
-			icmsg_major = negop->icversion_data[i].major;
-			icmsg_minor = negop->icversion_data[i].minor;
-			found_match = true;
-		}
-	}
+                for (j = negop->icframe_vercnt;
+                        (j < negop->icframe_vercnt + negop->icmsg_vercnt);
+                        j++) {
 
-	/*
-	 * Respond with the framework and service
-	 * version numbers we can support.
-	 */
+                        if ((negop->icversion_data[j].major == srv_major) &&
+                                (negop->icversion_data[j].minor == srv_minor)) {
+
+                                icmsg_major = negop->icversion_data[j].major;
+                                icmsg_minor = negop->icversion_data[j].minor;
+                                found_match = true;
+                                break;
+                        }
+                }
+
+                if (found_match)
+                        break;
+        }
+
+        /*
+         * Respond with the framework and service
+         * version numbers we can support.
+         */
 
 fw_error:
-	if (!found_match) {
-		negop->icframe_vercnt = 0;
-		negop->icmsg_vercnt = 0;
-	} else {
-		negop->icframe_vercnt = 1;
-		negop->icmsg_vercnt = 1;
-	}
+        if (!found_match) {
+                negop->icframe_vercnt = 0;
+                negop->icmsg_vercnt = 0;
+        } else {
+                negop->icframe_vercnt = 1;
+                negop->icmsg_vercnt = 1;
+        }
 
-	negop->icversion_data[0].major = icframe_major;
-	negop->icversion_data[0].minor = icframe_minor;
-	negop->icversion_data[1].major = icmsg_major;
-	negop->icversion_data[1].minor = icmsg_minor;
-	return found_match;
+        if (nego_fw_version)
+                *nego_fw_version = (icframe_major << 16) | icframe_minor;
+
+        if (nego_srv_version)
+                *nego_srv_version = (icmsg_major << 16) | icmsg_minor;
+
+        negop->icversion_data[0].major = icframe_major;
+        negop->icversion_data[0].minor = icframe_minor;
+        negop->icversion_data[1].major = icmsg_major;
+        negop->icversion_data[1].minor = icmsg_minor;
+        return found_match;
 }
 
 EXPORT_SYMBOL_GPL(vmbus_prep_negotiate_resp);

@@ -32,7 +32,7 @@
 #include <linux/interrupt.h>
 
 /*
- * Timeout for services such as KVP and fcopy.
+ * Timeout for services such as KVP.
  */
 #define HV_UTIL_TIMEOUT 30
 
@@ -777,9 +777,6 @@ int hv_vss_init(struct hv_util_service *);
 void hv_vss_deinit(void);
 void hv_vss_onchannelcallback(void *);
 
-int hv_fcopy_init(struct hv_util_service *);
-void hv_fcopy_deinit(void);
-void hv_fcopy_onchannelcallback(void *);
 void vmbus_initiate_unload(bool crash);
 
 static inline void hv_poll_channel(struct vmbus_channel *channel,
