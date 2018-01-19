@@ -977,10 +977,32 @@ enum ethtool_sfeatures_retval_bits {
 #define SPEED_10000		10000
 #define SPEED_UNKNOWN		-1
 
+#ifndef INT_MAX
+#define INT_MAX         ((int)(~0U>>1))
+#endif
+
+static inline int ethtool_validate_speed(__u32 speed)
+{
+        return speed <= INT_MAX || speed == SPEED_UNKNOWN;
+}
+
+
 /* Duplex, half or full. */
 #define DUPLEX_HALF		0x00
 #define DUPLEX_FULL		0x01
 #define DUPLEX_UNKNOWN		0xff
+
+static inline int ethtool_validate_duplex(__u8 duplex)
+{
+        switch (duplex) {
+        case DUPLEX_HALF:
+        case DUPLEX_FULL:
+        case DUPLEX_UNKNOWN:
+                return 1;
+        }
+
+        return 0;
+}
 
 /* Which connector port. */
 #define PORT_TP			0x00

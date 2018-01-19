@@ -545,7 +545,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
 	if (system_state != SYSTEM_BOOTING)
 		pci_enable_bridges(root->bus);
 
+	pci_lock_rescan_remove();
 	pci_bus_add_devices(root->bus);
+	pci_unlock_rescan_remove();
 	return 1;
 
 out_del_root:
@@ -562,6 +564,8 @@ static void acpi_pci_root_remove(struct acpi_device *device)
 {
 	struct acpi_pci_root *root = acpi_driver_data(device);
 
+	pci_lock_rescan_remove();
+
 	pci_stop_root_bus(root->bus);
 
 	device_set_run_wake(root->bus->bridge, false);
@@ -572,6 +576,9 @@ static void acpi_pci_root_remove(struct acpi_device *device)
 	mutex_lock(&acpi_pci_root_lock);
 	list_del(&root->node);
 	mutex_unlock(&acpi_pci_root_lock);
+
+	pci_unlock_rescan_remove();
+
 	kfree(root);
 }
 

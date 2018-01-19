@@ -397,8 +397,9 @@ struct virtio_device_id {
 /*
  * For Hyper-V devices we use the device guid as the id.
  */
+#define vmbus_device_id hv_vmbus_device_id
 struct hv_vmbus_device_id {
-	__u8 guid[16];
+	uuid_le guid;
 	kernel_ulong_t driver_data;	/* Data private to the driver */
 };
 
