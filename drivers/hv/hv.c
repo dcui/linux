@@ -90,9 +90,9 @@ static int query_hypervisor_info(void)
 }
 
 /*
- * do_hypercall- Invoke the specified hypercall
+ * hv_do_hypercall- Invoke the specified hypercall
  */
-static u64 do_hypercall(u64 control, void *input, void *output)
+u64 hv_do_hypercall(u64 control, void *input, void *output)
 {
 	u64 input_address = (input) ? virt_to_phys(input) : 0;
 	u64 output_address = (output) ? virt_to_phys(output) : 0;
@@ -135,6 +135,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
 	return hv_status_lo | ((u64)hv_status_hi << 32);
 #endif /* !x86_64 */
 }
+EXPORT_SYMBOL_GPL(hv_do_hypercall);
 
 #ifdef CONFIG_X86_64
 static cycle_t read_hv_clock_tsc(struct clocksource *arg)
@@ -198,6 +199,8 @@ int hv_init(void)
 	union hv_x64_msr_hypercall_contents tsc_msr;
 	void *virtaddr = NULL;
 	void *va_tsc = NULL;
+
+	hyperv_init();
 
 	memset(hv_context.synic_event_page, 0, sizeof(void *) * NR_CPUS);
 	memset(hv_context.synic_message_page, 0,
@@ -341,7 +344,7 @@ int hv_post_message(union hv_connection_id connection_id,
 	aligned_msg->payload_size = payload_size;
 	memcpy((void *)aligned_msg->payload, payload, payload_size);
 
-	status = do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
+	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL)
 		& 0xFFFF;
 
 	put_cpu();
@@ -359,7 +362,7 @@ u16 hv_signal_event(void *con_id)
 {
 	u16 status;
 
-	status = (do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
+	status = (hv_do_hypercall(HVCALL_SIGNAL_EVENT, con_id, NULL) & 0xFFFF);
 
 	return status;
 }
@@ -554,6 +557,8 @@ void hv_synic_init(void *arg)
 	wrmsrl(HV_X64_MSR_SCONTROL, sctrl.as_uint64);
 
 	hv_context.synic_initialized = true;
+
+	hv_cpu_init(cpu);
 
 	/*
 	 * Setup the mapping between Hyper-V's notion

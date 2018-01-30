@@ -144,6 +144,9 @@
  */
 #define HV_X64_RELAXED_TIMING_RECOMMENDED	(1 << 5)
 
+/* Crash notification flag */
+#define HV_CRASH_CTL_CRASH_NOTIFY (1ULL << 63)
+
 /* MSR used to identify the guest OS. */
 #define HV_X64_MSR_GUEST_OS_ID			0x40000000
 

@@ -197,7 +197,10 @@ void netvsc_linkstatus_callback(struct hv_device *device_obj,
 void netvsc_xmit_completion(void *context);
 int netvsc_recv_callback(struct hv_device *device_obj,
 			struct hv_netvsc_packet *packet,
-			struct ndis_tcp_ip_checksum_info *csum_info);
+			void **data,
+			struct ndis_tcp_ip_checksum_info *csum_info,
+			struct vmbus_channel *channel,
+			u16 vlan_tci);
 void netvsc_channel_cb(void *context);
 int rndis_filter_open(struct hv_device *dev);
 int rndis_filter_close(struct hv_device *dev);
@@ -205,11 +208,14 @@ int rndis_filter_device_add(struct hv_device *dev,
 			void *additional_info);
 void rndis_filter_device_remove(struct hv_device *dev);
 int rndis_filter_receive(struct hv_device *dev,
-			struct hv_netvsc_packet *pkt);
+			struct hv_netvsc_packet *pkt,
+			void **data,
+			struct vmbus_channel *channel);
 
 int rndis_filter_set_packet_filter(struct rndis_device *dev, u32 new_filter);
 int rndis_filter_set_device_mac(struct hv_device *hdev, char *mac);
-
+bool rndis_filter_opened(const struct netvsc_device *nvdev);
+void netvsc_switch_datapath(struct netvsc_device *nv_dev, bool vf);
 
 #define NVSP_INVALID_PROTOCOL_VERSION	((u32)0xFFFFFFFF)
 
@@ -644,16 +650,32 @@ struct netvsc_stats {
 	struct u64_stats_sync syncp;
 };
 
+/*struct garp_wrk {
+	struct work_struct dwrk;
+	struct net_device *netdev;
+	struct netvsc_device *netvsc_dev;
+};
+*/
+
 /* The context of the netvsc device  */
 struct net_device_context {
 	/* point back to our device context */
 	struct hv_device *device_ctx;
+	/* netvsc_device */
+	/* struct netvsc_device *nvdev; */
 	struct delayed_work dwork;
 	struct work_struct work;
 	u32 msg_enable; /* debug level */
 
 	struct netvsc_stats __percpu *tx_stats;
 	struct netvsc_stats __percpu *rx_stats;
+
+	/* Ethtool settings */
+	u8 duplex;
+	u32 speed;
+
+	struct delayed_work vf_takeover;
+	struct work_struct vf_notify;
 };
 
 /* Per netvsc device */
@@ -721,6 +743,12 @@ struct netvsc_device {
 	u32 vf_alloc;
 	/* Serial number of the VF to team with */
 	u32 vf_serial;
+	bool vf_inject;
+	atomic_t open_cnt;
+
+	struct net_device __rcu *vf_netdev;
+	struct work_struct vf_takeover;
+	atomic_t vf_use_cnt;
 };
 
 /* NdisInitialize message */

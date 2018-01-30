@@ -348,14 +348,17 @@ static inline void *rndis_get_ppi(struct rndis_packet *rpkt, u32 type)
 	return NULL;
 }
 
-static void rndis_filter_receive_data(struct rndis_device *dev,
+static int rndis_filter_receive_data(struct rndis_device *dev,
 				   struct rndis_message *msg,
-				   struct hv_netvsc_packet *pkt)
+				   struct hv_netvsc_packet *pkt,
+				   void **data,
+				   struct vmbus_channel *channel)
 {
 	struct rndis_packet *rndis_pkt;
 	u32 data_offset;
 	struct ndis_pkt_8021q_info *vlan;
 	struct ndis_tcp_ip_checksum_info *csum_info;
+	u16 vlan_tci = 0;
 
 	rndis_pkt = &msg->msg.pkt;
 
@@ -373,7 +376,7 @@ static void rndis_filter_receive_data(struct rndis_device *dev,
 			   "overflow detected (got %u, min %u)"
 			   "...dropping this message!\n",
 			   pkt->total_data_buflen, rndis_pkt->data_len);
-		return;
+		return NVSP_STAT_FAIL;
 	}
 
 	/*
@@ -382,22 +385,23 @@ static void rndis_filter_receive_data(struct rndis_device *dev,
 	 * the data packet to the stack, without the rndis trailer padding
 	 */
 	pkt->total_data_buflen = rndis_pkt->data_len;
-	pkt->data = (void *)((unsigned long)pkt->data + data_offset);
+	*data = (void *)((unsigned long)(*data) + data_offset);
 
 	vlan = rndis_get_ppi(rndis_pkt, IEEE_8021Q_INFO);
 	if (vlan) {
-		pkt->vlan_tci = VLAN_TAG_PRESENT | vlan->vlanid |
+		vlan_tci = VLAN_TAG_PRESENT | vlan->vlanid |
 			(vlan->pri << VLAN_PRIO_SHIFT);
-	} else {
-		pkt->vlan_tci = 0;
 	}
 
 	csum_info = rndis_get_ppi(rndis_pkt, TCPIP_CHKSUM_PKTINFO);
-	netvsc_recv_callback(dev->net_dev->dev, pkt, csum_info);
+	return netvsc_recv_callback(dev->net_dev->dev, pkt, data,
+				    csum_info, channel, vlan_tci);
 }
 
 int rndis_filter_receive(struct hv_device *dev,
-				struct hv_netvsc_packet	*pkt)
+			 struct hv_netvsc_packet *pkt,
+			 void **data,
+			 struct vmbus_channel *channel)
 {
 	struct netvsc_device *net_dev = hv_get_drvdata(dev);
 	struct rndis_device *rndis_dev;
@@ -428,7 +432,7 @@ int rndis_filter_receive(struct hv_device *dev,
 		goto exit;
 	}
 
-	rndis_msg = pkt->data;
+	rndis_msg = *data;
 
 	if (netif_msg_rx_err(net_dev->nd_ctx))
 		dump_rndis_message(dev, rndis_msg);
@@ -436,7 +440,8 @@ int rndis_filter_receive(struct hv_device *dev,
 	switch (rndis_msg->ndis_msg_type) {
 	case RNDIS_MSG_PACKET:
 		/* data msg */
-		rndis_filter_receive_data(rndis_dev, rndis_msg, pkt);
+		ret = rndis_filter_receive_data(rndis_dev, rndis_msg, pkt,
+					  data, channel);
 		break;
 
 	case RNDIS_MSG_INIT_C:
@@ -1224,6 +1229,9 @@ int rndis_filter_open(struct hv_device *dev)
 	if (!net_device)
 		return -EINVAL;
 
+	if (atomic_inc_return(&net_device->open_cnt) != 1)
+		return 0;
+
 	return rndis_filter_open_device(net_device->extension);
 }
 
@@ -1234,5 +1242,15 @@ int rndis_filter_close(struct hv_device *dev)
 	if (!nvdev)
 		return -EINVAL;
 
+	if (atomic_dec_return(&nvdev->open_cnt) != 0)
+		return 0;
+
 	return rndis_filter_close_device(nvdev->extension);
+}
+
+bool rndis_filter_opened(const struct netvsc_device *nvdev)
+{
+	const struct rndis_device *dev = nvdev->extension;
+
+	return dev->state == RNDIS_DEV_DATAINITIALIZED;
 }
