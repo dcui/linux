@@ -2472,6 +2472,15 @@ static int hv_pci_probe(struct hv_device *hdev,
 		goto free_bus;
 	}
 
+	/*
+	 *  __do_softirq() can offload this channel callback to ksoftirqd if
+	 * it has been running longer than MAX_SOFTIRQ_TIME, but due to the
+	 * busy udelay loop in hv_compose_msi_msg(), ksoftirqd may have no
+	 * chance to run, especially in a UP VM (typically CONFIG_PREEMPT
+	 * is not enabled by Linux distros), and we may end up hanging in
+	 * the loop forever. Fix this race by using HV_CALL_ISR.
+	 */
+	set_channel_read_mode(hdev->channel, HV_CALL_ISR);
 	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
 			 hv_pci_onchannelcallback, hbus);
 	if (ret)
