@@ -515,12 +515,16 @@ struct hv_pci_dev {
 	 * read it back, for each of the BAR offsets within config space.
 	 */
 	u32 probed_bar[6];
+
+	bool intr_mapping_err;
 };
 
 struct hv_pci_compl {
 	struct completion host_event;
 	s32 completion_status;
 };
+
+static void hv_pci_onchannelcallback(void *context);
 
 /**
  * hv_pci_generic_compl() - Invoked for a completion packet
@@ -664,6 +668,32 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 		dev_err(&hpdev->hbus->hdev->device,
 			"Attempt to read beyond a function's config space.\n");
 	}
+}
+
+static u32 hv_pcifront_read_dev_id(struct hv_pci_dev *hpdev)
+{
+	u32 ret;
+	unsigned long flags;
+	void __iomem *addr = hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET +
+			     PCI_VENDOR_ID;
+
+	spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+
+	/* Choose the function to be read. (See comment above) */
+	writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+	/* Make sure the function was chosen before we start reading. */
+	mb();
+	/* Read from that function's config space. */
+	ret = readw(addr);
+	/*
+	 * Make sure the read was done before we release the spinlock
+	 * allowing consecutive reads/writes.
+	 */
+	mb();
+
+	spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+
+	return ret;
 }
 
 /**
@@ -1025,6 +1055,7 @@ static u32 hv_compose_msi_req_v2(
  */
 static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 {
+	unsigned long flags;
 	struct irq_cfg *cfg = irqd_cfg(data);
 	struct hv_pcibus_device *hbus;
 	struct hv_pci_dev *hpdev;
@@ -1051,6 +1082,9 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
 	if (!hpdev)
 		goto return_null_message;
+
+	if (hpdev->intr_mapping_err)
+		goto drop_reference;
 
 	/* Free any previous message that might have already been composed. */
 	if (data->chip_data) {
@@ -1108,8 +1142,35 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	 * Since this function is called with IRQ locks held, can't
 	 * do normal wait for completion; instead poll.
 	 */
-	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
+	while (!try_wait_for_completion(&comp.comp_pkt.host_event)) {
+		if (hv_pcifront_read_dev_id(hpdev) == 0xFFFF) {
+			hpdev->intr_mapping_err = true;
+			dev_err(&hbus->hdev->device, "the device has gone\n");
+			goto free_int_desc;
+		}
+
+		/*
+		 * In case we reach here with local interrupts disabled in
+		 * v4.15 or newer, we have to poll the ringbuffer by calling
+		 * the channel callback directly.
+		 *
+		 * In case we reach here with local interrupts enabled in
+		 * v4.14 or older, let's add local_irq_save/restore to
+		 * avoid the race.
+		 */
+		local_irq_save(flags);
+		if (hbus->hdev->channel->target_cpu == smp_processor_id())
+			hv_pci_onchannelcallback(hbus);
+		local_irq_restore(flags);
+
+		if (hpdev->state == hv_pcichild_ejecting) {
+			hpdev->intr_mapping_err = true;
+			dev_err(&hbus->hdev->device, "being ejected\n");
+			goto free_int_desc;
+		}
+
 		udelay(100);
+	}
 
 	if (comp.comp_pkt.completion_status < 0) {
 		dev_err(&hbus->hdev->device,
