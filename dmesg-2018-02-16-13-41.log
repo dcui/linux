@@ -1,0 +1,822 @@
+[    0.000000] Linux version 4.16.0-rc1+ (root@dexuan-gpu216-1) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.6)) #2 SMP Fri Feb 16 20:52:55 UTC 2018
+[    0.000000] Command line: BOOT_IMAGE=/boot/hv/bzImage root=UUID=b6adc449-5e3d-4331-ba6b-6e99a75fa48e ro console=ttyS0 earlyprintk=ttyS0 rootdelay=300 maxcpus=1 ignore_loglevel sysrq_always_enabled
+[    0.000000] KERNEL supported cpus:
+[    0.000000]   Intel GenuineIntel
+[    0.000000]   AMD AuthenticAMD
+[    0.000000]   Centaur CentaurHauls
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    0.000000] x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+[    0.000000] x86/fpu: Enabled xstate features 0x7, context size is 832 bytes, using 'standard' format.
+[    0.000000] e820: BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable
+[    0.000000] BIOS-e820: [mem 0x000000000009fc00-0x000000000009ffff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000000e0000-0x00000000000fffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x000000001ffeffff] usable
+[    0.000000] BIOS-e820: [mem 0x000000001fff0000-0x000000001fffefff] ACPI data
+[    0.000000] BIOS-e820: [mem 0x000000001ffff000-0x000000001fffffff] ACPI NVS
+[    0.000000] BIOS-e820: [mem 0x0000000100000000-0x0000000fdfffffff] usable
+[    0.000000] BIOS-e820: [mem 0x0000004fe0000000-0x00000078dfffffff] usable
+[    0.000000] BIOS-e820: [mem 0x00000078e0200000-0x000000b0e01fffff] usable
+[    0.000000] bootconsole [earlyser0] enabled
+[    0.000000] debug: ignoring loglevel setting.
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] random: fast init done
+[    0.000000] SMBIOS 2.3 present.
+[    0.000000] DMI: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS 090007  06/02/2017
+[    0.000000] Hypervisor detected: Microsoft Hyper-V
+[    0.000000] Hyper-V: features 0x2e7f, hints 0xc2c
+[    0.000000] Hyper-V Host Build:14393-10.0-0-0.230
+[    0.000000] Hyper-V: LAPIC Timer Frequency: 0xc3500
+[    0.000000] tsc: Marking TSC unstable due to running on Hyper-V
+[    0.000000] Hyper-V: Using ext hypercall for remote TLB flush
+[    0.000000] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
+[    0.000000] e820: remove [mem 0x000a0000-0x000fffff] usable
+[    0.000000] e820: last_pfn = 0xb0e0200 max_arch_pfn = 0x400000000
+[    0.000000] MTRR default type: uncachable
+[    0.000000] MTRR fixed ranges enabled:
+[    0.000000]   00000-9FFFF write-back
+[    0.000000]   A0000-DFFFF uncachable
+[    0.000000]   E0000-FFFFF write-back
+[    0.000000] MTRR variable ranges enabled:
+[    0.000000]   0 base 00000000000 mask FFFE0000000 write-back
+[    0.000000]   1 base 00100000000 mask FF000000000 write-back
+[    0.000000]   2 base 04FE0000000 mask 80000000000 write-back
+[    0.000000]   3 base 80000000000 mask 00000000000 write-back
+[    0.000000]   4 disabled
+[    0.000000]   5 disabled
+[    0.000000]   6 disabled
+[    0.000000]   7 disabled
+[    0.000000] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+[    0.000000] e820: update [mem 0x20000000-0xffffffff] usable ==> reserved
+[    0.000000] e820: update [mem 0x1100000000-0x4fdfffffff] usable ==> reserved
+[    0.000000] e820: last_pfn = 0x1fff0 max_arch_pfn = 0x400000000
+[    0.000000] found SMP MP-table at [mem 0x000ff780-0x000ff78f] mapped at [        (ptrval)]
+[    0.000000] Scanning 1 areas for low memory corruption
+[    0.000000] Base memory trampoline at [        (ptrval)] 99000 size 24576
+[    0.000000] Using GB pages for direct mapping
+[    0.000000] BRK [0xa07e38c000, 0xa07e38cfff] PGTABLE
+[    0.000000] BRK [0xa07e38d000, 0xa07e38dfff] PGTABLE
+[    0.000000] BRK [0xa07e38e000, 0xa07e38efff] PGTABLE
+[    0.000000] BRK [0xa07e38f000, 0xa07e38ffff] PGTABLE
+[    0.000000] BRK [0xa07e390000, 0xa07e390fff] PGTABLE
+[    0.000000] BRK [0xa07e391000, 0xa07e391fff] PGTABLE
+[    0.000000] BRK [0xa07e392000, 0xa07e392fff] PGTABLE
+[    0.000000] BRK [0xa07e393000, 0xa07e393fff] PGTABLE
+[    0.000000] BRK [0xa07e394000, 0xa07e394fff] PGTABLE
+[    0.000000] BRK [0xa07e395000, 0xa07e395fff] PGTABLE
+[    0.000000] RAMDISK: [mem 0x1347f000-0x1f672fff]
+[    0.000000] ACPI: Early table checksum verification disabled
+[    0.000000] ACPI: RSDP 0x00000000000F5BF0 000014 (v00 ACPIAM)
+[    0.000000] ACPI: RSDT 0x000000001FFF0000 000040 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: FACP 0x000000001FFF0200 000081 (v02 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: DSDT 0x000000001FFF1D24 003CBE (v01 MSFTVM MSFTVM02 00000002 INTL 02002026)
+[    0.000000] ACPI: FACS 0x000000001FFFF000 000040
+[    0.000000] ACPI: WAET 0x000000001FFF1A80 000028 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: SLIC 0x000000001FFF1AC0 000176 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: OEM0 0x000000001FFF1CC0 000064 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: SRAT 0x000000001FFF0800 000340 (v02 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: APIC 0x000000001FFF0300 000452 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: OEMB 0x000000001FFFF040 000064 (v01 VRTUAL MICROSFT 06001702 MSFT 00000097)
+[    0.000000] ACPI: Local APIC address 0xfee00000
+[    0.000000] SRAT: PXM 0 -> APIC 0x00 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x01 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x02 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x03 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x04 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x05 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x06 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x07 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x08 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x09 -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x0a -> Node 0
+[    0.000000] SRAT: PXM 0 -> APIC 0x0b -> Node 0
+[    0.000000] SRAT: PXM 1 -> APIC 0x0c -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x0d -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x0e -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x0f -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x10 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x11 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x12 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x13 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x14 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x15 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x16 -> Node 1
+[    0.000000] SRAT: PXM 1 -> APIC 0x17 -> Node 1
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x00000000-0x1fffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0xfdfffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x4fe0000000-0x78dfffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 1 PXM 1 [mem 0x78e0200000-0xb0e01fffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0xb0e0400000-0xd86fffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x10000200000-0x17fffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x20000200000-0x2ffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 1 PXM 1 [mem 0xd870200000-0xffffdfffff] hotplug
+[    0.000000] ACPI: SRAT: Node 1 PXM 1 [mem 0x18000200000-0x1ffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 1 PXM 1 [mem 0x30000200000-0x3ffffffffff] hotplug
+[    0.000000] NUMA: Node 0 [mem 0x00000000-0x1fffffff] + [mem 0x100000000-0xfdfffffff] -> [mem 0x00000000-0xfdfffffff]
+[    0.000000] NUMA: Node 0 [mem 0x00000000-0xfdfffffff] + [mem 0x4fe0000000-0x78dfffffff] -> [mem 0x00000000-0x78dfffffff]
+[    0.000000] NODE_DATA(0) allocated [mem 0x78dffd5000-0x78dfffffff]
+[    0.000000] NODE_DATA(1) allocated [mem 0xb0e01d5000-0xb0e01fffff]
+[    0.000000] Section 5659 and 5660 (node 1) have a circular dependency on usemap and pgdat allocations
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.000000]   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000b0e01fffff]
+[    0.000000]   Device   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000001000-0x000000000009efff]
+[    0.000000]   node   0: [mem 0x0000000000100000-0x000000001ffeffff]
+[    0.000000]   node   0: [mem 0x0000000100000000-0x0000000fdfffffff]
+[    0.000000]   node   0: [mem 0x0000004fe0000000-0x00000078dfffffff]
+[    0.000000]   node   1: [mem 0x00000078e0200000-0x000000b0e01fffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000001000-0x00000078dfffffff]
+[    0.000000] On node 0 totalpages: 58720142
+[    0.000000]   DMA zone: 64 pages used for memmap
+[    0.000000]   DMA zone: 21 pages reserved
+[    0.000000]   DMA zone: 3998 pages, LIFO batch:0
+[    0.000000]   DMA32 zone: 1984 pages used for memmap
+[    0.000000]   DMA32 zone: 126960 pages, LIFO batch:31
+[    0.000000]   Normal zone: 915456 pages used for memmap
+[    0.000000]   Normal zone: 58589184 pages, LIFO batch:31
+[    0.000000] Initmem setup node 1 [mem 0x00000078e0200000-0x000000b0e01fffff]
+[    0.000000] On node 1 totalpages: 58720256
+[    0.000000]   Normal zone: 917504 pages used for memmap
+[    0.000000]   Normal zone: 58720256 pages, LIFO batch:31
+[    0.000000] Reserved but unavailable: 98 pages
+[    0.000000] ACPI: PM-Timer IO Port: 0x408
+[    0.000000] ACPI: Local APIC address 0xfee00000
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0xff] dfl dfl lint[0x1])
+[    0.000000] IOAPIC[0]: apic_id 0, version 17, address 0xfec00000, GSI 0-23
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+[    0.000000] ACPI: IRQ0 used by override.
+[    0.000000] ACPI: IRQ9 used by override.
+[    0.000000] Using ACPI (MADT) for SMP configuration information
+[    0.000000] smpboot: Allowing 128 CPUs, 104 hotplug CPUs
+[    0.000000] PM: Registered nosave memory: [mem 0x00000000-0x00000fff]
+[    0.000000] PM: Registered nosave memory: [mem 0x0009f000-0x0009ffff]
+[    0.000000] PM: Registered nosave memory: [mem 0x000a0000-0x000dffff]
+[    0.000000] PM: Registered nosave memory: [mem 0x000e0000-0x000fffff]
+[    0.000000] PM: Registered nosave memory: [mem 0x1fff0000-0x1fffefff]
+[    0.000000] PM: Registered nosave memory: [mem 0x1ffff000-0x1fffffff]
+[    0.000000] PM: Registered nosave memory: [mem 0x20000000-0xffffffff]
+[    0.000000] PM: Registered nosave memory: [mem 0xfe0000000-0x4fdfffffff]
+[    0.000000] PM: Registered nosave memory: [mem 0x78e0000000-0x78e01fffff]
+[    0.000000] e820: [mem 0x20000000-0xffffffff] available for PCI devices
+[    0.000000] Booting paravirtualized kernel on bare hardware
+[    0.000000] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645519600211568 ns
+[    0.000000] setup_percpu: NR_CPUS:8192 nr_cpumask_bits:128 nr_cpu_ids:128 nr_node_ids:2
+[    0.000000] percpu: Embedded 45 pages/cpu @        (ptrval) s146248 r8192 d29880 u262144
+[    0.000000] pcpu-alloc: s146248 r8192 d29880 u262144 alloc=1*2097152
+[    0.000000] pcpu-alloc: [0] 000 001 002 003 004 005 006 007 
+[    0.000000] pcpu-alloc: [0] 008 009 010 011 024 026 028 030 
+[    0.000000] pcpu-alloc: [0] 032 034 036 038 040 042 044 046 
+[    0.000000] pcpu-alloc: [0] 048 050 052 054 056 058 060 062 
+[    0.000000] pcpu-alloc: [0] 064 066 068 070 072 074 076 078 
+[    0.000000] pcpu-alloc: [0] 080 082 084 086 088 090 092 094 
+[    0.000000] pcpu-alloc: [0] 096 098 100 102 104 106 108 110 
+[    0.000000] pcpu-alloc: [0] 112 114 116 118 120 122 124 126 
+[    0.000000] pcpu-alloc: [1] 012 013 014 015 016 017 018 019 
+[    0.000000] pcpu-alloc: [1] 020 021 022 023 025 027 029 031 
+[    0.000000] pcpu-alloc: [1] 033 035 037 039 041 043 045 047 
+[    0.000000] pcpu-alloc: [1] 049 051 053 055 057 059 061 063 
+[    0.000000] pcpu-alloc: [1] 065 067 069 071 073 075 077 079 
+[    0.000000] pcpu-alloc: [1] 081 083 085 087 089 091 093 095 
+[    0.000000] pcpu-alloc: [1] 097 099 101 103 105 107 109 111 
+[    0.000000] pcpu-alloc: [1] 113 115 117 119 121 123 125 127 
+[    0.000000] Built 2 zonelists, mobility grouping on.  Total pages: 115605369
+[    0.000000] Policy zone: Normal
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/hv/bzImage root=UUID=b6adc449-5e3d-4331-ba6b-6e99a75fa48e ro console=ttyS0 earlyprintk=ttyS0 rootdelay=300 maxcpus=1 ignore_loglevel sysrq_always_enabled
+[    0.000000] sysrq: sysrq always enabled.
+[    0.000000] log_buf_len individual max cpu contribution: 4096 bytes
+[    0.000000] log_buf_len total cpu_extra contributions: 520192 bytes
+[    0.000000] log_buf_len min size: 262144 bytes
+[    0.000000] log_buf_len: 1048576 bytes
+[    0.000000] early log buf free: 249068(95%)
+[    0.000000] Memory: 462091644K/469761592K available (12300K kernel code, 3115K rwdata, 3772K rodata, 2140K init, 14624K bss, 7669948K reserved, 0K cma-reserved)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=128, Nodes=2
+[    0.000000] Kernel/User page tables isolation: enabled
+[    0.000000] ftrace: allocating 35311 entries in 138 pages
+[    0.000000] Running RCU self tests
+[    0.000000] Hierarchical RCU implementation.
+[    0.000000] 	RCU event tracing is enabled.
+[    0.000000] 	RCU lockdep checking is enabled.
+[    0.000000] 	RCU restricting CPUs from NR_CPUS=8192 to nr_cpu_ids=128.
+[    0.000000] 	Tasks RCU enabled.
+[    0.000000] RCU: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=128
+[    0.000000] NR_IRQS: 524544, nr_irqs: 1448, preallocated irqs: 16
+[    0.000000] Console: colour VGA+ 80x25
+[    0.000000] console [ttyS0] enabled
+[    0.000000] bootconsole [earlyser0] disabled
+[    0.000000] Lock dependency validator: Copyright (c) 2006 Red Hat, Inc., Ingo Molnar
+[    0.000000] ... MAX_LOCKDEP_SUBCLASSES:  8
+[    0.000000] ... MAX_LOCK_DEPTH:          48
+[    0.000000] ... MAX_LOCKDEP_KEYS:        8191
+[    0.000000] ... CLASSHASH_SIZE:          4096
+[    0.000000] ... MAX_LOCKDEP_ENTRIES:     32768
+[    0.000000] ... MAX_LOCKDEP_CHAINS:      65536
+[    0.000000] ... CHAINHASH_SIZE:          32768
+[    0.000000]  memory used by lock dependency info: 7391 kB
+[    0.000000]  per task-struct memory footprint: 1920 bytes
+[    0.000000] mempolicy: Enabling automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl
+[    0.000000] ACPI: Core revision 20180105
+[    0.000000] ACPI: 1 ACPI AML tables successfully acquired and loaded
+[    0.000000] APIC: Switch to symmetric I/O mode setup
+[    0.000000] Switched APIC routing to physical flat.
+[    0.000000] clocksource: hyperv_clocksource_tsc_page: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710, max_idle_ns: 440795202120 ns
+[    0.120000] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+[    0.124000] tsc: Detected 2593.992 MHz processor
+[    0.124000] Calibrating delay loop (skipped), value calculated using timer frequency.. 5187.98 BogoMIPS (lpj=10375968)
+[    0.124000] pid_max: default: 131072 minimum: 1024
+[    0.128223] Security Framework initialized
+[    0.129650] Yama: becoming mindful.
+[    0.130878] SELinux:  Disabled at boot.
+[    0.132003] AppArmor: AppArmor disabled by boot time parameter
+[    0.157709] Dentry cache hash table entries: 16777216 (order: 15, 134217728 bytes)
+[    0.172000] Inode-cache hash table entries: 8388608 (order: 14, 67108864 bytes)
+[    0.172478] Mount-cache hash table entries: 262144 (order: 9, 2097152 bytes)
+[    0.176410] Mountpoint-cache hash table entries: 262144 (order: 9, 2097152 bytes)
+[    0.180858] CPU: Physical Processor ID: 0
+[    0.182190] CPU: Processor Core ID: 0
+[    0.184054] mce: CPU supports 1 MCE banks
+[    0.185443] Last level iTLB entries: 4KB 128, 2MB 8, 4MB 8
+[    0.188003] Last level dTLB entries: 4KB 64, 2MB 0, 4MB 0, 1GB 4
+[    0.189952] Spectre V2 : Vulnerable: Minimal generic ASM retpoline
+[    0.203117] smpboot: CPU0: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz (family: 0x6, model: 0x4f, stepping: 0x1)
+[    0.204000] Performance Events: unsupported p6 CPU model 79 no PMU driver, software events only.
+[    0.204207] Hierarchical SRCU implementation.
+[    0.208681] NMI watchdog: Perf event create on CPU 0 failed with -2
+[    0.210729] NMI watchdog: Perf NMI watchdog permanently disabled
+[    0.214581] smp: Bringing up secondary CPUs ...
+[    0.216004] smp: Brought up 2 nodes, 1 CPU
+[    0.217357] smpboot: Max logical packages: 128
+[    0.218830] smpboot: Total of 1 processors activated (5187.98 BogoMIPS)
+[    0.231169] devtmpfs: initialized
+[    0.232139] x86/mm: Memory block size: 2048MB
+[    0.240214] evm: security.selinux
+[    0.241323] evm: security.SMACK64
+[    0.242446] evm: security.SMACK64EXEC
+[    0.243654] evm: security.SMACK64TRANSMUTE
+[    0.244003] evm: security.SMACK64MMAP
+[    0.245210] evm: security.apparmor
+[    0.246346] evm: security.ima
+[    0.248003] evm: security.capability
+[    0.249369] PM: Registering ACPI NVS region [mem 0x1ffff000-0x1fffffff] (4096 bytes)
+[    0.252270] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.255636] futex hash table entries: 32768 (order: 10, 4194304 bytes)
+[    0.260440] pinctrl core: initialized pinctrl subsystem
+[    0.262634] RTC time: 21:35:58, date: 02/16/18
+[    0.265007] NET: Registered protocol family 16
+[    0.266719] audit: initializing netlink subsys (disabled)
+[    0.268301] cpuidle: using governor ladder
+[    0.269670] cpuidle: using governor menu
+[    0.272016] audit: type=2000 audit(1518816957.268:1): state=initialized audit_enabled=0 res=1
+[    0.274887] KVM setup pv remote TLB flush
+[    0.276015] ACPI: bus type PCI registered
+[    0.277334] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+[    0.280072] PCI: Using configuration type 1 for base access
+[    0.288000] HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.288027] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.293490] ACPI: Added _OSI(Module Device)
+[    0.296011] ACPI: Added _OSI(Processor Device)
+[    0.297470] ACPI: Added _OSI(3.0 _SCP Extensions)
+[    0.299052] ACPI: Added _OSI(Processor Aggregator Device)
+[    0.311590] ACPI: Interpreter enabled
+[    0.312034] ACPI: (supports S0 S5)
+[    0.313195] ACPI: Using IOAPIC for interrupt routing
+[    0.314915] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+[    0.316269] ACPI: Enabled 1 GPEs in block 00 to 0F
+[    0.345202] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+[    0.347230] acpi PNP0A03:00: _OSC: OS supports [ASPM ClockPM Segments MSI]
+[    0.348027] acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+[    0.350407] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+[    0.352210] PCI host bridge to bus 0000:00
+[    0.356006] pci_bus 0000:00: root bus resource [mem 0xfe0000000-0x4fdfffffff window]
+[    0.358484] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
+[    0.360004] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
+[    0.364003] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+[    0.366499] pci_bus 0000:00: root bus resource [mem 0x20000000-0xfffbffff window]
+[    0.368004] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    0.370087] pci 0000:00:00.0: [8086:7192] type 00 class 0x060000
+[    0.373287] pci 0000:00:07.0: [8086:7110] type 00 class 0x060100
+[    0.377649] pci 0000:00:07.1: [8086:7111] type 00 class 0x010180
+[    0.381335] pci 0000:00:07.1: reg 0x20: [io  0xffa0-0xffaf]
+[    0.383650] pci 0000:00:07.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    0.384003] pci 0000:00:07.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    0.388003] pci 0000:00:07.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    0.390328] pci 0000:00:07.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
+[    0.392360] pci 0000:00:07.3: [8086:7113] type 00 class 0x068000
+[    0.394333] * Found PM-Timer Bug on the chipset. Due to workarounds for a bug,
+               * this clock source is slow. Consider trying other clock sources
+[    0.401179] pci 0000:00:07.3: quirk: [io  0x0400-0x043f] claimed by PIIX4 ACPI
+[    0.404076] pci 0000:00:08.0: [1414:5353] type 00 class 0x030000
+[    0.406357] pci 0000:00:08.0: reg 0x10: [mem 0xf8000000-0xfbffffff]
+[    0.423749] ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 7 9 10 *11 12 14 15)
+[    0.424206] ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
+[    0.428208] ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
+[    0.432137] ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 7 9 10 11 12 14 15) *0, disabled.
+[    0.435283] pci 0000:00:08.0: vgaarb: setting as boot VGA device
+[    0.436000] pci 0000:00:08.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
+[    0.436004] pci 0000:00:08.0: vgaarb: bridge control possible
+[    0.438066] vgaarb: loaded
+[    0.439285] SCSI subsystem initialized
+[    0.440183] libata version 3.00 loaded.
+[    0.441749] EDAC MC: Ver: 3.0.0
+[    0.460020] hv_vmbus: Vmbus version:4.0
+[    0.461579] PCI: Using ACPI for IRQ routing
+[    0.464007] PCI: pci_cache_line_size set to 64 bytes
+[    0.465952] e820: reserve RAM buffer [mem 0x0009fc00-0x0009ffff]
+[    0.468007] e820: reserve RAM buffer [mem 0x1fff0000-0x1fffffff]
+[    0.470050] e820: reserve RAM buffer [mem 0xb0e0200000-0xb0e3ffffff]
+[    0.473364] hv_vmbus: Unknown GUID: 697925a7-84f0-4ed9-a9e8-76a941e72eb1
+[    0.476477] NetLabel: Initializing
+[    0.477670] NetLabel:  domain hash size = 128
+[    0.479213] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    0.480040] NetLabel:  unlabeled traffic allowed by default
+[    0.482219] clocksource: Switched to clocksource hyperv_clocksource_tsc_page
+[    0.484000] workqueue: round-robin CPU selection forced, expect performance impact
+[    0.531201] VFS: Disk quotas dquot_6.6.0
+[    0.532603] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.535128] pnp: PnP ACPI init
+[    0.536320] pnp 00:00: Plug and Play ACPI device, IDs PNP0b00 (active)
+[    0.538576] pnp 00:01: Plug and Play ACPI device, IDs PNP0303 PNP030b (active)
+[    0.541250] pnp 00:02: Plug and Play ACPI device, IDs PNP0f03 PNP0f13 (active)
+[    0.544188] pnp 00:03: [dma 0 disabled]
+[    0.545516] pnp 00:03: Plug and Play ACPI device, IDs PNP0501 (active)
+[    0.548255] pnp 00:04: [dma 0 disabled]
+[    0.549716] pnp 00:04: Plug and Play ACPI device, IDs PNP0501 (active)
+[    0.553579] pnp 00:05: [dma 2]
+[    0.554844] pnp 00:05: Plug and Play ACPI device, IDs PNP0700 (active)
+[    0.557191] system 00:06: [io  0x01e0-0x01ef] has been reserved
+[    0.559183] system 00:06: [io  0x0160-0x016f] has been reserved
+[    0.561179] system 00:06: [io  0x0278-0x027f] has been reserved
+[    0.563403] system 00:06: [io  0x0378-0x037f] has been reserved
+[    0.565573] system 00:06: [io  0x0678-0x067f] has been reserved
+[    0.567567] system 00:06: [io  0x0778-0x077f] has been reserved
+[    0.569566] system 00:06: [io  0x04d0-0x04d1] has been reserved
+[    0.571564] system 00:06: Plug and Play ACPI device, IDs PNP0c02 (active)
+[    0.574284] system 00:07: [io  0x0400-0x043f] has been reserved
+[    0.576291] system 00:07: [io  0x0370-0x0371] has been reserved
+[    0.578282] system 00:07: [io  0x0440-0x044f] has been reserved
+[    0.580266] system 00:07: [mem 0xfec00000-0xfec00fff] could not be reserved
+[    0.582587] system 00:07: [mem 0xfee00000-0xfee00fff] has been reserved
+[    0.585052] system 00:07: Plug and Play ACPI device, IDs PNP0c02 (active)
+[    0.587577] system 00:08: [mem 0x00000000-0x0009ffff] could not be reserved
+[    0.589939] system 00:08: [mem 0x000c0000-0x000dffff] could not be reserved
+[    0.592295] system 00:08: [mem 0x000e0000-0x000fffff] could not be reserved
+[    0.594651] system 00:08: [mem 0x00100000-0x1fffffff] could not be reserved
+[    0.596938] system 00:08: [mem 0xfffc0000-0xffffffff] has been reserved
+[    0.599036] system 00:08: Plug and Play ACPI device, IDs PNP0c01 (active)
+[    0.601417] pnp: PnP ACPI: found 9 devices
+[    0.610386] clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
+[    0.613313] pci_bus 0000:00: resource 4 [mem 0xfe0000000-0x4fdfffffff window]
+[    0.615692] pci_bus 0000:00: resource 5 [io  0x0000-0x0cf7 window]
+[    0.617732] pci_bus 0000:00: resource 6 [io  0x0d00-0xffff window]
+[    0.619757] pci_bus 0000:00: resource 7 [mem 0x000a0000-0x000bffff window]
+[    0.622021] pci_bus 0000:00: resource 8 [mem 0x20000000-0xfffbffff window]
+[    0.624396] NET: Registered protocol family 2
+[    0.627031] tcp_listen_portaddr_hash hash table entries: 65536 (order: 10, 4718592 bytes)
+[    0.632768] TCP established hash table entries: 524288 (order: 10, 4194304 bytes)
+[    0.636490] TCP bind hash table entries: 65536 (order: 10, 4194304 bytes)
+[    0.641396] TCP: Hash tables configured (established 524288 bind 65536)
+[    0.644696] UDP hash table entries: 65536 (order: 11, 10485760 bytes)
+[    0.653007] UDP-Lite hash table entries: 65536 (order: 11, 10485760 bytes)
+[    0.662088] NET: Registered protocol family 1
+[    0.663556] pci 0000:00:00.0: Limiting direct PCI/PCI transfers
+[    0.665918] pci 0000:00:08.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+[    0.668688] PCI: CLS 0 bytes, default 64
+[    0.670139] Unpacking initramfs...
+[    3.306031] Freeing initrd memory: 198608K
+[    3.307736] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+[    3.309933] software IO TLB [mem 0x0f47f000-0x1347f000] (64MB) mapped at [00000000d2a9d4b8-00000000ea0f2230]
+[    3.313680] Scanning for low memory corruption every 60 seconds
+[    3.319605] Initialise system trusted keyrings
+[    3.321256] Key type blacklist registered
+[    3.322736] workingset: timestamp_bits=36 max_order=27 bucket_order=0
+[    3.328825] zbud: loaded
+[    3.331260] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    3.333831] fuse init (API version 7.26)
+[    3.337428] Key type asymmetric registered
+[    3.338846] Asymmetric key parser 'x509' registered
+[    3.340652] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 247)
+[    3.343312] io scheduler noop registered (default)
+[    3.345486] intel_idle: Please enable MWAIT in BIOS SETUP
+[    3.347469] input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input0
+[    3.350266] ACPI: Power Button [PWRF]
+[    3.353112] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    3.379392] 00:03: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    3.406222] 00:04: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+[    3.410978] Linux agpgart interface v0.103
+[    3.437226] loop: module loaded
+[    3.438403] hv_vmbus: registering driver hv_storvsc
+[    3.441286] scsi host0: storvsc_host_t
+[    3.443351] scsi 0:0:0:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[    3.447501] scsi host1: storvsc_host_t
+[    3.449115] scsi 1:0:1:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[    3.454037] scsi host2: storvsc_host_t
+[    3.458634] scsi host3: storvsc_host_t
+[    3.460835] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    3.463076] sd 1:0:1:0: Attached scsi generic sg1 type 0
+[    3.465303] ata_piix 0000:00:07.1: version 2.13
+[    3.468737] ata_piix 0000:00:07.1: Hyper-V Virtual Machine detected, ATA device ignore set
+[    3.477809] sd 0:0:0:0: [sda] 62914560 512-byte logical blocks: (32.2 GB/30.0 GiB)
+[    3.480493] sd 0:0:0:0: [sda] 4096-byte physical blocks
+[    3.487134] sd 0:0:0:0: [sda] Write Protect is off
+[    3.488990] sd 0:0:0:0: [sda] Mode Sense: 0f 00 10 00
+[    3.491195] sd 1:0:1:0: [sdb] 6182404096 512-byte logical blocks: (3.17 TB/2.88 TiB)
+[    3.493767] sd 1:0:1:0: [sdb] 4096-byte physical blocks
+[    3.496366] sd 1:0:1:0: [sdb] Write Protect is off
+[    3.498094] sd 1:0:1:0: [sdb] Mode Sense: 0f 00 10 00
+[    3.502703] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+[    3.509124] sd 1:0:1:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
+[    3.512529] scsi host4: ata_piix
+[    3.514363] scsi host5: ata_piix
+[    3.515878] ata1: PATA max UDMA/33 cmd 0x1f0 ctl 0x3f6 bmdma 0xffa0 irq 14
+[    3.518213] ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xffa8 irq 15
+[    3.522869] libphy: Fixed MDIO Bus: probed
+[    3.524353] tun: Universal TUN/TAP device driver, 1.6
+[    3.526336] PPP generic driver version 2.4.2
+[    3.528346] i8042: PNP: PS/2 Controller [PNP0303:PS2K,PNP0f03:PS2M] at 0x60,0x64 irq 1,12
+[    3.531547]  sda: sda1
+[    3.562768] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    3.564651] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    3.566690] sd 0:0:0:0: [sda] Attached SCSI disk
+[    3.568733] mousedev: PS/2 mouse device common for all mice
+[    3.571291] rtc_cmos 00:00: RTC can wake from S4
+[    3.593133]  sdb: sdb1
+[    3.594463] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+[    3.598627] rtc_cmos 00:00: rtc core: registered rtc_cmos as rtc0
+[    3.605538] rtc_cmos 00:00: alarms up to one month, 114 bytes nvram
+[    3.607771] device-mapper: uevent: version 1.0.3
+[    3.609509] device-mapper: ioctl: 4.37.0-ioctl (2017-09-20) initialised: dm-devel@redhat.com
+[    3.612657] sd 1:0:1:0: [sdb] Attached SCSI disk
+[    3.614713] NET: Registered protocol family 10
+[    3.623079] Segment Routing with IPv6
+[    3.624357] NET: Registered protocol family 17
+[    3.625806] Key type dns_resolver registered
+[    3.627225] start plist test
+[    3.629471] end plist test
+[    3.630678] RAS: Correctable Errors collector initialized.
+[    3.632904] registered taskstats version 1
+[    3.634336] Loading compiled-in X.509 certificates
+[    3.639134] Loaded X.509 cert 'Build time autogenerated kernel key: 6614735e8c5153defc10407fb85ac20e1b844cde'
+[    3.642790] zswap: loaded using pool lzo/zbud
+[    3.648516] Key type big_key registered
+[    3.649806] Key type trusted registered
+[    3.653423] Key type encrypted registered
+[    3.654789] ima: No TPM chip found, activating TPM-bypass! (rc=-19)
+[    3.657041] evm: HMAC attrs: 0x1
+[    3.658552]   Magic number: 6:435:601
+[    3.660172] rtc_cmos 00:00: setting system clock to 2018-02-16 21:36:01 UTC (1518816961)
+[    3.663616] BIOS EDD facility v0.16 2004-Jun-25, 0 devices found
+[    3.665621] EDD information not available.
+[    3.682136] ata1.01: host indicates ignore ATA devices, ignored
+[    3.685178] ata1.00: host indicates ignore ATA devices, ignored
+[    3.691297] Freeing unused kernel memory: 2140K
+[    3.692937] Write protecting the kernel read-only data: 18432k
+[    3.696173] Freeing unused kernel memory: 2008K
+[    3.698444] Freeing unused kernel memory: 324K
+[    3.705681] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    3.707792] x86/mm: Checking user space page tables
+[    3.714721] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    4.023081] pps_core: LinuxPPS API ver. 1 registered
+[    4.024798] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    4.031955] PTP clock support registered
+[    4.058662] hv_vmbus: registering driver hv_netvsc
+[    4.090385] hv_utils: Registering HyperV Utility Driver
+[    4.092587] hv_vmbus: registering driver hv_util
+[    4.149526] hv_utils: Heartbeat IC version 3.0
+[    4.185027] cryptd: max_cpu_qlen set to 1000
+[    4.217197] AVX2 version of gcm_enc/dec engaged.
+[    4.218773] AES CTR mode by8 optimization enabled
+[    4.231504] hv_utils: Shutdown IC version 3.0
+[    4.233379] hv_utils: TimeSync IC version 4.0
+[    4.235083] hv_utils: VSS IC version 5.0
+[    5.688011] raid6: sse2x1   gen() 10329 MB/s
+[    5.756009] raid6: sse2x1   xor()  7698 MB/s
+[    5.824009] raid6: sse2x2   gen() 12539 MB/s
+[    5.892014] raid6: sse2x2   xor()  8233 MB/s
+[    5.960010] raid6: sse2x4   gen() 14784 MB/s
+[    6.028010] raid6: sse2x4   xor() 10372 MB/s
+[    6.096012] raid6: avx2x1   gen() 19581 MB/s
+[    6.164009] raid6: avx2x1   xor() 14452 MB/s
+[    6.232009] raid6: avx2x2   gen() 23100 MB/s
+[    6.300008] raid6: avx2x2   xor() 14898 MB/s
+[    6.368008] raid6: avx2x4   gen() 26633 MB/s
+[    6.436009] raid6: avx2x4   xor() 18340 MB/s
+[    6.437472] raid6: using algorithm avx2x4 gen() 26633 MB/s
+[    6.439331] raid6: .... xor() 18340 MB/s, rmw enabled
+[    6.441048] raid6: using avx2x2 recovery algorithm
+[    6.446290] xor: automatically using best checksumming function   avx       
+[    6.452357] async_tx: api initialized (async)
+[    6.655803] Btrfs loaded, crc32c=crc32c-intel
+[    6.722807] EXT4-fs (sda1): mounted filesystem with ordered data mode. Opts: (null)
+[    7.048208] systemd[1]: systemd 229 running in system mode. (+PAM +AUDIT +SELINUX +IMA +APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ -LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD -IDN)
+[    7.054543] systemd[1]: Detected virtualization microsoft.
+[    7.056511] systemd[1]: Detected architecture x86-64.
+[    7.062652] systemd[1]: Set hostname to <dexuan-gpu216-1>.
+[    7.268452] systemd[1]: Created slice User and Session Slice.
+[    7.272860] systemd[1]: Listening on fsck to fsckd communication Socket.
+[    7.277370] systemd[1]: Listening on udev Kernel Socket.
+[    7.281417] systemd[1]: Reached target Encrypted Volumes.
+[    7.285347] systemd[1]: Listening on Device-mapper event daemon FIFOs.
+[    7.289919] systemd[1]: Listening on Journal Socket.
+[    7.346507] EXT4-fs (sda1): re-mounted. Opts: discard
+[    7.370076] random: crng init done
+[    7.412149] Loading iSCSI transport class v2.0-870.
+[    7.466631] iscsi: registered transport (tcp)
+[    7.798743] systemd-journald[419]: Received request to flush runtime journal from PID 1
+[    8.304204] iscsi: registered transport (iser)
+[    9.610811] piix4_smbus 0000:00:07.3: SMBus base address uninitialized - upgrade BIOS or use force_addr=0xaddr
+[    9.846385] RAPL PMU: API unit is 2^-32 Joules, 3 fixed counters, 10737418240 ms ovfl timer
+[    9.849227] RAPL PMU: hw unit of domain pp0-core 2^-0 Joules
+[    9.851161] RAPL PMU: hw unit of domain package 2^-0 Joules
+[    9.853058] RAPL PMU: hw unit of domain dram 2^-16 Joules
+[    9.945430] EDAC sbridge: Seeking for: PCI ID 8086:6fa0
+[    9.947244] EDAC sbridge:  Ver: 1.1.2 
+[    9.982533] IPv6: ADDRCONF(NETDEV_UP): eth1: link is not ready
+[    9.989578] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[    9.991736] IPv6: ADDRCONF(NETDEV_CHANGE): eth1: link becomes ready
+[    9.994044] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   10.229684] sd 1:0:1:0: [storvsc] Sense Key : Illegal Request [current] 
+[   10.231982] sd 1:0:1:0: [storvsc] Add. Sense: Invalid command operation code
+[   10.247465] sd 1:0:1:0: [storvsc] Sense Key : Illegal Request [current] 
+[   10.249766] sd 1:0:1:0: [storvsc] Add. Sense: Invalid command operation code
+[   10.368679] sd 0:0:0:0: [storvsc] Sense Key : Illegal Request [current] 
+[   10.370979] sd 0:0:0:0: [storvsc] Add. Sense: Invalid command operation code
+[   10.380674] sd 0:0:0:0: [storvsc] Sense Key : Illegal Request [current] 
+[   10.382937] sd 0:0:0:0: [storvsc] Add. Sense: Invalid command operation code
+[   12.411327] new mount options do not match the existing superblock, will be ignored
+[   13.489030] EXT4-fs (sdb1): mounted filesystem with ordered data mode. Opts: (null)
+[  402.345376] hv_vmbus: registering driver hv_pci
+[  402.347390] hv_pci 04b630ba-9028-4d02-ac54-eab0cca5dd52: PCI VMBus probing: Using version 0x10002
+[  402.352488] cfg: write: delta1=6178, delta2=5161, off=0x10, size=4, val=0x21000000
+[  402.356380] cfg: write: delta1=4847, delta2=6270, off=0x14, size=4, val=0x0
+[  402.359725] cfg: write: delta1=4789, delta2=4870, off=0x18, size=4, val=0x10
+[  402.363127] cfg: write: delta1=4771, delta2=4951, off=0x1c, size=4, val=0x0
+[  402.366653] cfg: write: delta1=4790, delta2=4810, off=0x20, size=4, val=0x14
+[  402.370305] cfg: read: delta1=4917, delta2=5434, off=0x4, size=2, val=0x540
+[  402.376701] INFO: rcu_sched detected stalls on CPUs/tasks:
+[  402.376701] 	(detected by 0, t=9405 jiffies, g=4663, c=4662, q=82)
+[  402.376701] All QSes seen, last rcu_sched kthread activity 9405 (4295002288-4294992883), jiffies_till_next_fqs=1, root ->qsmask 0x0
+[  402.376701] insmod          R  running task        0  2124   2064 0x80000008
+[  402.376701] Call Trace:
+[  402.376701]  <IRQ>
+[  402.376701]  sched_show_task+0x131/0x190
+[  402.376701]  rcu_check_callbacks+0xa64/0xa70
+[  402.376701]  ? tick_sched_do_timer+0x40/0x40
+[  402.376701]  update_process_times+0x2f/0x60
+[  402.376701]  tick_sched_handle+0x2a/0x60
+[  402.376701]  tick_sched_timer+0x39/0x80
+[  402.376701]  __hrtimer_run_queues+0x106/0x520
+[  402.376701]  hrtimer_interrupt+0x116/0x240
+[  402.376701]  vmbus_isr+0x1d2/0x480
+[  402.376701]  hyperv_vector_handler+0x34/0x60
+[  402.376701]  hyperv_callback_vector+0xa9/0xb0
+[  402.376701]  </IRQ>
+[  402.376701] RIP: 0010:native_read_msr+0x7/0x30
+[  402.376701] RSP: 0018:ffffa8db10a579b8 EFLAGS: 00010246 ORIG_RAX: ffffffffffffff0c
+[  402.376701] RAX: ffffa8db0c485004 RBX: 0000000000000004 RCX: 0000000040000020
+[  402.376701] RDX: 0000000100000000 RSI: ffff9a3fb5023830 RDI: 0000000040000020
+[  402.376701] RBP: ffffa8db10a579c0 R08: 0000000000000542 R09: 0000000000000000
+[  402.376701] R10: 0000000001000000 R11: 0000000000000000 R12: 0000000000000002
+[  402.376701] R13: 0000000000000542 R14: 00000000000012e4 R15: 000000010d4dc82f
+[  402.376701]  _hv_pcifront_write_config.isra.14+0xe0/0x120 [pci_hyperv]
+[  402.376701]  hv_pci_probe+0xc83/0xd00 [pci_hyperv]
+[  402.376701]  vmbus_probe+0x3e/0xa0
+[  402.376701]  driver_probe_device+0x2b3/0x490
+[  402.376701]  __driver_attach+0xe3/0xf0
+[  402.376701]  ? driver_probe_device+0x490/0x490
+[  402.376701]  ? driver_probe_device+0x490/0x490
+[  402.376701]  bus_for_each_dev+0x6b/0xc0
+[  402.376701]  driver_attach+0x1e/0x20
+[  402.376701]  bus_add_driver+0x1f6/0x270
+[  402.376701]  driver_register+0x60/0xe0
+[  402.376701]  __vmbus_driver_register+0x84/0x90
+[  402.376701]  ? 0xffffffffc0655000
+[  402.376701]  init_hv_pci_drv+0x23/0x1000 [pci_hyperv]
+[  402.376701]  do_one_initcall+0x53/0x19b
+[  402.376701]  ? rcu_read_lock_sched_held+0x72/0x80
+[  402.376701]  ? kmem_cache_alloc_trace+0x240/0x2b0
+[  402.376701]  ? do_init_module+0x27/0x21b
+[  402.376701]  do_init_module+0x5f/0x21b
+[  402.376701]  load_module+0x255b/0x2d10
+[  402.376701]  ? ima_post_read_file+0x83/0xa0
+[  402.376701]  SYSC_finit_module+0xe5/0x120
+[  402.376701]  ? SYSC_finit_module+0xe5/0x120
+[  402.376701]  SyS_finit_module+0xe/0x10
+[  402.376701]  do_syscall_64+0x78/0x1e0
+[  402.376701]  entry_SYSCALL_64_after_hwframe+0x26/0x9b
+[  402.376701] RIP: 0033:0x7f2e79cb44d9
+[  402.376701] RSP: 002b:00007fffb9a28828 EFLAGS: 00000206 ORIG_RAX: 0000000000000139
+[  402.376701] RAX: ffffffffffffffda RBX: 000055c640e261f0 RCX: 00007f2e79cb44d9
+[  402.376701] RDX: 0000000000000000 RSI: 000055c6404bd26b RDI: 0000000000000003
+[  402.376701] RBP: 000055c6404bd26b R08: 0000000000000000 R09: 00007f2e79f79ea0
+[  402.376701] R10: 0000000000000003 R11: 0000000000000206 R12: 0000000000000000
+[  402.376701] R13: 000055c640e25130 R14: 0000000000000000 R15: 0000000000000000
+[  402.376701] rcu_sched kthread starved for 9405 jiffies! g4663 c4662 f0x2 RCU_GP_WAIT_FQS(3) ->state=0x0 ->cpu=0
+[  402.376701] rcu_sched       R  running task        0     9      2 0x80000000
+[  402.376701] Call Trace:
+[  402.376701]  __schedule+0x42c/0xb80
+[  402.376701]  schedule+0x3d/0x90
+[  402.376701]  schedule_timeout+0x1e6/0x5a0
+[  402.376701]  ? __next_timer_interrupt+0xe0/0xe0
+[  402.376701]  rcu_gp_kthread+0x7b2/0x1800
+[  402.376701]  kthread+0x10d/0x140
+[  402.376701]  ? call_rcu_sched+0x20/0x20
+[  402.376701]  ? kthread_delayed_work_timer_fn+0xa0/0xa0
+[  402.376701]  ret_from_fork+0x3a/0x50
+[  440.090579] cfg: write: delta1=4836, delta2=377181211, off=0x4, size=2, val=0x542
+[  440.131822] hv_pci 04b630ba-9028-4d02-ac54-eab0cca5dd52: PCI host bridge to bus 3a19:00
+[  440.135136] pci_bus 3a19:00: root bus resource [mem 0x21000000-0x21ffffff window]
+[  440.138401] pci_bus 3a19:00: root bus resource [mem 0x1000000000-0x1401ffffff window]
+[  440.142554] cfg: read: delta1=5788, delta2=5264, off=0xe, size=1, val=0x0
+[  440.145936] cfg: read: delta1=4815, delta2=4899, off=0x6, size=2, val=0x10
+[  440.149177] cfg: read: delta1=4778, delta2=4900, off=0x34, size=1, val=0x60
+[  440.152438] cfg: read: delta1=4754, delta2=4974, off=0x60, size=2, val=0x6801
+[  440.155801] cfg: read: delta1=4829, delta2=4920, off=0x68, size=2, val=0x7805
+[  440.159127] cfg: read: delta1=4733, delta2=4924, off=0x78, size=2, val=0x10
+[  440.162447] cfg: read: delta1=4788, delta2=4973, off=0x7a, size=2, val=0x2
+[  440.165757] cfg: read: delta1=4821, delta2=4889, off=0x7c, size=2, val=0x8de1
+[  440.168454] pci 3a19:00:00.0: [10de:15f8] type 00 class 0x030200
+[  440.171512] cfg: read: delta1=4839, delta2=4884, off=0x100, size=4, val=0x25010002
+[  440.175131] cfg: read: delta1=4765, delta2=4941, off=0x100, size=4, val=0x25010002
+[  440.178722] cfg: read: delta1=4844, delta2=4863, off=0x100, size=4, val=0x25010002
+[  440.182306] cfg: read: delta1=4714, delta2=4903, off=0x250, size=4, val=0x25810018
+[  440.186233] cfg: read: delta1=5088, delta2=4954, off=0x258, size=4, val=0x1281001e
+[  440.189830] cfg: read: delta1=4846, delta2=4856, off=0x128, size=4, val=0x42010004
+[  440.193439] cfg: read: delta1=4794, delta2=5230, off=0x420, size=4, val=0x60020001
+[  440.197266] cfg: read: delta1=4796, delta2=4966, off=0x600, size=4, val=0x9001000b
+[  440.200863] cfg: read: delta1=4908, delta2=4876, off=0x604, size=4, val=0x2410001
+[  440.204632] cfg: read: delta1=4758, delta2=6976, off=0x600, size=4, val=0x9001000b
+[  440.208229] cfg: read: delta1=4774, delta2=5010, off=0x900, size=4, val=0x10019
+[  440.211728] cfg: read: delta1=4793, delta2=4910, off=0x4, size=2, val=0x146
+[  440.215357] cfg: write: delta1=4841, delta2=7042, off=0x4, size=2, val=0x546
+[  440.218681] cfg: read: delta1=4770, delta2=4840, off=0x4, size=2, val=0x146
+[  440.221974] cfg: write: delta1=4779, delta2=4826, off=0x4, size=2, val=0x146
+[  440.225348] cfg: read: delta1=4766, delta2=4879, off=0x3d, size=1, val=0x1
+[  440.228807] cfg: read: delta1=4850, delta2=4876, off=0x4, size=2, val=0x146
+[  440.454755] cfg: write: delta1=4710, delta2=2231637, off=0x4, size=2, val=0x144
+[  440.458262] cfg: read: delta1=4889, delta2=4916, off=0x10, size=4, val=0x21000000
+[  440.462010] cfg: write: delta1=4821, delta2=4862, off=0x10, size=4, val=0xffffffff
+[  440.465577] cfg: read: delta1=4796, delta2=4846, off=0x10, size=4, val=0xff000000
+[  440.469117] cfg: write: delta1=4769, delta2=4889, off=0x10, size=4, val=0x21000000
+[  440.940942] cfg: write: delta1=4921, delta2=4685429, off=0x4, size=2, val=0x146
+[  440.943322] pci 3a19:00:00.0: reg 0x10: [mem 0x21000000-0x21ffffff]
+[  440.946391] cfg: read: delta1=4943, delta2=5348, off=0x4, size=2, val=0x146
+[  441.171570] cfg: write: delta1=9966, delta2=2219314, off=0x4, size=2, val=0x144
+[  441.175003] cfg: read: delta1=4953, delta2=4923, off=0x14, size=4, val=0xc
+[  441.178206] cfg: write: delta1=4793, delta2=4902, off=0x14, size=4, val=0xffffffff
+[  441.181603] cfg: read: delta1=4858, delta2=4848, off=0x14, size=4, val=0xc
+[  441.184786] cfg: write: delta1=4916, delta2=4833, off=0x14, size=4, val=0xc
+[  441.188304] cfg: read: delta1=4973, delta2=4948, off=0x18, size=4, val=0x10
+[  441.191692] cfg: write: delta1=4923, delta2=4846, off=0x18, size=4, val=0xffffffff
+[  441.195158] cfg: read: delta1=4883, delta2=4922, off=0x18, size=4, val=0xfffffffc
+[  441.198656] cfg: write: delta1=4851, delta2=4841, off=0x18, size=4, val=0x10
+[  441.670575] cfg: write: delta1=6581, delta2=4689829, off=0x4, size=2, val=0x146
+[  441.673328] pci 3a19:00:00.0: reg 0x14: [mem 0x1000000000-0x13ffffffff 64bit pref]
+[  441.676966] cfg: read: delta1=5082, delta2=5023, off=0x4, size=2, val=0x146
+[  441.901936] cfg: write: delta1=4731, delta2=2222187, off=0x4, size=2, val=0x144
+[  441.905421] cfg: read: delta1=4914, delta2=4883, off=0x1c, size=4, val=0xc
+[  441.908897] cfg: write: delta1=4855, delta2=4839, off=0x1c, size=4, val=0xffffffff
+[  441.912453] cfg: read: delta1=4737, delta2=4945, off=0x1c, size=4, val=0xfe00000c
+[  441.915932] cfg: write: delta1=4698, delta2=4804, off=0x1c, size=4, val=0xc
+[  441.919482] cfg: read: delta1=4810, delta2=4818, off=0x20, size=4, val=0x14
+[  441.922820] cfg: write: delta1=4876, delta2=4826, off=0x20, size=4, val=0xffffffff
+[  441.926356] cfg: read: delta1=4757, delta2=4884, off=0x20, size=4, val=0xffffffff
+[  441.930033] cfg: write: delta1=4743, delta2=4868, off=0x20, size=4, val=0x14
+[  442.400905] cfg: write: delta1=4761, delta2=4679867, off=0x4, size=2, val=0x146
+[  442.403408] pci 3a19:00:00.0: reg 0x1c: [mem 0x1400000000-0x1401ffffff 64bit pref]
+[  442.406974] cfg: read: delta1=4911, delta2=5054, off=0x4, size=2, val=0x146
+[  442.632270] cfg: write: delta1=4829, delta2=2222525, off=0x4, size=2, val=0x144
+[  442.635855] cfg: read: delta1=5986, delta2=4899, off=0x24, size=4, val=0x0
+[  442.639167] cfg: write: delta1=4764, delta2=4835, off=0x24, size=4, val=0xffffffff
+[  442.642719] cfg: read: delta1=4801, delta2=4772, off=0x24, size=4, val=0x0
+[  442.646220] cfg: write: delta1=4731, delta2=4857, off=0x24, size=4, val=0x0
+[  443.117823] cfg: write: delta1=4806, delta2=4687422, off=0x4, size=2, val=0x146
+[  443.121411] cfg: read: delta1=4947, delta2=5275, off=0x4, size=2, val=0x146
+[  443.346476] cfg: write: delta1=4863, delta2=2221703, off=0x4, size=2, val=0x144
+[  443.817483] cfg: write: delta1=4947, delta2=4680162, off=0x4, size=2, val=0x146
+[  443.821042] cfg: read: delta1=5043, delta2=5063, off=0x7c, size=4, val=0x648de1
+[  443.824652] cfg: read: delta1=6016, delta2=4877, off=0x80, size=2, val=0x2137
+[  443.828072] cfg: read: delta1=4742, delta2=5016, off=0x80, size=2, val=0x2137
+[  443.831488] cfg: read: delta1=4902, delta2=4857, off=0x9c, size=4, val=0x40813
+[  443.834860] cfg: read: delta1=4725, delta2=4883, off=0x6, size=2, val=0x10
+[  443.838288] cfg: read: delta1=4727, delta2=4920, off=0x34, size=1, val=0x60
+[  443.841567] cfg: read: delta1=4907, delta2=4881, off=0x60, size=2, val=0x6801
+[  443.844885] cfg: read: delta1=4900, delta2=4948, off=0x68, size=2, val=0x7805
+[  443.848389] cfg: read: delta1=4708, delta2=4999, off=0x78, size=2, val=0x10
+[  443.851639] cfg: read: delta1=4795, delta2=4806, off=0x6, size=2, val=0x10
+[  443.854893] cfg: read: delta1=4714, delta2=4851, off=0x34, size=1, val=0x60
+[  443.858417] cfg: read: delta1=4706, delta2=4927, off=0x60, size=2, val=0x6801
+[  443.861809] cfg: read: delta1=4764, delta2=4850, off=0x68, size=2, val=0x7805
+[  443.865184] cfg: read: delta1=4749, delta2=4847, off=0x6a, size=2, val=0x80
+[  443.868709] cfg: write: delta1=4855, delta2=4885, off=0x6a, size=2, val=0x80
+[  443.872080] cfg: read: delta1=4786, delta2=5004, off=0x6, size=2, val=0x10
+[  443.875390] cfg: read: delta1=4702, delta2=4999, off=0x34, size=1, val=0x60
+[  443.878910] cfg: read: delta1=4749, delta2=4813, off=0x60, size=2, val=0x6801
+[  443.882309] cfg: read: delta1=4740, delta2=4909, off=0x68, size=2, val=0x7805
+[  443.885703] cfg: read: delta1=4746, delta2=4868, off=0x78, size=2, val=0x10
+[  443.889217] cfg: read: delta1=4733, delta2=4899, off=0x6, size=2, val=0x10
+[  443.892523] cfg: read: delta1=4901, delta2=4891, off=0x34, size=1, val=0x60
+[  443.895861] cfg: read: delta1=4786, delta2=4862, off=0x60, size=2, val=0x6801
+[  443.899451] cfg: read: delta1=4752, delta2=4857, off=0x68, size=2, val=0x7805
+[  443.902864] cfg: read: delta1=4843, delta2=4860, off=0x78, size=2, val=0x10
+[  443.919220] cfg: read: delta1=5004, delta2=4900, off=0x6, size=2, val=0x10
+[  443.922509] cfg: read: delta1=4741, delta2=4853, off=0x34, size=1, val=0x60
+[  443.925833] cfg: read: delta1=4778, delta2=4875, off=0x60, size=2, val=0x6801
+[  443.929398] cfg: read: delta1=4713, delta2=4881, off=0x68, size=2, val=0x7805
+[  443.932795] cfg: read: delta1=4872, delta2=4869, off=0x78, size=2, val=0x10
+[  443.936160] cfg: read: delta1=4754, delta2=4986, off=0x100, size=4, val=0x25010002
+[  443.939905] cfg: read: delta1=4694, delta2=4839, off=0x250, size=4, val=0x25810018
+[  443.943484] cfg: read: delta1=4786, delta2=4872, off=0x258, size=4, val=0x1281001e
+[  443.947010] cfg: read: delta1=4787, delta2=4834, off=0x128, size=4, val=0x42010004
+[  443.950654] cfg: read: delta1=4741, delta2=4844, off=0x420, size=4, val=0x60020001
+[  443.954198] cfg: read: delta1=4750, delta2=4901, off=0x600, size=4, val=0x9001000b
+[  443.957728] cfg: read: delta1=4765, delta2=4794, off=0x900, size=4, val=0x10019
+[  443.961351] cfg: read: delta1=4740, delta2=4865, off=0x100, size=4, val=0x25010002
+[  443.964896] cfg: read: delta1=4867, delta2=4857, off=0x104, size=4, val=0x0
+[  443.968277] cfg: read: delta1=4751, delta2=4950, off=0x110, size=4, val=0x0
+[  443.971810] cfg: read: delta1=4761, delta2=4888, off=0x100, size=4, val=0x25010002
+[  443.975738] cfg: read: delta1=4787, delta2=4829, off=0x100, size=4, val=0x25010002
+[  443.979327] cfg: read: delta1=4840, delta2=5076, off=0x250, size=4, val=0x25810018
+[  443.982779] cfg: read: delta1=4728, delta2=4820, off=0x258, size=4, val=0x1281001e
+[  443.986231] cfg: read: delta1=4721, delta2=4923, off=0x128, size=4, val=0x42010004
+[  443.989690] cfg: read: delta1=4871, delta2=4805, off=0x420, size=4, val=0x60020001
+[  443.993365] cfg: read: delta1=4739, delta2=4819, off=0x600, size=4, val=0x9001000b
+[  443.996890] cfg: read: delta1=4829, delta2=4841, off=0x900, size=4, val=0x10019
+[  444.000354] cfg: read: delta1=4701, delta2=5000, off=0x6, size=2, val=0x10
+[  444.003668] cfg: read: delta1=4760, delta2=4874, off=0x34, size=1, val=0x60
+[  444.007089] cfg: read: delta1=4743, delta2=4883, off=0x60, size=2, val=0x6801
+[  444.010640] cfg: read: delta1=6107, delta2=4830, off=0x62, size=2, val=0x3
+[  444.013942] cfg: read: delta1=4738, delta2=4817, off=0x6, size=2, val=0x10
+[  444.017263] cfg: read: delta1=4734, delta2=4989, off=0x34, size=1, val=0x60
+[  444.020602] cfg: read: delta1=4913, delta2=4817, off=0x60, size=2, val=0x6801
+[  444.024186] cfg: read: delta1=4727, delta2=5025, off=0x68, size=2, val=0x7805
+[  444.027550] cfg: read: delta1=4795, delta2=4847, off=0x78, size=2, val=0x10
+[  444.030898] cfg: read: delta1=4873, delta2=4873, off=0x100, size=4, val=0x25010002
+[  444.034651] cfg: read: delta1=4799, delta2=4821, off=0x250, size=4, val=0x25810018
+[  444.038189] cfg: read: delta1=4762, delta2=4856, off=0x258, size=4, val=0x1281001e
+[  444.041812] cfg: read: delta1=5593, delta2=4849, off=0x128, size=4, val=0x42010004
+[  444.045339] cfg: read: delta1=4700, delta2=4925, off=0x420, size=4, val=0x60020001
+[  444.048870] cfg: read: delta1=4802, delta2=4869, off=0x600, size=4, val=0x9001000b
+[  444.052600] cfg: read: delta1=4765, delta2=6794, off=0x900, size=4, val=0x10019
+[  444.056062] cfg: read: delta1=4772, delta2=4940, off=0x100, size=4, val=0x25010002
+[  444.059598] cfg: read: delta1=4810, delta2=4829, off=0x250, size=4, val=0x25810018
+[  444.063315] cfg: read: delta1=4753, delta2=6690, off=0x258, size=4, val=0x1281001e
+[  444.066762] cfg: read: delta1=4763, delta2=4826, off=0x128, size=4, val=0x42010004
+[  444.070217] cfg: read: delta1=4728, delta2=4925, off=0x420, size=4, val=0x60020001
+[  444.073808] cfg: read: delta1=6347, delta2=4799, off=0x600, size=4, val=0x9001000b
+[  444.077243] cfg: read: delta1=4723, delta2=4859, off=0x900, size=4, val=0x10019
+[  444.080611] cfg: read: delta1=5097, delta2=4849, off=0x100, size=4, val=0x25010002
+[  444.084251] cfg: read: delta1=4727, delta2=4994, off=0x250, size=4, val=0x25810018
+[  444.087684] cfg: read: delta1=4816, delta2=4819, off=0x258, size=4, val=0x1281001e
+[  444.091150] cfg: read: delta1=4817, delta2=4933, off=0x128, size=4, val=0x42010004
+[  444.094814] cfg: read: delta1=4946, delta2=4846, off=0x420, size=4, val=0x60020001
+[  444.098277] cfg: read: delta1=4765, delta2=4855, off=0x600, size=4, val=0x9001000b
+[  444.101727] cfg: read: delta1=4781, delta2=4845, off=0x900, size=4, val=0x10019
+[  444.105310] cfg: read: delta1=4763, delta2=4846, off=0x100, size=4, val=0x25010002
+[  444.108830] cfg: read: delta1=4873, delta2=4812, off=0x250, size=4, val=0x25810018
+[  444.112368] cfg: read: delta1=4759, delta2=5011, off=0x258, size=4, val=0x1281001e
+[  444.116102] cfg: read: delta1=4732, delta2=5090, off=0x128, size=4, val=0x42010004
+[  444.119640] cfg: read: delta1=4807, delta2=4818, off=0x420, size=4, val=0x60020001
+[  444.123224] cfg: read: delta1=4776, delta2=4920, off=0x430, size=4, val=0x0
+[  444.126755] cfg: write: delta1=4917, delta2=4840, off=0x430, size=4, val=0x0
+[  444.130131] cfg: read: delta1=4781, delta2=4907, off=0x424, size=4, val=0x0
+[  444.133461] cfg: write: delta1=4810, delta2=4835, off=0x424, size=4, val=0x0
+[  444.139127] pci 3a19:00:00.0: BAR 1: assigned [mem 0x1000000000-0x13ffffffff 64bit pref]
+[  444.144373] cfg: read: delta1=4817, delta2=4999, off=0x4, size=2, val=0x146
+[  444.369772] cfg: write: delta1=4755, delta2=2224013, off=0x4, size=2, val=0x144
+[  444.373489] cfg: write: delta1=4845, delta2=5631, off=0x14, size=4, val=0xc
+[  444.376805] cfg: read: delta1=4874, delta2=4835, off=0x14, size=4, val=0xc
+[  444.380137] cfg: write: delta1=4760, delta2=5062, off=0x18, size=4, val=0x10
+[  444.383661] cfg: read: delta1=4796, delta2=4777, off=0x18, size=4, val=0x10
+[  444.855396] cfg: write: delta1=4756, delta2=4688918, off=0x4, size=2, val=0x146
+[  444.857954] pci 3a19:00:00.0: BAR 3: assigned [mem 0x1400000000-0x1401ffffff 64bit pref]
+[  444.861694] cfg: read: delta1=4997, delta2=5002, off=0x4, size=2, val=0x146
+[  445.086687] cfg: write: delta1=4739, delta2=2219546, off=0x4, size=2, val=0x144
+[  445.090152] cfg: write: delta1=4848, delta2=4929, off=0x1c, size=4, val=0xc
+[  445.093604] cfg: read: delta1=4837, delta2=5954, off=0x1c, size=4, val=0xc
+[  445.096902] cfg: write: delta1=4836, delta2=4887, off=0x20, size=4, val=0x14
+[  445.100270] cfg: read: delta1=4845, delta2=4957, off=0x20, size=4, val=0x14
+[  445.573444] cfg: write: delta1=6693, delta2=4701330, off=0x4, size=2, val=0x146
+[  445.575967] pci 3a19:00:00.0: BAR 0: assigned [mem 0x21000000-0x21ffffff]
+[  445.579473] cfg: write: delta1=5013, delta2=4879, off=0x10, size=4, val=0x21000000
+[  445.583043] cfg: read: delta1=4813, delta2=4953, off=0x10, size=4, val=0x21000000
+[  445.586567] cfg: read: delta1=4884, delta2=4871, off=0x6, size=2, val=0x10
+[  445.589851] cfg: read: delta1=4890, delta2=4903, off=0x34, size=1, val=0x60
+[  445.593263] cfg: read: delta1=4787, delta2=4987, off=0x60, size=2, val=0x6801
+[  445.596600] cfg: read: delta1=4990, delta2=4878, off=0x68, size=2, val=0x7805
+[  445.600139] cfg: read: delta1=4831, delta2=7011, off=0x78, size=2, val=0x10
+[  445.627502] cfg: read: delta1=5559, delta2=5048, off=0x7c, size=4, val=0x648de1
+[  445.631011] cfg: read: delta1=4837, delta2=5024, off=0x6, size=2, val=0x10
+[  445.634498] cfg: read: delta1=4920, delta2=4888, off=0x34, size=1, val=0x60
+[  445.637832] cfg: read: delta1=4856, delta2=4915, off=0x60, size=2, val=0x6801
+[  445.641208] cfg: read: delta1=4839, delta2=4984, off=0x68, size=2, val=0x7805
+[  445.644705] cfg: read: delta1=4934, delta2=4875, off=0x78, size=2, val=0x10
+[  445.647933] cfg: read: delta1=4756, delta2=4922, off=0x64, size=2, val=0x0
+[  445.650738] hv_vmbus: probe failed for device 572a8608-0c86-4883-8456-f22b0c509d5a (-19)
+[  445.653795] hv_vmbus: probe failed for device 0cf36776-8279-4532-8a57-b3fdea9ef538 (-19)
+[  445.656552] hv_vmbus: probe failed for device 94e1515a-6395-4f26-8d2f-fe9d6d2304f0 (-19)
