@@ -635,12 +635,17 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 		 */
 		*val = 0;
 	} else if (where + size <= CFG_PAGE_SIZE) {
-		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+		u64 s, e, delta1, delta2;
+		//spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
 		/* Choose the function to be read. (See comment above) */
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, s);
 		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, e);
+		delta1 = e - s;
 		/* Make sure the function was chosen before we start reading. */
 		mb();
 		/* Read from that function's config space. */
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, s);
 		switch (size) {
 		case 1:
 			*val = readb(addr);
@@ -652,12 +657,16 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 			*val = readl(addr);
 			break;
 		}
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, e);
+		delta2 = e - s;
+		printk("cfg: read: delta1=%lld, delta2=%lld, off=0x%x, size=%d, val=0x%x\n",
+			delta1, delta2, where, size, *val);
 		/*
 		 * Make sure the write was done before we release the spinlock
 		 * allowing consecutive reads/writes.
 		 */
 		mb();
-		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+		//spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
 			"Attempt to read beyond a function's config space.\n");
@@ -681,12 +690,18 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 	    where + size <= PCI_CAPABILITY_LIST) {
 		/* SSIDs and ROM BARs are read-only */
 	} else if (where >= PCI_COMMAND && where + size <= CFG_PAGE_SIZE) {
-		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+		u64 s, e, delta1, delta2;
+		//spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
 		/* Choose the function to be written. (See comment above) */
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, s);
 		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, e);
+		delta1 = e - s;
 		/* Make sure the function was chosen before we start writing. */
 		wmb();
 		/* Write to that function's config space. */
+
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, s);
 		switch (size) {
 		case 1:
 			writeb(val, addr);
@@ -698,12 +713,16 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 			writel(val, addr);
 			break;
 		}
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, e);
+		delta2 = e - s;
+		printk("cfg: write: delta1=%lld, delta2=%lld, off=0x%x, size=%d, val=0x%x\n",
+			delta1, delta2, where, size, val);
 		/*
 		 * Make sure the write was done before we release the spinlock
 		 * allowing consecutive reads/writes.
 		 */
 		mb();
-		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+		//spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
 			"Attempt to write beyond a function's config space.\n");
@@ -1324,13 +1343,14 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 		high_base = hbus->high_mmio_res->start;
 	}
 
-	spin_lock_irqsave(&hbus->device_list_lock, flags);
+	//spin_lock_irqsave(&hbus->device_list_lock, flags);
 
 	/* Pick addresses for the BARs. */
 	do {
 		list_for_each(iter, &hbus->children) {
 			hpdev = container_of(iter, struct hv_pci_dev,
 					     list_entry);
+
 			for (i = 0; i < 6; i++) {
 				bar_val = hpdev->probed_bar[i];
 				if (bar_val == 0)
@@ -1383,7 +1403,7 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 		low_size >>= 1;
 	}  while (high_size || low_size);
 
-	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+	//spin_unlock_irqrestore(&hbus->device_list_lock, flags);
 }
 
 /**
@@ -1528,7 +1548,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
 	 * domain number will not change after the first device is added.
 	 */
 	if (list_empty(&hbus->children))
-		hbus->sysdata.domain = desc->ser;
+		hbus->sysdata.domain = desc->ser & 0xFFFF;
 	list_add_tail(&hpdev->list_entry, &hbus->children);
 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
 	return hpdev;
@@ -2427,6 +2447,8 @@ static int hv_pci_probe(struct hv_device *hdev,
 	struct hv_pcibus_device *hbus;
 	int ret;
 
+	if (hdev->channel->offermsg.child_relid != 21)
+		return -ENODEV;
 	/*
 	 * hv_pcibus_device contains the hypercall arguments for retargeting in
 	 * hv_irq_unmask(). Those must not cross a page boundary.
