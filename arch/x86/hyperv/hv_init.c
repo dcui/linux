@@ -95,6 +95,7 @@ int hv_cpu_init(unsigned int cpu)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(hv_cpu_init);
 
 /*
  * This function is to be invoked early in the boot sequence after the
@@ -178,6 +179,7 @@ free_vp_index:
 	kfree(hv_vp_index);
 	hv_vp_index = NULL;
 }
+EXPORT_SYMBOL_GPL(hyperv_init);
 
 /*
  * This routine is called before kexec/kdump, it does the required cleanup.
