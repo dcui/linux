@@ -668,9 +668,9 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 	}
 }
 
-static u32 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
+static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
 {
-	u32 ret;
+	u16 ret;
 	unsigned long flags;
 	void __iomem *addr = hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET +
 			     PCI_VENDOR_ID;
