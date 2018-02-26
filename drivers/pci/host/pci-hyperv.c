@@ -684,10 +684,9 @@ static u32 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
 	/* Read from that function's config space. */
 	ret = readw(addr);
 	/*
-	 * Make sure the read was done before we release the spinlock
-	 * allowing consecutive reads/writes.
+	 * mb() is not required here, because the spin_unlock_irqrestore()
+	 * is a barrier.
 	 */
-	mb();
 
 	spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
 
