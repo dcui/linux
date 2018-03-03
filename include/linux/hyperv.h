@@ -171,10 +171,11 @@ static inline u32 hv_get_bytes_to_write(const struct hv_ring_buffer_info *rbi)
 #define VERSION_WIN8    ((2 << 16) | (4))
 #define VERSION_WIN8_1    ((3 << 16) | (0))
 #define VERSION_WIN10	((4 << 16) | (0))
+#define VERSION_WIN10_RS4 ((5 << 16) | (0))
 
 #define VERSION_INVAL -1
 
-#define VERSION_CURRENT VERSION_WIN10
+#define VERSION_CURRENT VERSION_WIN10_RS4
 
 /* Make maximum size of pipe payload of 16K */
 #define MAX_PIPE_DATA_PAYLOAD		(sizeof(u8) * 16384)
@@ -571,7 +572,14 @@ struct vmbus_channel_initiate_contact {
 	struct vmbus_channel_message_header header;
 	u32 vmbus_version_requested;
 	u32 target_vcpu; /* The VCPU the host should respond to */
-	u64 interrupt_page;
+	union {
+		u64 interrupt_page;
+		struct {
+			u8	message_sint;
+			u8	padding1[3];
+			u32	padding2;
+		};
+	};
 	u64 monitor_page1;
 	u64 monitor_page2;
 } __packed;
@@ -586,6 +594,11 @@ struct vmbus_channel_tl_connect_request {
 struct vmbus_channel_version_response {
 	struct vmbus_channel_message_header header;
 	u8 version_supported;
+	u8 connection_state;
+	u16 padding;
+
+	/* Used on RS4 and newer. Old hosts imply 1. */
+	u32 message_connection_id;
 } __packed;
 
 enum vmbus_channel_state {
@@ -1111,6 +1124,8 @@ struct hv_ring_buffer_debug_info {
 
 void hv_ringbuffer_get_debuginfo(const struct hv_ring_buffer_info *ring_info,
 			    struct hv_ring_buffer_debug_info *debug_info);
+
+int vmbus_exists(void);
 
 /* Vmbus interface */
 #define vmbus_driver_register(driver)	\

@@ -37,6 +37,7 @@ EXPORT_SYMBOL_GPL(ms_hyperv);
 
 #if IS_ENABLED(CONFIG_HYPERV)
 static void (*vmbus_handler)(void);
+static void (*vmbus_handler2)(void);
 static void (*hv_kexec_handler)(void);
 static void (*hv_crash_handler)(struct pt_regs *regs);
 
@@ -49,6 +50,8 @@ void hyperv_vector_handler(struct pt_regs *regs)
 	if (vmbus_handler)
 		vmbus_handler();
 
+	if (vmbus_handler2)
+		vmbus_handler2();
 	if (ms_hyperv.hints & HV_X64_DEPRECATING_AEOI_RECOMMENDED)
 		ack_APIC_irq();
 
@@ -58,12 +61,17 @@ void hyperv_vector_handler(struct pt_regs *regs)
 
 void hv_setup_vmbus_irq(void (*handler)(void))
 {
-	vmbus_handler = handler;
+	//TODO: use a different vector for the 2nd vmbus driver
+	if (!vmbus_handler)
+		vmbus_handler = handler;
+	else
+		vmbus_handler2 = handler;
 }
 
 void hv_remove_vmbus_irq(void)
 {
 	/* We have no way to deallocate the interrupt gate */
+	WARN_ON(1); //FIXME
 	vmbus_handler = NULL;
 }
 EXPORT_SYMBOL_GPL(hv_setup_vmbus_irq);
@@ -99,6 +107,7 @@ static void hv_machine_shutdown(void)
 	if (kexec_in_progress && hv_kexec_handler)
 		hv_kexec_handler();
 	native_machine_shutdown();
+	//FIXME
 }
 
 static void hv_machine_crash_shutdown(struct pt_regs *regs)
@@ -106,6 +115,7 @@ static void hv_machine_crash_shutdown(struct pt_regs *regs)
 	if (hv_crash_handler)
 		hv_crash_handler(regs);
 	native_machine_crash_shutdown(regs);
+	//FIXME
 }
 #endif /* CONFIG_KEXEC_CORE */
 #endif /* CONFIG_HYPERV */

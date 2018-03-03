@@ -31,8 +31,6 @@
 #include <linux/hyperv.h>
 #include <linux/interrupt.h>
 
-#include "hv_trace.h"
-
 /*
  * Timeout for services such as KVP and fcopy.
  */
@@ -184,22 +182,13 @@ struct hv_input_post_message {
 
 enum {
 	VMBUS_MESSAGE_CONNECTION_ID	= 1,
-	VMBUS_MESSAGE_CONNECTION_ID_RS4	= 4,
 	VMBUS_MESSAGE_PORT_ID		= 1,
 	VMBUS_EVENT_CONNECTION_ID	= 2,
 	VMBUS_EVENT_PORT_ID		= 2,
 	VMBUS_MONITOR_CONNECTION_ID	= 3,
 	VMBUS_MONITOR_PORT_ID		= 3,
 	VMBUS_MESSAGE_SINT		= 2,
-	VMBUS_MESSAGE_SINT_RS4		= 8,
 };
-
-static inline
-unsigned int hv_get_sint(void)
-{
-	return (vmbus_proto_version >= VERSION_WIN10_RS4) ?
-		VMBUS_MESSAGE_SINT_RS4 : VMBUS_MESSAGE_SINT;
-}
 
 /*
  * Per cpu state for channel handling
@@ -247,10 +236,7 @@ struct hv_context {
 };
 
 extern struct hv_context hv_context;
-
-extern int hyperv_cpuhp_online;
-extern int hyperv_cpuhp_timer;
-
+extern struct hv_context hv_context2;
 
 /* Hv Interface */
 
@@ -265,10 +251,8 @@ extern int hv_synic_alloc(void);
 extern void hv_synic_free(void);
 
 extern int hv_synic_init(unsigned int cpu);
-extern int hv_synic_init_timer(unsigned int cpu);
 
 extern int hv_synic_cleanup(unsigned int cpu);
-extern int hv_synic_cleanup_timer(unsigned int cpu);
 
 extern void hv_synic_clockevents_cleanup(void);
 
@@ -314,8 +298,6 @@ struct vmbus_connection {
 	 */
 	int connect_cpu;
 
-	u32 message_connection_id;
-
 	atomic_t offer_in_progress;
 
 	enum vmbus_connect_state conn_state;
@@ -360,6 +342,7 @@ struct vmbus_msginfo {
 
 
 extern struct vmbus_connection vmbus_connection;
+extern struct vmbus_connection vmbus_connection2;
 
 static inline void vmbus_send_interrupt(u32 relid)
 {
@@ -381,7 +364,7 @@ struct vmbus_channel_message_table_entry {
 };
 
 extern const struct vmbus_channel_message_table_entry
-	channel_message_table[CHANNELMSG_COUNT];
+	channel_message_table2[CHANNELMSG_COUNT];
 
 
 /* General vmbus interface */
@@ -392,8 +375,6 @@ struct hv_device *vmbus_device_create(const uuid_le *type,
 
 int vmbus_device_register(struct hv_device *child_device_obj);
 void vmbus_device_unregister(struct hv_device *device_obj);
-int vmbus_add_channel_kobj(struct hv_device *device_obj,
-			   struct vmbus_channel *channel);
 
 struct vmbus_channel *relid2channel(u32 relid);
 
@@ -443,5 +424,82 @@ enum hvutil_device_state {
 	HVUTIL_USERSPACE_RECV,   /* reply from userspace was received */
 	HVUTIL_DEVICE_DYING,     /* driver unload is in progress */
 };
+
+void vmbus_onmessage2(void *context);
+
+int vmbus_request_offers2(void);
+
+extern int vmbus_open2(struct vmbus_channel *channel,
+			    u32 send_ringbuffersize,
+			    u32 recv_ringbuffersize,
+			    void *userdata,
+			    u32 userdatalen,
+			    void (*onchannel_callback)(void *context),
+			    void *context);
+
+extern void vmbus_close2(struct vmbus_channel *channel);
+
+extern int vmbus_sendpacket2(struct vmbus_channel *channel,
+				  void *buffer,
+				  u32 bufferLen,
+				  u64 requestid,
+				  enum vmbus_packet_type type,
+				  u32 flags);
+
+extern int vmbus_sendpacket_pagebuffer2(struct vmbus_channel *channel,
+					    struct hv_page_buffer pagebuffers[],
+					    u32 pagecount,
+					    void *buffer,
+					    u32 bufferlen,
+					    u64 requestid);
+
+extern int vmbus_sendpacket_mpb_desc2(struct vmbus_channel *channel,
+				     struct vmbus_packet_mpb_array *mpb,
+				     u32 desc_size,
+				     void *buffer,
+				     u32 bufferlen,
+				     u64 requestid);
+
+extern int vmbus_establish_gpadl2(struct vmbus_channel *channel,
+				      void *kbuffer,
+				      u32 size,
+				      u32 *gpadl_handle);
+
+extern int vmbus_teardown_gpadl2(struct vmbus_channel *channel,
+				     u32 gpadl_handle);
+
+extern int vmbus_recvpacket2(struct vmbus_channel *channel,
+				  void *buffer,
+				  u32 bufferlen,
+				  u32 *buffer_actual_len,
+				  u64 *requestid);
+
+extern int vmbus_recvpacket_raw2(struct vmbus_channel *channel,
+				     void *buffer,
+				     u32 bufferlen,
+				     u32 *buffer_actual_len,
+				     u64 *requestid);
+
+void vmbus_setevent2(struct vmbus_channel *channel);
+
+extern __u32 vmbus_proto_version2;
+
+struct vmpacket_descriptor *
+hv_pkt_iter_first2(struct vmbus_channel *channel);
+
+struct vmpacket_descriptor *
+__hv_pkt_iter_next2(struct vmbus_channel *channel,
+		    const struct vmpacket_descriptor *pkt);
+
+void hv_pkt_iter_close2(struct vmbus_channel *channel);
+
+#define vmbus_driver_register2(driver)	\
+	__vmbus_driver_register2(driver, THIS_MODULE, KBUILD_MODNAME)
+int __must_check __vmbus_driver_register2(struct hv_driver *hv_driver,
+					 struct module *owner,
+					 const char *mod_name);
+
+void vmbus_driver_unregister2(struct hv_driver *hv_driver);
+
 
 #endif /* _HYPERV_VMBUS_H */

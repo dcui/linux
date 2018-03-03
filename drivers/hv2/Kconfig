@@ -1,0 +1,17 @@
+menu "Microsoft Hyper-V guest support (secondary)"
+
+config HYPERV2
+	tristate "Microsoft Hyper-V client drivers (secondary)"
+	depends on HYPERV
+	select PARAVIRT
+	help
+	  Select this option to run Linux as a Hyper-V client operating
+	  system.
+
+config HYPERV_UTILS2
+	tristate "Microsoft Hyper-V Utilities driver (secondary)"
+	depends on HYPERV2
+	help
+	  Select this option to enable the Hyper-V Utilities.
+
+endmenu
