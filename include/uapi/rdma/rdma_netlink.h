@@ -5,9 +5,10 @@
 
 enum {
 	RDMA_NL_RDMA_CM = 1,
-	RDMA_NL_NES,
-	RDMA_NL_C4IW,
+	RDMA_NL_IWCM,
+	RDMA_NL_RSVD,
 	RDMA_NL_LS,	/* RDMA Local Services */
+	RDMA_NL_NLDEV,	/* RDMA device interface */
 	RDMA_NL_NUM_CLIENTS
 };
 
@@ -134,10 +135,12 @@ enum {
  * Local service operations:
  *   RESOLVE - The client requests the local service to resolve a path.
  *   SET_TIMEOUT - The local service requests the client to set the timeout.
+ *   IP_RESOLVE - The client requests the local service to resolve an IP to GID.
  */
 enum {
 	RDMA_NL_LS_OP_RESOLVE = 0,
 	RDMA_NL_LS_OP_SET_TIMEOUT,
+	RDMA_NL_LS_OP_IP_RESOLVE,
 	RDMA_NL_LS_NUM_OPS
 };
 
@@ -175,6 +178,10 @@ struct rdma_ls_resolve_header {
 	__u8 path_use;
 };
 
+struct rdma_ls_ip_resolve_header {
+	__u32 ifindex;
+};
+
 /* Local service attribute type */
 #define RDMA_NLA_F_MANDATORY	(1 << 13)
 #define RDMA_NLA_TYPE_MASK	(~(NLA_F_NESTED | NLA_F_NET_BYTEORDER | \
@@ -192,6 +199,8 @@ struct rdma_ls_resolve_header {
  *   TCLASS          u8
  *   PKEY            u16                        cpu
  *   QOS_CLASS       u16                        cpu
+ *   IPV4            u32                        BE
+ *   IPV6            u8[16]                     BE
  */
 enum {
 	LS_NLA_TYPE_UNSPEC = 0,
@@ -203,6 +212,8 @@ enum {
 	LS_NLA_TYPE_TCLASS,
 	LS_NLA_TYPE_PKEY,
 	LS_NLA_TYPE_QOS_CLASS,
+	LS_NLA_TYPE_IPV4,
+	LS_NLA_TYPE_IPV6,
 	LS_NLA_TYPE_MAX
 };
 
@@ -211,4 +222,86 @@ struct rdma_nla_ls_gid {
 	__u8		gid[16];
 };
 
+enum rdma_nldev_command {
+	RDMA_NLDEV_CMD_UNSPEC,
+
+	RDMA_NLDEV_CMD_GET, /* can dump */
+	RDMA_NLDEV_CMD_SET,
+	RDMA_NLDEV_CMD_NEW,
+	RDMA_NLDEV_CMD_DEL,
+
+	RDMA_NLDEV_CMD_PORT_GET, /* can dump */
+	RDMA_NLDEV_CMD_PORT_SET,
+	RDMA_NLDEV_CMD_PORT_NEW,
+	RDMA_NLDEV_CMD_PORT_DEL,
+
+	RDMA_NLDEV_NUM_OPS
+};
+
+enum rdma_nldev_attr {
+	/* don't change the order or add anything between, this is ABI! */
+	RDMA_NLDEV_ATTR_UNSPEC,
+
+	/* Identifier for ib_device */
+	RDMA_NLDEV_ATTR_DEV_INDEX,		/* u32 */
+
+	RDMA_NLDEV_ATTR_DEV_NAME,		/* string */
+	/*
+	 * Device index together with port index are identifiers
+	 * for port/link properties.
+	 *
+	 * For RDMA_NLDEV_CMD_GET comamnd, port index will return number
+	 * of available ports in ib_device, while for port specific operations,
+	 * it will be real port index as it appears in sysfs. Port index follows
+	 * sysfs notation and starts from 1 for the first port.
+	 */
+	RDMA_NLDEV_ATTR_PORT_INDEX,		/* u32 */
+
+	/*
+	 * Device and port capabilities
+	 */
+	RDMA_NLDEV_ATTR_CAP_FLAGS,		/* u64 */
+
+	/*
+	 * FW version
+	 */
+	RDMA_NLDEV_ATTR_FW_VERSION,		/* string */
+
+	/*
+	 * Node GUID (in host byte order) associated with the RDMA device.
+	 */
+	RDMA_NLDEV_ATTR_NODE_GUID,			/* u64 */
+
+	/*
+	 * System image GUID (in host byte order) associated with
+	 * this RDMA device and other devices which are part of a
+	 * single system.
+	 */
+	RDMA_NLDEV_ATTR_SYS_IMAGE_GUID,		/* u64 */
+
+	/*
+	 * Subnet prefix (in host byte order)
+	 */
+	RDMA_NLDEV_ATTR_SUBNET_PREFIX,		/* u64 */
+
+	/*
+	 * Local Identifier (LID),
+	 * According to IB specification, It is 16-bit address assigned
+	 * by the Subnet Manager. Extended to be 32-bit for OmniPath users.
+	 */
+	RDMA_NLDEV_ATTR_LID,			/* u32 */
+	RDMA_NLDEV_ATTR_SM_LID,			/* u32 */
+
+	/*
+	 * LID mask control (LMC)
+	 */
+	RDMA_NLDEV_ATTR_LMC,			/* u8 */
+
+	RDMA_NLDEV_ATTR_PORT_STATE,		/* u8 */
+	RDMA_NLDEV_ATTR_PORT_PHYS_STATE,	/* u8 */
+
+	RDMA_NLDEV_ATTR_DEV_NODE_TYPE,		/* u8 */
+
+	RDMA_NLDEV_ATTR_MAX
+};
 #endif /* _UAPI_RDMA_NETLINK_H */

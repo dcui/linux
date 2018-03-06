@@ -34,15 +34,94 @@
 
 #include <linux/mm.h>
 #include <linux/dma-mapping.h>
-#include <linux/sched.h>
 #include <linux/export.h>
 #include <linux/hugetlb.h>
-#include <linux/dma-attrs.h>
 #include <linux/slab.h>
 #include <rdma/ib_umem_odp.h>
 
 #include "uverbs.h"
 
+static struct ib_umem *peer_umem_get(struct ib_peer_memory_client *ib_peer_mem,
+				     struct ib_umem *umem, unsigned long addr,
+				     int dmasync, unsigned long peer_mem_flags)
+{
+	int ret;
+	const struct peer_memory_client *peer_mem = ib_peer_mem->peer_mem;
+	struct invalidation_ctx *invalidation_ctx = NULL;
+
+	umem->ib_peer_mem = ib_peer_mem;
+	if (peer_mem_flags & IB_PEER_MEM_INVAL_SUPP) {
+		ret = ib_peer_create_invalidation_ctx(ib_peer_mem, umem, &invalidation_ctx);
+		if (ret)
+			goto end;
+	}
+
+	/*
+	 * We always request write permissions to the pages, to force breaking of any CoW
+	 * during the registration of the MR. For read-only MRs we use the "force" flag to
+	 * indicate that CoW breaking is required but the registration should not fail if
+	 * referencing read-only areas.
+	 */
+	ret = peer_mem->get_pages(addr, umem->length,
+				  1, !umem->writable,
+				  &umem->sg_head,
+				  umem->peer_mem_client_context,
+				  invalidation_ctx ?
+				  invalidation_ctx->context_ticket : 0);
+	if (ret)
+		goto out;
+
+	umem->page_shift = ilog2(peer_mem->get_page_size
+				 (umem->peer_mem_client_context));
+	if (BIT(umem->page_shift) <= 0)
+		goto put_pages;
+
+	ret = peer_mem->dma_map(&umem->sg_head,
+				umem->peer_mem_client_context,
+				umem->context->device->dma_device,
+				dmasync,
+				&umem->nmap);
+	if (ret)
+		goto put_pages;
+
+	atomic64_add(umem->npages, &ib_peer_mem->stats.num_reg_pages);
+	atomic64_add(umem->npages << umem->page_shift,
+		     &ib_peer_mem->stats.num_reg_bytes);
+	atomic64_inc(&ib_peer_mem->stats.num_alloc_mrs);
+	return umem;
+
+put_pages:
+	peer_mem->put_pages(&umem->sg_head, umem->peer_mem_client_context);
+out:
+	if (invalidation_ctx)
+		ib_peer_destroy_invalidation_ctx(ib_peer_mem, invalidation_ctx);
+end:
+	ib_put_peer_client(ib_peer_mem, umem->peer_mem_client_context);
+	kfree(umem);
+	return ERR_PTR(ret);
+}
+
+static void peer_umem_release(struct ib_umem *umem)
+{
+	struct ib_peer_memory_client *ib_peer_mem = umem->ib_peer_mem;
+	const struct peer_memory_client *peer_mem = ib_peer_mem->peer_mem;
+	struct invalidation_ctx *invalidation_ctx = umem->invalidation_ctx;
+
+	if (invalidation_ctx)
+		ib_peer_destroy_invalidation_ctx(ib_peer_mem, invalidation_ctx);
+
+	peer_mem->dma_unmap(&umem->sg_head,
+			    umem->peer_mem_client_context,
+			    umem->context->device->dma_device);
+	peer_mem->put_pages(&umem->sg_head,
+			    umem->peer_mem_client_context);
+	atomic64_add(umem->npages, &ib_peer_mem->stats.num_dereg_pages);
+	atomic64_add(umem->npages << umem->page_shift,
+		     &ib_peer_mem->stats.num_dereg_bytes);
+	atomic64_inc(&ib_peer_mem->stats.num_dealloc_mrs);
+	ib_put_peer_client(ib_peer_mem, umem->peer_mem_client_context);
+	kfree(umem);
+}
 
 static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int dirty)
 {
@@ -52,13 +131,13 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
 
 	if (umem->nmap > 0)
 		ib_dma_unmap_sg(dev, umem->sg_head.sgl,
-				umem->nmap,
+				umem->npages,
 				DMA_BIDIRECTIONAL);
 
 	for_each_sg(umem->sg_head.sgl, sg, umem->npages, i) {
 
 		page = sg_page(sg);
-		if (umem->writable && dirty)
+		if (!PageDirty(page) && umem->writable && dirty)
 			set_page_dirty_lock(page);
 		put_page(page);
 	}
@@ -68,6 +147,27 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
 
 }
 
+int ib_umem_activate_invalidation_notifier(struct ib_umem *umem,
+					   umem_invalidate_func_t func,
+					   void *cookie)
+{
+	struct invalidation_ctx *invalidation_ctx = umem->invalidation_ctx;
+	int ret = 0;
+
+	mutex_lock(&umem->ib_peer_mem->lock);
+	if (invalidation_ctx->peer_invalidated) {
+		pr_err("ib_umem_activate_invalidation_notifier: pages were invalidated by peer\n");
+		ret = -EINVAL;
+		goto end;
+	}
+	invalidation_ctx->func = func;
+	invalidation_ctx->cookie = cookie;
+	/* from that point any pending invalidations can be called */
+end:
+	mutex_unlock(&umem->ib_peer_mem->lock);
+	return ret;
+}
+EXPORT_SYMBOL(ib_umem_activate_invalidation_notifier);
 /**
  * ib_umem_get - Pin and DMA map userspace memory.
  *
@@ -79,9 +179,11 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
  * @size: length of region to pin
  * @access: IB_ACCESS_xxx flags for memory being pinned
  * @dmasync: flush in-flight DMA when the memory region is written
+ * @peer_mem_flags: IB_PEER_MEM_xxx flags for memory being used
  */
 struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
-			    size_t size, int access, int dmasync)
+			       size_t size, int access, int dmasync,
+			       unsigned long peer_mem_flags)
 {
 	struct ib_umem *umem;
 	struct page **page_list;
@@ -99,29 +201,30 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 	if (dmasync)
 		dma_set_attr(DMA_ATTR_WRITE_BARRIER, &attrs);
 
-	if (!size)
-		return ERR_PTR(-EINVAL);
-
 	/*
 	 * If the combination of the addr and size requested for this memory
 	 * region causes an integer overflow, return error.
 	 */
 	if (((addr + size) < addr) ||
-	    PAGE_ALIGN(addr + size) < (addr + size))
+	    PAGE_ALIGN(addr + size) < (addr + size)) {
+		pr_err("%s: integer overflow, size=%zu\n", __func__, size);
 		return ERR_PTR(-EINVAL);
+	}
 
-	if (!can_do_mlock())
+	if (!can_do_mlock()) {
+		pr_err("%s: no mlock permission\n", __func__);
 		return ERR_PTR(-EPERM);
+	}
 
 	umem = kzalloc(sizeof *umem, GFP_KERNEL);
 	if (!umem)
 		return ERR_PTR(-ENOMEM);
 
-	umem->context   = context;
-	umem->length    = size;
-	umem->address   = addr;
-	umem->page_size = PAGE_SIZE;
-	umem->pid       = get_task_pid(current, PIDTYPE_PID);
+	umem->context    = context;
+	umem->length     = size;
+	umem->address    = addr;
+	umem->page_shift = PAGE_SHIFT;
+	umem->pid	 = get_task_pid(current, PIDTYPE_PID);
 	/*
 	 * We ask for writable memory if any of the following
 	 * access flags are set.  "Local write" and "remote write"
@@ -133,9 +236,19 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 		(IB_ACCESS_LOCAL_WRITE   | IB_ACCESS_REMOTE_WRITE |
 		 IB_ACCESS_REMOTE_ATOMIC | IB_ACCESS_MW_BIND));
 
+	if (peer_mem_flags & IB_PEER_MEM_ALLOW) {
+		struct ib_peer_memory_client *peer_mem_client;
+
+		peer_mem_client =  ib_get_peer_client(context, addr, size, peer_mem_flags,
+					&umem->peer_mem_client_context);
+		if (peer_mem_client)
+			return peer_umem_get(peer_mem_client, umem, addr,
+					dmasync, peer_mem_flags);
+	}
+
 	if (access & IB_ACCESS_ON_DEMAND) {
 		put_pid(umem->pid);
-		ret = ib_umem_odp_get(context, umem);
+		ret = ib_umem_odp_get(context, umem, access);
 		if (ret) {
 			kfree(umem);
 			return ERR_PTR(ret);
@@ -166,11 +279,12 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 	npages = ib_umem_num_pages(umem);
 
 	down_write(&current->mm->mmap_sem);
-
 	locked     = npages + current->mm->pinned_vm;
 	lock_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
 
 	if ((locked > lock_limit) && !capable(CAP_IPC_LOCK)) {
+		pr_err("%s: requested to lock(%lu) while limit is(%lu)\n",
+		       __func__, locked, lock_limit);
 		ret = -ENOMEM;
 		goto out;
 	}
@@ -178,13 +292,19 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 	cur_base = addr & PAGE_MASK;
 
 	if (npages == 0 || npages > UINT_MAX) {
+		pr_err("%s: npages(%lu) isn't in the range 1..%u\n", __func__,
+		       npages, UINT_MAX);
 		ret = -EINVAL;
 		goto out;
 	}
 
 	ret = sg_alloc_table(&umem->sg_head, npages, GFP_KERNEL);
-	if (ret)
+	if (ret) {
+		pr_err("%s: failed to allocate sg table, npages=%lu\n",
+		       __func__, npages);
 		goto out;
+	}
+
 
 	need_release = 1;
 	sg_list_start = umem->sg_head.sgl;
@@ -195,8 +315,12 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 					   PAGE_SIZE / sizeof (struct page *)),
 				     1, !umem->writable, page_list, vma_list);
 
-		if (ret < 0)
+		if (ret < 0) {
+			pr_err("%s: failed to get user pages, nr_pages=%lu\n", __func__,
+			       min_t(unsigned long, npages,
+				     PAGE_SIZE / sizeof(struct page *)));
 			goto out;
+		}
 
 		umem->npages += ret;
 		cur_base += ret * PAGE_SIZE;
@@ -220,6 +344,8 @@ struct ib_umem *ib_umem_get(struct ib_ucontext *context, unsigned long addr,
 				  &attrs);
 
 	if (umem->nmap <= 0) {
+		pr_err("%s: failed to map scatterlist, npages=%d\n", __func__,
+		       umem->npages);
 		ret = -ENOMEM;
 		goto out;
 	}
@@ -265,6 +391,10 @@ void ib_umem_release(struct ib_umem *umem)
 	struct mm_struct *mm;
 	struct task_struct *task;
 	unsigned long diff;
+	if (umem->ib_peer_mem) {
+		peer_umem_release(umem);
+		return;
+	}
 
 	if (umem->odp_data) {
 		ib_umem_odp_release(umem);
@@ -303,7 +433,6 @@ void ib_umem_release(struct ib_umem *umem)
 		}
 	} else
 		down_write(&mm->mmap_sem);
-
 	mm->pinned_vm -= diff;
 	up_write(&mm->mmap_sem);
 	mmput(mm);
@@ -314,7 +443,6 @@ EXPORT_SYMBOL(ib_umem_release);
 
 int ib_umem_page_count(struct ib_umem *umem)
 {
-	int shift;
 	int i;
 	int n;
 	struct scatterlist *sg;
@@ -322,11 +450,9 @@ int ib_umem_page_count(struct ib_umem *umem)
 	if (umem->odp_data)
 		return ib_umem_num_pages(umem);
 
-	shift = ilog2(umem->page_size);
-
 	n = 0;
 	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, i)
-		n += sg_dma_len(sg) >> shift;
+		n += sg_dma_len(sg) >> umem->page_shift;
 
 	return n;
 }
@@ -354,7 +480,7 @@ int ib_umem_copy_from(void *dst, struct ib_umem *umem, size_t offset,
 		return -EINVAL;
 	}
 
-	ret = sg_pcopy_to_buffer(umem->sg_head.sgl, umem->nmap, dst, length,
+	ret = sg_pcopy_to_buffer(umem->sg_head.sgl, umem->npages, dst, length,
 				 offset + ib_umem_offset(umem));
 
 	if (ret < 0)

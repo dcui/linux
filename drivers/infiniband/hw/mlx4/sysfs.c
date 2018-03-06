@@ -226,6 +226,7 @@ static int add_port_entries(struct mlx4_ib_dev *device, int port_num)
 	int ret = 0 ;
 	struct ib_port_attr attr;
 
+	memset(&attr, 0, sizeof(attr));
 	/* get the physical gid and pkey table sizes.*/
 	ret = __mlx4_ib_query_port(&device->ib_dev, port_num, &attr, 1);
 	if (ret)
@@ -423,7 +424,7 @@ static ssize_t port_attr_store(struct kobject *kobj,
 	return port_attr->store(p, port_attr, buf, size);
 }
 
-static const struct sysfs_ops port_sysfs_ops = {
+static struct sysfs_ops port_sysfs_ops = {
 	.show = port_attr_show,
 	.store = port_attr_store,
 };

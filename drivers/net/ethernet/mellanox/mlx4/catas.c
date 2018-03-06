@@ -178,14 +178,23 @@ void mlx4_enter_error_state(struct mlx4_dev_persistent *persist)
 
 	dev = persist->dev;
 	mlx4_err(dev, "device is going to be reset\n");
-	if (mlx4_is_slave(dev))
+	if (mlx4_is_slave(dev)) {
 		err = mlx4_reset_slave(dev);
-	else
+	} else {
+		mlx4_crdump_collect(dev);
 		err = mlx4_reset_master(dev);
-	BUG_ON(err != 0);
+	}
 
+	if (!err) {
+		mlx4_err(dev, "device was reset successfully\n");
+	} else {
+		/* EEH could have disabled the PCI channel during reset. That's
+		 * recoverable and the PCI error flow will handle it.
+		 */
+		if (!pci_channel_offline(dev->persist->pdev))
+			BUG_ON(1);
+	}
 	dev->persist->state |= MLX4_DEVICE_STATE_INTERNAL_ERROR;
-	mlx4_err(dev, "device was reset successfully\n");
 	mutex_unlock(&persist->device_state_mutex);
 
 	/* At that step HW was already reset, now notify clients */

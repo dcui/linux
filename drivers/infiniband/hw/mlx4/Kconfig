@@ -8,3 +8,6 @@ config MLX4_INFINIBAND
 	  Mellanox ConnectX PCI Express host channel adapters (HCAs).
 	  This is required to use InfiniBand protocols such as
 	  IP-over-IB or SRP with these devices.
+
+config MLX4_IB_DEBUG_FS
+	bool "CONFIG_MLX4_IB_DEBUG_FS"

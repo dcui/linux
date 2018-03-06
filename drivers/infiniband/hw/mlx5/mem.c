@@ -37,12 +37,15 @@
 
 /* @umem: umem object to scan
  * @addr: ib virtual address requested by the user
+ * @max_page_shift: high limit for page_shift - 0 means no limit
  * @count: number of PAGE_SIZE pages covered by umem
  * @shift: page shift for the compound pages found in the region
  * @ncont: number of compund pages
  * @order: log2 of the number of compound pages
  */
-void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr, int *count, int *shift,
+void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr,
+			unsigned long max_page_shift,
+			int *count, int *shift,
 			int *ncont, int *order)
 {
 	unsigned long tmp;
@@ -56,22 +59,23 @@ void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr, int *count, int *shift,
 	u64 pfn;
 	struct scatterlist *sg;
 	int entry;
-	unsigned long page_shift = ilog2(umem->page_size);
+	unsigned long page_shift = umem->page_shift;
 
-	/* With ODP we must always match OS page size. */
 	if (umem->odp_data) {
-		*count = ib_umem_page_count(umem);
-		*shift = PAGE_SHIFT;
-		*ncont = *count;
+		*ncont = ib_umem_page_count(umem);
+		*count = *ncont << (page_shift - PAGE_SHIFT);
+		*shift = page_shift;
 		if (order)
-			*order = ilog2(roundup_pow_of_two(*count));
+			*order = ilog2(roundup_pow_of_two(*ncont));
 
 		return;
 	}
 
 	addr = addr >> page_shift;
 	tmp = (unsigned long)addr;
-	m = find_first_bit(&tmp, sizeof(tmp));
+	m = find_first_bit(&tmp, BITS_PER_LONG);
+	if (max_page_shift)
+		m = min_t(unsigned long, max_page_shift - page_shift, m);
 	skip = 1 << m;
 	mask = skip - 1;
 	i = 0;
@@ -81,7 +85,7 @@ void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr, int *count, int *shift,
 		for (k = 0; k < len; k++) {
 			if (!(i & mask)) {
 				tmp = (unsigned long)pfn;
-				m = min_t(unsigned long, m, find_first_bit(&tmp, sizeof(tmp)));
+				m = min_t(unsigned long, m, find_first_bit(&tmp, BITS_PER_LONG));
 				skip = 1 << m;
 				mask = skip - 1;
 				base = pfn;
@@ -89,7 +93,7 @@ void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr, int *count, int *shift,
 			} else {
 				if (base + p != pfn) {
 					tmp = (unsigned long)p;
-					m = find_first_bit(&tmp, sizeof(tmp));
+					m = find_first_bit(&tmp, BITS_PER_LONG);
 					skip = 1 << m;
 					mask = skip - 1;
 					base = pfn;
@@ -120,20 +124,6 @@ void mlx5_ib_cont_pages(struct ib_umem *umem, u64 addr, int *count, int *shift,
 	*count = i;
 }
 
-#ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
-static u64 umem_dma_to_mtt(dma_addr_t umem_dma)
-{
-	u64 mtt_entry = umem_dma & ODP_DMA_ADDR_MASK;
-
-	if (umem_dma & ODP_READ_ALLOWED_BIT)
-		mtt_entry |= MLX5_IB_MTT_READ;
-	if (umem_dma & ODP_WRITE_ALLOWED_BIT)
-		mtt_entry |= MLX5_IB_MTT_WRITE;
-
-	return mtt_entry;
-}
-#endif
-
 /*
  * Populate the given array with bus addresses from the umem.
  *
@@ -151,47 +141,50 @@ void __mlx5_ib_populate_pas(struct mlx5_ib_dev *dev, struct ib_umem *umem,
 			    int page_shift, size_t offset, size_t num_pages,
 			    __be64 *pas, int access_flags)
 {
-	unsigned long umem_page_shift = ilog2(umem->page_size);
+	unsigned long umem_page_shift = umem->page_shift;
 	int shift = page_shift - umem_page_shift;
 	int mask = (1 << shift) - 1;
-	int i, k;
+	int i, k, idx;
 	u64 cur = 0;
 	u64 base;
 	int len;
 	struct scatterlist *sg;
 	int entry;
-#ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
-	const bool odp = umem->odp_data != NULL;
-
-	if (odp) {
-		WARN_ON(shift != 0);
-		WARN_ON(access_flags != (MLX5_IB_MTT_READ | MLX5_IB_MTT_WRITE));
-
-		for (i = 0; i < num_pages; ++i) {
-			dma_addr_t pa = umem->odp_data->dma_list[offset + i];
-
-			pas[i] = cpu_to_be64(umem_dma_to_mtt(pa));
-		}
-		return;
-	}
-#endif
 
 	i = 0;
 	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, entry) {
 		len = sg_dma_len(sg) >> umem_page_shift;
 		base = sg_dma_address(sg);
-		for (k = 0; k < len; k++) {
+
+		/* Skip elements below offset */
+		if (i + len < offset << shift) {
+			i += len;
+			continue;
+		}
+
+		/* Skip pages below offset */
+		if (i < offset << shift) {
+			k = (offset << shift) - i;
+			i = offset << shift;
+		} else {
+			k = 0;
+		}
+
+		for (; k < len; k++) {
 			if (!(i & mask)) {
 				cur = base + (k << umem_page_shift);
 				cur |= access_flags;
+				idx = (i >> shift) - offset;
 
-				pas[i >> shift] = cpu_to_be64(cur);
+				pas[idx] = cpu_to_be64(cur);
 				mlx5_ib_dbg(dev, "pas[%d] 0x%llx\n",
-					    i >> shift, be64_to_cpu(pas[i >> shift]));
-			}  else
-				mlx5_ib_dbg(dev, "=====> 0x%llx\n",
-					    base + (k << umem_page_shift));
+					    i >> shift, be64_to_cpu(pas[idx]));
+			}
 			i++;
+
+			/* Stop after num_pages reached */
+			if (i >> shift >= offset + num_pages)
+				return;
 		}
 	}
 }

@@ -37,8 +37,10 @@
 
 #include <linux/mlx4/cmd.h>
 
+#include <rdma/ib_verbs.h>
 #include "mlx4.h"
 #include "mlx4_stats.h"
+#include "fw.h"
 
 #define MLX4_MAC_VALID		(1ull << 63)
 
@@ -50,8 +52,45 @@
 #define MLX4_STATS_ERROR_COUNTERS_MASK		0x1ffc30ULL
 #define MLX4_STATS_PORT_COUNTERS_MASK		0x1fe00000ULL
 
-#define MLX4_FLAG_V_IGNORE_FCS_MASK		0x2
+#define MLX4_FLAG2_V_IGNORE_FCS_MASK		BIT(1)
+#define MLX4_FLAG2_V_USER_MTU_MASK		BIT(5)
+#define MLX4_FLAG2_V_USER_MAC_MASK		BIT(6)
+#define MLX4_FLAG_V_MTU_MASK			BIT(0)
+#define MLX4_FLAG_V_PPRX_MASK			BIT(1)
+#define MLX4_FLAG_V_PPTX_MASK			BIT(2)
 #define MLX4_IGNORE_FCS_MASK			0x1
+#define MLX4_TC_MAX_NUMBER			8
+#define MLX4_FLAG2_V_DISABLE_MC_LOOPBACK_MASK	BIT(2)
+#define MLX4_DISABLE_MC_LOOPBACK_MASK		0x6
+
+static void mlx4_inc_port_macs(struct mlx4_dev *mdev, int port)
+{
+	struct mlx4_port_info *info = &mlx4_priv(mdev)->port[port];
+
+	mutex_lock(&info->mac_table.mutex);
+	info->mac_table.total++;
+	mutex_unlock(&info->mac_table.mutex);
+	mlx4_dbg(mdev, "%s added mac for port: %d, now: %d\n",
+		 __func__, port, info->mac_table.total);
+}
+
+static void mlx4_dec_port_macs(struct mlx4_dev *mdev, int port)
+{
+	struct mlx4_port_info *info = &mlx4_priv(mdev)->port[port];
+
+	mutex_lock(&info->mac_table.mutex);
+	if (!info->mac_table.total) {
+		mutex_unlock(&info->mac_table.mutex);
+		mlx4_dbg(mdev, "No current macs for port: %d\n", port);
+		return;
+	}
+
+	info->mac_table.total--;
+	mutex_unlock(&info->mac_table.mutex);
+
+	mlx4_dbg(mdev, "%s removed mac, port: %d, now: %d\n",
+		 __func__, port, info->mac_table.total);
+}
 
 void mlx4_init_mac_table(struct mlx4_dev *dev, struct mlx4_mac_table *table)
 {
@@ -61,6 +100,7 @@ void mlx4_init_mac_table(struct mlx4_dev *dev, struct mlx4_mac_table *table)
 	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
 		table->entries[i] = 0;
 		table->refs[i]	 = 0;
+		table->is_dup[i] = false;
 	}
 	table->max   = 1 << dev->caps.log_num_macs;
 	table->total = 0;
@@ -74,19 +114,19 @@ void mlx4_init_vlan_table(struct mlx4_dev *dev, struct mlx4_vlan_table *table)
 	for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
 		table->entries[i] = 0;
 		table->refs[i]	 = 0;
+		table->is_dup[i] = false;
 	}
 	table->max   = (1 << dev->caps.log_num_vlans) - MLX4_VLAN_REGULAR;
 	table->total = 0;
 }
 
 void mlx4_init_roce_gid_table(struct mlx4_dev *dev,
-			      struct mlx4_roce_gid_table *table)
+			      struct mlx4_roce_info *roce)
 {
-	int i;
+	struct mlx4_roce_addr_table *addr_table = &roce->addr_table;
 
-	mutex_init(&table->mutex);
-	for (i = 0; i < MLX4_ROCE_MAX_GIDS; i++)
-		memset(table->roce_gids[i].raw, 0, MLX4_ROCE_GID_ENTRY_SIZE);
+	mutex_init(&roce->mutex);
+	memset(addr_table, 0, sizeof(*addr_table));
 }
 
 static int validate_index(struct mlx4_dev *dev,
@@ -159,21 +199,94 @@ int mlx4_find_cached_mac(struct mlx4_dev *dev, u8 port, u64 mac, int *idx)
 }
 EXPORT_SYMBOL_GPL(mlx4_find_cached_mac);
 
+static bool mlx4_need_mf_bond(struct mlx4_dev *dev)
+{
+	int i, num_eth_ports = 0;
+
+	if (!mlx4_is_mfunc(dev))
+		return false;
+	mlx4_foreach_port(i, dev, MLX4_PORT_TYPE_ETH)
+		++num_eth_ports;
+
+	return (num_eth_ports ==  2) ? true : false;
+}
+
 int __mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 {
 	struct mlx4_port_info *info = &mlx4_priv(dev)->port[port];
 	struct mlx4_mac_table *table = &info->mac_table;
 	int i, err = 0;
 	int free = -1;
+	int free_for_dup = -1;
+	bool dup = mlx4_is_mf_bonded(dev);
+	u8 dup_port = (port == 1) ? 2 : 1;
+	struct mlx4_mac_table *dup_table = &mlx4_priv(dev)->port[dup_port].mac_table;
+	bool need_mf_bond = mlx4_need_mf_bond(dev);
+	bool can_mf_bond = true;
 
-	mlx4_dbg(dev, "Registering MAC: 0x%llx for port %d\n",
-		 (unsigned long long) mac, port);
+	mlx4_dbg(dev, "Registering MAC: 0x%llx for port %d %s duplicate\n",
+		 (unsigned long long)mac, port,
+		 dup ? "with" : "without");
 
-	mutex_lock(&table->mutex);
+	if (need_mf_bond) {
+		if (port == 1) {
+			mutex_lock(&table->mutex);
+			mutex_lock_nested(&dup_table->mutex, SINGLE_DEPTH_NESTING);
+		} else {
+			mutex_lock(&dup_table->mutex);
+			mutex_lock_nested(&table->mutex, SINGLE_DEPTH_NESTING);
+		}
+	} else {
+		mutex_lock(&table->mutex);
+	}
+
+	if (need_mf_bond) {
+		int index_at_port = -1;
+		int index_at_dup_port = -1;
+
+		for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
+			if (((MLX4_MAC_MASK & mac) == (MLX4_MAC_MASK & be64_to_cpu(table->entries[i]))))
+				index_at_port = i;
+			if (((MLX4_MAC_MASK & mac) == (MLX4_MAC_MASK & be64_to_cpu(dup_table->entries[i]))))
+				index_at_dup_port = i;
+		}
+
+		/* check that same mac is not in the tables at different indices */
+		if ((index_at_port != index_at_dup_port) &&
+		    (index_at_port >= 0) &&
+		    (index_at_dup_port >= 0))
+			can_mf_bond = false;
+
+		/* If the mac is already in the primary table, the slot must be
+		 * available in the duplicate table as well.
+		 */
+		if (index_at_port >= 0 && index_at_dup_port < 0 &&
+		    dup_table->refs[index_at_port]) {
+			can_mf_bond = false;
+		}
+		/* If the mac is already in the duplicate table, check that the
+		 * corresponding index is not occupied in the primary table, or
+		 * the primary table already contains the mac at the same index.
+		 * Otherwise, you cannot bond (primary contains a different mac
+		 * at that index).
+		 */
+		if (index_at_dup_port >= 0) {
+			if (!table->refs[index_at_dup_port] ||
+			    ((MLX4_MAC_MASK & mac) == (MLX4_MAC_MASK & be64_to_cpu(table->entries[index_at_dup_port]))))
+				free_for_dup = index_at_dup_port;
+			else
+				can_mf_bond = false;
+		}
+	}
+
 	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
 		if (!table->refs[i]) {
 			if (free < 0)
 				free = i;
+			if (free_for_dup < 0 && need_mf_bond && can_mf_bond) {
+				if (!dup_table->refs[i])
+					free_for_dup = i;
+			}
 			continue;
 		}
 
@@ -182,9 +295,29 @@ int __mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 			/* MAC already registered, increment ref count */
 			err = i;
 			++table->refs[i];
+			if (dup) {
+				u64 dup_mac = MLX4_MAC_MASK & be64_to_cpu(dup_table->entries[i]);
+
+				if (dup_mac != mac || !dup_table->is_dup[i]) {
+					mlx4_warn(dev, "register mac: expect duplicate mac 0x%llx on port %d index %d\n",
+						  mac, dup_port, i);
+				}
+			}
 			goto out;
 		}
 	}
+
+	if (need_mf_bond && (free_for_dup < 0)) {
+		if (dup) {
+			mlx4_warn(dev, "Fail to allocate duplicate MAC table entry\n");
+			mlx4_warn(dev, "High Availability for virtual functions may not work as expected\n");
+			dup = false;
+		}
+		can_mf_bond = false;
+	}
+
+	if (need_mf_bond && can_mf_bond)
+		free = free_for_dup;
 
 	mlx4_dbg(dev, "Free MAC index is %d\n", free);
 
@@ -205,10 +338,35 @@ int __mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 		goto out;
 	}
 	table->refs[free] = 1;
-	err = free;
+	table->is_dup[free] = false;
 	++table->total;
+	if (dup) {
+		dup_table->refs[free] = 0;
+		dup_table->is_dup[free] = true;
+		dup_table->entries[free] = cpu_to_be64(mac | MLX4_MAC_VALID);
+
+		err = mlx4_set_port_mac_table(dev, dup_port, dup_table->entries);
+		if (unlikely(err)) {
+			mlx4_warn(dev, "Failed adding duplicate mac: 0x%llx\n", mac);
+			dup_table->is_dup[free] = false;
+			dup_table->entries[free] = 0;
+			goto out;
+		}
+		++dup_table->total;
+	}
+	err = free;
 out:
-	mutex_unlock(&table->mutex);
+	if (need_mf_bond) {
+		if (port == 2) {
+			mutex_unlock(&table->mutex);
+			mutex_unlock(&dup_table->mutex);
+		} else {
+			mutex_unlock(&dup_table->mutex);
+			mutex_unlock(&table->mutex);
+		}
+	} else {
+		mutex_unlock(&table->mutex);
+	}
 	return err;
 }
 EXPORT_SYMBOL_GPL(__mlx4_register_mac);
@@ -219,6 +377,8 @@ int mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 	int err = -EINVAL;
 
 	if (mlx4_is_mfunc(dev)) {
+		u32 p_l;
+
 		if (!(dev->flags & MLX4_FLAG_OLD_REG_MAC)) {
 			err = mlx4_cmd_imm(dev, mac, &out_param,
 					   ((u32) port) << 8 | (u32) RES_MAC,
@@ -237,8 +397,13 @@ int mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 		if (err)
 			return err;
 
-		return get_param_l(&out_param);
+		p_l = get_param_l(&out_param);
+		/* update vf table, the master updated via __register_mac */
+		if (p_l && mlx4_is_slave(dev))
+			mlx4_inc_port_macs(dev, port);
+		return p_l;
 	}
+
 	return __mlx4_register_mac(dev, port, mac);
 }
 EXPORT_SYMBOL_GPL(mlx4_register_mac);
@@ -255,6 +420,9 @@ void __mlx4_unregister_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 	struct mlx4_port_info *info;
 	struct mlx4_mac_table *table;
 	int index;
+	bool dup = mlx4_is_mf_bonded(dev);
+	u8 dup_port = (port == 1) ? 2 : 1;
+	struct mlx4_mac_table *dup_table = &mlx4_priv(dev)->port[dup_port].mac_table;
 
 	if (port < 1 || port > dev->caps.num_ports) {
 		mlx4_warn(dev, "invalid port number (%d), aborting...\n", port);
@@ -262,22 +430,59 @@ void __mlx4_unregister_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 	}
 	info = &mlx4_priv(dev)->port[port];
 	table = &info->mac_table;
-	mutex_lock(&table->mutex);
+
+	if (dup) {
+		if (port == 1) {
+			mutex_lock(&table->mutex);
+			mutex_lock_nested(&dup_table->mutex, SINGLE_DEPTH_NESTING);
+		} else {
+			mutex_lock(&dup_table->mutex);
+			mutex_lock_nested(&table->mutex, SINGLE_DEPTH_NESTING);
+		}
+	} else {
+		mutex_lock(&table->mutex);
+	}
+
 	index = find_index(dev, table, mac);
 
 	if (validate_index(dev, table, index))
 		goto out;
-	if (--table->refs[index]) {
+
+	if (--table->refs[index] || table->is_dup[index]) {
 		mlx4_dbg(dev, "Have more references for index %d, no need to modify mac table\n",
 			 index);
+		if (!table->refs[index])
+			dup_table->is_dup[index] = false;
 		goto out;
 	}
 
 	table->entries[index] = 0;
-	mlx4_set_port_mac_table(dev, port, table->entries);
+	if (mlx4_set_port_mac_table(dev, port, table->entries))
+		mlx4_warn(dev, "Fail to set mac in port %d during unregister\n", port);
 	--table->total;
+
+	if (dup) {
+		dup_table->is_dup[index] = false;
+		if (dup_table->refs[index])
+			goto out;
+		dup_table->entries[index] = 0;
+		if (mlx4_set_port_mac_table(dev, dup_port, dup_table->entries))
+			mlx4_warn(dev, "Fail to set mac in duplicate port %d during unregister\n", dup_port);
+
+		--table->total;
+	}
 out:
-	mutex_unlock(&table->mutex);
+	if (dup) {
+		if (port == 2) {
+			mutex_unlock(&table->mutex);
+			mutex_unlock(&dup_table->mutex);
+		} else {
+			mutex_unlock(&dup_table->mutex);
+			mutex_unlock(&table->mutex);
+		}
+	} else {
+		mutex_unlock(&table->mutex);
+	}
 }
 EXPORT_SYMBOL_GPL(__mlx4_unregister_mac);
 
@@ -298,6 +503,11 @@ void mlx4_unregister_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 					    RES_OP_RESERVE_AND_MAP, MLX4_CMD_FREE_RES,
 					    MLX4_CMD_TIME_CLASS_A, MLX4_CMD_WRAPPED);
 		}
+
+		/* update vf mac table */
+		if (mlx4_is_slave(dev))
+			mlx4_dec_port_macs(dev, port);
+
 		return;
 	}
 	__mlx4_unregister_mac(dev, port, mac);
@@ -311,9 +521,22 @@ int __mlx4_replace_mac(struct mlx4_dev *dev, u8 port, int qpn, u64 new_mac)
 	struct mlx4_mac_table *table = &info->mac_table;
 	int index = qpn - info->base_qpn;
 	int err = 0;
+	bool dup = mlx4_is_mf_bonded(dev);
+	u8 dup_port = (port == 1) ? 2 : 1;
+	struct mlx4_mac_table *dup_table = &mlx4_priv(dev)->port[dup_port].mac_table;
 
 	/* CX1 doesn't support multi-functions */
-	mutex_lock(&table->mutex);
+	if (dup) {
+		if (port == 1) {
+			mutex_lock(&table->mutex);
+			mutex_lock_nested(&dup_table->mutex, SINGLE_DEPTH_NESTING);
+		} else {
+			mutex_lock(&dup_table->mutex);
+			mutex_lock_nested(&table->mutex, SINGLE_DEPTH_NESTING);
+		}
+	} else {
+		mutex_lock(&table->mutex);
+	}
 
 	err = validate_index(dev, table, index);
 	if (err)
@@ -326,9 +549,30 @@ int __mlx4_replace_mac(struct mlx4_dev *dev, u8 port, int qpn, u64 new_mac)
 		mlx4_err(dev, "Failed adding MAC: 0x%llx\n",
 			 (unsigned long long) new_mac);
 		table->entries[index] = 0;
+	} else {
+		if (dup) {
+			dup_table->entries[index] = cpu_to_be64(new_mac | MLX4_MAC_VALID);
+
+			err = mlx4_set_port_mac_table(dev, dup_port, dup_table->entries);
+			if (unlikely(err)) {
+				mlx4_err(dev, "Failed adding duplicate MAC: 0x%llx\n",
+					 (unsigned long long)new_mac);
+				dup_table->entries[index] = 0;
+			}
+		}
 	}
 out:
-	mutex_unlock(&table->mutex);
+	if (dup) {
+		if (port == 2) {
+			mutex_unlock(&table->mutex);
+			mutex_unlock(&dup_table->mutex);
+		} else {
+			mutex_unlock(&dup_table->mutex);
+			mutex_unlock(&table->mutex);
+		}
+	} else {
+		mutex_unlock(&table->mutex);
+	}
 	return err;
 }
 EXPORT_SYMBOL_GPL(__mlx4_replace_mac);
@@ -380,8 +624,28 @@ int __mlx4_register_vlan(struct mlx4_dev *dev, u8 port, u16 vlan,
 	struct mlx4_vlan_table *table = &mlx4_priv(dev)->port[port].vlan_table;
 	int i, err = 0;
 	int free = -1;
+	int free_for_dup = -1;
+	bool dup = mlx4_is_mf_bonded(dev);
+	u8 dup_port = (port == 1) ? 2 : 1;
+	struct mlx4_vlan_table *dup_table = &mlx4_priv(dev)->port[dup_port].vlan_table;
+	bool need_mf_bond = mlx4_need_mf_bond(dev);
+	bool can_mf_bond = true;
 
-	mutex_lock(&table->mutex);
+	mlx4_dbg(dev, "Registering VLAN: %d for port %d %s duplicate\n",
+		 vlan, port,
+		 dup ? "with" : "without");
+
+	if (need_mf_bond) {
+		if (port == 1) {
+			mutex_lock(&table->mutex);
+			mutex_lock_nested(&dup_table->mutex, SINGLE_DEPTH_NESTING);
+		} else {
+			mutex_lock(&dup_table->mutex);
+			mutex_lock_nested(&table->mutex, SINGLE_DEPTH_NESTING);
+		}
+	} else {
+		mutex_lock(&table->mutex);
+	}
 
 	if (table->total == table->max) {
 		/* No free vlan entries */
@@ -389,21 +653,84 @@ int __mlx4_register_vlan(struct mlx4_dev *dev, u8 port, u16 vlan,
 		goto out;
 	}
 
+	if (need_mf_bond) {
+		int index_at_port = -1;
+		int index_at_dup_port = -1;
+
+		for (i = MLX4_VLAN_REGULAR; i < MLX4_MAX_VLAN_NUM; i++) {
+			if ((vlan == (MLX4_VLAN_MASK & be32_to_cpu(table->entries[i]))))
+				index_at_port = i;
+			if ((vlan == (MLX4_VLAN_MASK & be32_to_cpu(dup_table->entries[i]))))
+				index_at_dup_port = i;
+		}
+		/* check that same vlan is not in the tables at different indices */
+		if ((index_at_port != index_at_dup_port) &&
+		    (index_at_port >= 0) &&
+		    (index_at_dup_port >= 0))
+			can_mf_bond = false;
+
+		/* If the vlan is already in the primary table, the slot must be
+		 * available in the duplicate table as well.
+		 */
+		if (index_at_port >= 0 && index_at_dup_port < 0 &&
+		    dup_table->refs[index_at_port]) {
+			can_mf_bond = false;
+		}
+		/* If the vlan is already in the duplicate table, check that the
+		 * corresponding index is not occupied in the primary table, or
+		 * the primary table already contains the vlan at the same index.
+		 * Otherwise, you cannot bond (primary contains a different vlan
+		 * at that index).
+		 */
+		if (index_at_dup_port >= 0) {
+			if (!table->refs[index_at_dup_port] ||
+			    (vlan == (MLX4_VLAN_MASK & be32_to_cpu(dup_table->entries[index_at_dup_port]))))
+				free_for_dup = index_at_dup_port;
+			else
+				can_mf_bond = false;
+		}
+	}
+
 	for (i = MLX4_VLAN_REGULAR; i < MLX4_MAX_VLAN_NUM; i++) {
-		if (free < 0 && (table->refs[i] == 0)) {
-			free = i;
-			continue;
+		if (!table->refs[i]) {
+			if (free < 0)
+				free = i;
+			if (free_for_dup < 0 && need_mf_bond && can_mf_bond) {
+				if (!dup_table->refs[i])
+					free_for_dup = i;
+			}
 		}
 
-		if (table->refs[i] &&
+		if ((table->refs[i] || table->is_dup[i]) &&
 		    (vlan == (MLX4_VLAN_MASK &
 			      be32_to_cpu(table->entries[i])))) {
 			/* Vlan already registered, increase references count */
+			mlx4_dbg(dev, "vlan %u is already registered.\n", vlan);
 			*index = i;
 			++table->refs[i];
+			if (dup) {
+				u16 dup_vlan = MLX4_VLAN_MASK & be32_to_cpu(dup_table->entries[i]);
+
+				if (dup_vlan != vlan || !dup_table->is_dup[i]) {
+					mlx4_warn(dev, "register vlan: expected duplicate vlan %u on port %d index %d\n",
+						  vlan, dup_port, i);
+				}
+			}
 			goto out;
 		}
 	}
+
+	if (need_mf_bond && (free_for_dup < 0)) {
+		if (dup) {
+			mlx4_warn(dev, "Fail to allocate duplicate VLAN table entry\n");
+			mlx4_warn(dev, "High Availability for virtual functions may not work as expected\n");
+			dup = false;
+		}
+		can_mf_bond = false;
+	}
+
+	if (need_mf_bond && can_mf_bond)
+		free = free_for_dup;
 
 	if (free < 0) {
 		err = -ENOMEM;
@@ -412,6 +739,7 @@ int __mlx4_register_vlan(struct mlx4_dev *dev, u8 port, u16 vlan,
 
 	/* Register new VLAN */
 	table->refs[free] = 1;
+	table->is_dup[free] = false;
 	table->entries[free] = cpu_to_be32(vlan | MLX4_VLAN_VALID);
 
 	err = mlx4_set_port_vlan_table(dev, port, table->entries);
@@ -421,11 +749,35 @@ int __mlx4_register_vlan(struct mlx4_dev *dev, u8 port, u16 vlan,
 		table->entries[free] = 0;
 		goto out;
 	}
+	++table->total;
+	if (dup) {
+		dup_table->refs[free] = 0;
+		dup_table->is_dup[free] = true;
+		dup_table->entries[free] = cpu_to_be32(vlan | MLX4_VLAN_VALID);
+
+		err = mlx4_set_port_vlan_table(dev, dup_port, dup_table->entries);
+		if (unlikely(err)) {
+			mlx4_warn(dev, "Failed adding duplicate vlan: %u\n", vlan);
+			dup_table->is_dup[free] = false;
+			dup_table->entries[free] = 0;
+			goto out;
+		}
+		++dup_table->total;
+	}
 
 	*index = free;
-	++table->total;
 out:
-	mutex_unlock(&table->mutex);
+	if (need_mf_bond) {
+		if (port == 2) {
+			mutex_unlock(&table->mutex);
+			mutex_unlock(&dup_table->mutex);
+		} else {
+			mutex_unlock(&dup_table->mutex);
+			mutex_unlock(&table->mutex);
+		}
+	} else {
+		mutex_unlock(&table->mutex);
+	}
 	return err;
 }
 
@@ -455,8 +807,22 @@ void __mlx4_unregister_vlan(struct mlx4_dev *dev, u8 port, u16 vlan)
 {
 	struct mlx4_vlan_table *table = &mlx4_priv(dev)->port[port].vlan_table;
 	int index;
+	bool dup = mlx4_is_mf_bonded(dev);
+	u8 dup_port = (port == 1) ? 2 : 1;
+	struct mlx4_vlan_table *dup_table = &mlx4_priv(dev)->port[dup_port].vlan_table;
 
-	mutex_lock(&table->mutex);
+	if (dup) {
+		if (port == 1) {
+			mutex_lock(&table->mutex);
+			mutex_lock_nested(&dup_table->mutex, SINGLE_DEPTH_NESTING);
+		} else {
+			mutex_lock(&dup_table->mutex);
+			mutex_lock_nested(&table->mutex, SINGLE_DEPTH_NESTING);
+		}
+	} else {
+		mutex_lock(&table->mutex);
+	}
+
 	if (mlx4_find_cached_vlan(dev, port, vlan, &index)) {
 		mlx4_warn(dev, "vlan 0x%x is not in the vlan table\n", vlan);
 		goto out;
@@ -467,16 +833,38 @@ void __mlx4_unregister_vlan(struct mlx4_dev *dev, u8 port, u16 vlan)
 		goto out;
 	}
 
-	if (--table->refs[index]) {
+	if (--table->refs[index] || table->is_dup[index]) {
 		mlx4_dbg(dev, "Have %d more references for index %d, no need to modify vlan table\n",
 			 table->refs[index], index);
+		if (!table->refs[index])
+			dup_table->is_dup[index] = false;
 		goto out;
 	}
 	table->entries[index] = 0;
-	mlx4_set_port_vlan_table(dev, port, table->entries);
+	if (mlx4_set_port_vlan_table(dev, port, table->entries))
+		mlx4_warn(dev, "Fail to set vlan in port %d during unregister\n", port);
 	--table->total;
+	if (dup) {
+		dup_table->is_dup[index] = false;
+		if (dup_table->refs[index])
+			goto out;
+		dup_table->entries[index] = 0;
+		if (mlx4_set_port_vlan_table(dev, dup_port, dup_table->entries))
+			mlx4_warn(dev, "Fail to set vlan in duplicate port %d during unregister\n", dup_port);
+		--dup_table->total;
+	}
 out:
-	mutex_unlock(&table->mutex);
+	if (dup) {
+		if (port == 2) {
+			mutex_unlock(&table->mutex);
+			mutex_unlock(&dup_table->mutex);
+		} else {
+			mutex_unlock(&dup_table->mutex);
+			mutex_unlock(&table->mutex);
+		}
+	} else {
+		mutex_unlock(&table->mutex);
+	}
 }
 
 void mlx4_unregister_vlan(struct mlx4_dev *dev, u8 port, u16 vlan)
@@ -494,6 +882,220 @@ void mlx4_unregister_vlan(struct mlx4_dev *dev, u8 port, u16 vlan)
 	__mlx4_unregister_vlan(dev, port, vlan);
 }
 EXPORT_SYMBOL_GPL(mlx4_unregister_vlan);
+
+int mlx4_bond_mac_table(struct mlx4_dev *dev)
+{
+	struct mlx4_mac_table *t1 = &mlx4_priv(dev)->port[1].mac_table;
+	struct mlx4_mac_table *t2 = &mlx4_priv(dev)->port[2].mac_table;
+	int ret = 0;
+	int i;
+	bool update1 = false;
+	bool update2 = false;
+
+	mutex_lock(&t1->mutex);
+	mutex_lock(&t2->mutex);
+	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
+		if ((t1->entries[i] != t2->entries[i]) &&
+		    t1->entries[i] && t2->entries[i]) {
+			mlx4_warn(dev, "can't duplicate entry %d in mac table\n", i);
+			ret = -EINVAL;
+			goto unlock;
+		}
+	}
+
+	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
+		if (t1->entries[i] && !t2->entries[i]) {
+			t2->entries[i] = t1->entries[i];
+			t2->is_dup[i] = true;
+			update2 = true;
+		} else if (!t1->entries[i] && t2->entries[i]) {
+			t1->entries[i] = t2->entries[i];
+			t1->is_dup[i] = true;
+			update1 = true;
+		} else if (t1->entries[i] && t2->entries[i]) {
+			t1->is_dup[i] = true;
+			t2->is_dup[i] = true;
+		}
+	}
+
+	if (update1) {
+		ret = mlx4_set_port_mac_table(dev, 1, t1->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to set MAC table for port 1 (%d)\n", ret);
+	}
+	if (!ret && update2) {
+		ret = mlx4_set_port_mac_table(dev, 2, t2->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to set MAC table for port 2 (%d)\n", ret);
+	}
+
+	if (ret)
+		mlx4_warn(dev, "failed to create mirror MAC tables\n");
+unlock:
+	mutex_unlock(&t2->mutex);
+	mutex_unlock(&t1->mutex);
+	return ret;
+}
+
+int mlx4_unbond_mac_table(struct mlx4_dev *dev)
+{
+	struct mlx4_mac_table *t1 = &mlx4_priv(dev)->port[1].mac_table;
+	struct mlx4_mac_table *t2 = &mlx4_priv(dev)->port[2].mac_table;
+	int ret = 0;
+	int ret1;
+	int i;
+	bool update1 = false;
+	bool update2 = false;
+
+	mutex_lock(&t1->mutex);
+	mutex_lock(&t2->mutex);
+	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
+		if (t1->entries[i] != t2->entries[i]) {
+			mlx4_warn(dev, "mac table is in an unexpected state when trying to unbond\n");
+			ret = -EINVAL;
+			goto unlock;
+		}
+	}
+
+	for (i = 0; i < MLX4_MAX_MAC_NUM; i++) {
+		if (!t1->entries[i])
+			continue;
+		t1->is_dup[i] = false;
+		if (!t1->refs[i]) {
+			t1->entries[i] = 0;
+			update1 = true;
+		}
+		t2->is_dup[i] = false;
+		if (!t2->refs[i]) {
+			t2->entries[i] = 0;
+			update2 = true;
+		}
+	}
+
+	if (update1) {
+		ret = mlx4_set_port_mac_table(dev, 1, t1->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to unmirror MAC tables for port 1(%d)\n", ret);
+	}
+	if (update2) {
+		ret1 = mlx4_set_port_mac_table(dev, 2, t2->entries);
+		if (ret1) {
+			mlx4_warn(dev, "failed to unmirror MAC tables for port 2(%d)\n", ret1);
+			ret = ret1;
+		}
+	}
+unlock:
+	mutex_unlock(&t2->mutex);
+	mutex_unlock(&t1->mutex);
+	return ret;
+}
+
+int mlx4_bond_vlan_table(struct mlx4_dev *dev)
+{
+	struct mlx4_vlan_table *t1 = &mlx4_priv(dev)->port[1].vlan_table;
+	struct mlx4_vlan_table *t2 = &mlx4_priv(dev)->port[2].vlan_table;
+	int ret = 0;
+	int i;
+	bool update1 = false;
+	bool update2 = false;
+
+	mutex_lock(&t1->mutex);
+	mutex_lock(&t2->mutex);
+	for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
+		if ((t1->entries[i] != t2->entries[i]) &&
+		    t1->entries[i] && t2->entries[i]) {
+			mlx4_warn(dev, "can't duplicate entry %d in vlan table\n", i);
+			ret = -EINVAL;
+			goto unlock;
+		}
+	}
+
+	for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
+		if (t1->entries[i] && !t2->entries[i]) {
+			t2->entries[i] = t1->entries[i];
+			t2->is_dup[i] = true;
+			update2 = true;
+		} else if (!t1->entries[i] && t2->entries[i]) {
+			t1->entries[i] = t2->entries[i];
+			t1->is_dup[i] = true;
+			update1 = true;
+		} else if (t1->entries[i] && t2->entries[i]) {
+			t1->is_dup[i] = true;
+			t2->is_dup[i] = true;
+		}
+	}
+
+	if (update1) {
+		ret = mlx4_set_port_vlan_table(dev, 1, t1->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to set VLAN table for port 1 (%d)\n", ret);
+	}
+	if (!ret && update2) {
+		ret = mlx4_set_port_vlan_table(dev, 2, t2->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to set VLAN table for port 2 (%d)\n", ret);
+	}
+
+	if (ret)
+		mlx4_warn(dev, "failed to create mirror VLAN tables\n");
+unlock:
+	mutex_unlock(&t2->mutex);
+	mutex_unlock(&t1->mutex);
+	return ret;
+}
+
+int mlx4_unbond_vlan_table(struct mlx4_dev *dev)
+{
+	struct mlx4_vlan_table *t1 = &mlx4_priv(dev)->port[1].vlan_table;
+	struct mlx4_vlan_table *t2 = &mlx4_priv(dev)->port[2].vlan_table;
+	int ret = 0;
+	int ret1;
+	int i;
+	bool update1 = false;
+	bool update2 = false;
+
+	mutex_lock(&t1->mutex);
+	mutex_lock(&t2->mutex);
+	for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
+		if (t1->entries[i] != t2->entries[i]) {
+			mlx4_warn(dev, "vlan table is in an unexpected state when trying to unbond\n");
+			ret = -EINVAL;
+			goto unlock;
+		}
+	}
+
+	for (i = 0; i < MLX4_MAX_VLAN_NUM; i++) {
+		if (!t1->entries[i])
+			continue;
+		t1->is_dup[i] = false;
+		if (!t1->refs[i]) {
+			t1->entries[i] = 0;
+			update1 = true;
+		}
+		t2->is_dup[i] = false;
+		if (!t2->refs[i]) {
+			t2->entries[i] = 0;
+			update2 = true;
+		}
+	}
+
+	if (update1) {
+		ret = mlx4_set_port_vlan_table(dev, 1, t1->entries);
+		if (ret)
+			mlx4_warn(dev, "failed to unmirror VLAN tables for port 1(%d)\n", ret);
+	}
+	if (update2) {
+		ret1 = mlx4_set_port_vlan_table(dev, 2, t2->entries);
+		if (ret1) {
+			mlx4_warn(dev, "failed to unmirror VLAN tables for port 2(%d)\n", ret1);
+			ret = ret1;
+		}
+	}
+unlock:
+	mutex_unlock(&t2->mutex);
+	mutex_unlock(&t1->mutex);
+	return ret;
+}
 
 int mlx4_get_port_ib_caps(struct mlx4_dev *dev, u8 port, __be32 *caps)
 {
@@ -529,7 +1131,8 @@ int mlx4_get_port_ib_caps(struct mlx4_dev *dev, u8 port, __be32 *caps)
 	mlx4_free_cmd_mailbox(dev, outmailbox);
 	return err;
 }
-static struct mlx4_roce_gid_entry zgid_entry;
+
+static u8 mlx4_zgid[MLX4_GID_LEN];
 
 int mlx4_get_slave_num_gids(struct mlx4_dev *dev, int slave, int port)
 {
@@ -611,37 +1214,26 @@ EXPORT_SYMBOL_GPL(mlx4_get_base_gid_ix);
 static int mlx4_reset_roce_port_gids(struct mlx4_dev *dev, int slave,
 				     int port, struct mlx4_cmd_mailbox *mailbox)
 {
-	struct mlx4_roce_gid_entry *gid_entry_mbox;
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	int num_gids, base, offset;
 	int i, err;
+	struct mlx4_roce_addr_table *t = &priv->port[port].roce.addr_table;
 
 	num_gids = mlx4_get_slave_num_gids(dev, slave, port);
 	base = mlx4_get_base_gid_ix(dev, slave, port);
 
 	memset(mailbox->buf, 0, MLX4_MAILBOX_SIZE);
 
-	mutex_lock(&(priv->port[port].gid_table.mutex));
+	mutex_lock(&priv->port[port].roce.mutex);
 	/* Zero-out gids belonging to that slave in the port GID table */
 	for (i = 0, offset = base; i < num_gids; offset++, i++)
-		memcpy(priv->port[port].gid_table.roce_gids[offset].raw,
-		       zgid_entry.raw, MLX4_ROCE_GID_ENTRY_SIZE);
+		memcpy(t->addr[offset].gid, &mlx4_zgid, MLX4_GID_LEN);
 
-	/* Now, copy roce port gids table to mailbox for passing to FW */
-	gid_entry_mbox = (struct mlx4_roce_gid_entry *)mailbox->buf;
-	for (i = 0; i < MLX4_ROCE_MAX_GIDS; gid_entry_mbox++, i++)
-		memcpy(gid_entry_mbox->raw,
-		       priv->port[port].gid_table.roce_gids[i].raw,
-		       MLX4_ROCE_GID_ENTRY_SIZE);
+	err = mlx4_update_roce_addr_table(dev, port, t, MLX4_CMD_NATIVE);
+	mutex_unlock(&priv->port[port].roce.mutex);
 
-	err = mlx4_cmd(dev, mailbox->dma,
-		       ((u32)port) | (MLX4_SET_PORT_GID_TABLE << 8),
-		       MLX4_SET_PORT_ETH_OPCODE, MLX4_CMD_SET_PORT,
-		       MLX4_CMD_TIME_CLASS_B, MLX4_CMD_NATIVE);
-	mutex_unlock(&(priv->port[port].gid_table.mutex));
 	return err;
 }
-
 
 void mlx4_reset_roce_gids(struct mlx4_dev *dev, int slave)
 {
@@ -686,16 +1278,218 @@ void mlx4_reset_roce_gids(struct mlx4_dev *dev, int slave)
 	return;
 }
 
+static void
+mlx4_en_set_port_mtu(struct mlx4_dev *dev, int slave, int port,
+		     struct mlx4_set_port_general_context *gen_context)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_mfunc_master_ctx *master = &priv->mfunc.master;
+	struct mlx4_slave_state *slave_st = &master->slave_state[slave];
+	u16 mtu, prev_mtu;
+
+	/* Mtu is configured as the max USER_MTU among all
+	 * the functions on the port.
+	 */
+	mtu = be16_to_cpu(gen_context->mtu);
+	mtu = min_t(int, mtu, dev->caps.eth_mtu_cap[port] +
+		    ETH_HLEN + VLAN_HLEN + ETH_FCS_LEN);
+	prev_mtu = slave_st->mtu[port];
+	slave_st->mtu[port] = mtu;
+	if (mtu > master->max_mtu[port])
+		master->max_mtu[port] = mtu;
+	if (mtu < prev_mtu && prev_mtu == master->max_mtu[port]) {
+		int i;
+
+		slave_st->mtu[port] = mtu;
+		master->max_mtu[port] = mtu;
+		for (i = 0; i < dev->num_slaves; i++)
+			master->max_mtu[port] =
+				max_t(u16, master->max_mtu[port],
+				      master->slave_state[i].mtu[port]);
+	}
+	gen_context->mtu = cpu_to_be16(master->max_mtu[port]);
+}
+
+static void
+mlx4_en_set_port_user_mtu(struct mlx4_dev *dev, int slave, int port,
+			  struct mlx4_set_port_general_context *gen_context)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_mfunc_master_ctx *master = &priv->mfunc.master;
+	struct mlx4_slave_state *slave_st = &master->slave_state[slave];
+	u16 user_mtu, prev_user_mtu;
+
+	/* User Mtu is configured as the max USER_MTU among all
+	 * the functions on the port.
+	 */
+	user_mtu = be16_to_cpu(gen_context->user_mtu);
+	user_mtu = min_t(int, user_mtu, dev->caps.eth_mtu_cap[port]);
+	prev_user_mtu = slave_st->user_mtu[port];
+	slave_st->user_mtu[port] = user_mtu;
+	if (user_mtu > master->max_user_mtu[port])
+		master->max_user_mtu[port] = user_mtu;
+	if (user_mtu < prev_user_mtu &&
+	    prev_user_mtu == master->max_user_mtu[port]) {
+		int i;
+
+		slave_st->user_mtu[port] = user_mtu;
+		master->max_user_mtu[port] = user_mtu;
+		for (i = 0; i < dev->num_slaves; i++)
+			master->max_user_mtu[port] =
+				max_t(u16, master->max_user_mtu[port],
+				      master->slave_state[i].user_mtu[port]);
+	}
+	gen_context->user_mtu = cpu_to_be16(master->max_user_mtu[port]);
+}
+
+static void
+mlx4_en_set_port_global_pause(struct mlx4_dev *dev, int slave,
+			      struct mlx4_set_port_general_context *gen_context)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_mfunc_master_ctx *master = &priv->mfunc.master;
+
+	/* Slave cannot change Global Pause configuration */
+	if (slave != mlx4_master_func_num(dev) &&
+	    (gen_context->pptx != master->pptx ||
+	     gen_context->pprx != master->pprx)) {
+		gen_context->pptx = master->pptx;
+		gen_context->pprx = master->pprx;
+		mlx4_warn(dev, "denying Global Pause change for slave:%d\n",
+			  slave);
+	} else {
+		master->pptx = gen_context->pptx;
+		master->pprx = gen_context->pprx;
+	}
+}
+
+enum mlx4_set_port_roce_mode {
+	MLX4_SET_PORT_ROCE_MODE_1,
+	MLX4_SET_PORT_ROCE_MODE_RESERVED,
+	MLX4_SET_PORT_ROCE_MODE_1_PLUS_2,
+	MLX4_SET_PORT_ROCE_MODE_RESERVED2,
+	MLX4_SET_PORT_ROCE_MODE_MAX,
+	MLX4_SET_PORT_ROCE_MODE_INVALID = MLX4_SET_PORT_ROCE_MODE_MAX
+};
+
+struct roce_gid_table_mbox_entry {
+	u8		gid[MLX4_GID_LEN];
+};
+
+struct roce_adr_table_mbox_entry {
+	u8		gid[MLX4_GID_LEN];
+	__be32		rsrvd1[2];
+	__be16		rsrvd2;
+	u8		type;
+	u8		version;
+	__be32		rsrvd3;
+};
+
+static inline bool roce_table_entry_is_empty(int inmod, void *e)
+{
+	struct roce_gid_table_mbox_entry *gid_e = (struct roce_gid_table_mbox_entry *)e;
+	struct roce_adr_table_mbox_entry *adr_e = (struct roce_adr_table_mbox_entry *)e;
+
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		return memcmp(gid_e->gid, mlx4_zgid, MLX4_GID_LEN) ? false : true;
+	case MLX4_SET_PORT_ROCE_ADDR:
+		return memcmp(adr_e->gid, mlx4_zgid, MLX4_GID_LEN) ? false : true;
+	default:
+		return false;
+	}
+}
+
+static inline bool roce_table_entry_is_valid(struct mlx4_dev *dev, int inmod, void *e)
+{
+	struct roce_adr_table_mbox_entry *adr_e = (struct roce_adr_table_mbox_entry *)e;
+
+	if (roce_table_entry_is_empty(inmod, e))
+		return true;
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		return true;
+	case MLX4_SET_PORT_ROCE_ADDR:
+		return mlx4_verify_supported_gid_type(dev, adr_e->version, NULL) ?
+			false : true;
+	default:
+		return false;
+	}
+}
+
+static inline bool roce_table_entry_has_gid(int inmod, void *e, u8 *gid)
+{
+	struct roce_gid_table_mbox_entry *gid_e = (struct roce_gid_table_mbox_entry *)e;
+	struct roce_adr_table_mbox_entry *adr_e = (struct roce_adr_table_mbox_entry *)e;
+
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		return memcmp(gid_e->gid, gid, MLX4_GID_LEN) ? false : true;
+	case MLX4_SET_PORT_ROCE_ADDR:
+		return memcmp(adr_e->gid, gid, MLX4_GID_LEN) ? false : true;
+	default:
+		return false;
+	}
+}
+
+bool roce_table_entry_is_eq(int inmod, void *e1, void *e2)
+{
+	struct roce_gid_table_mbox_entry *gid_e1 = (struct roce_gid_table_mbox_entry *)e1;
+	struct roce_gid_table_mbox_entry *gid_e2 = (struct roce_gid_table_mbox_entry *)e2;
+	struct roce_adr_table_mbox_entry *adr_e1 = (struct roce_adr_table_mbox_entry *)e1;
+	struct roce_adr_table_mbox_entry *adr_e2 = (struct roce_adr_table_mbox_entry *)e2;
+
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		return memcmp(gid_e1->gid, gid_e2->gid, MLX4_GID_LEN) ? false : true;
+	case MLX4_SET_PORT_ROCE_ADDR:
+		return (!memcmp(adr_e1->gid, adr_e2->gid, MLX4_GID_LEN) &&
+			(adr_e1->version == adr_e2->version)) ? true : false;
+	default:
+		return false;
+	}
+}
+
+void *roce_table_entry_next(int inmod, void *e)
+{
+	struct roce_gid_table_mbox_entry *gid_e = (struct roce_gid_table_mbox_entry *)e;
+	struct roce_adr_table_mbox_entry *adr_e = (struct roce_adr_table_mbox_entry *)e;
+
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		return (void *)(gid_e + 1);
+	case MLX4_SET_PORT_ROCE_ADDR:
+		return (void *)(adr_e + 1);
+	default:
+		return NULL;
+	}
+}
+
+void roce_table_entry_copy(int inmod, void *e, struct mlx4_roce_addr *to)
+{
+	struct roce_gid_table_mbox_entry *gid_e = (struct roce_gid_table_mbox_entry *)e;
+	struct roce_adr_table_mbox_entry *adr_e = (struct roce_adr_table_mbox_entry *)e;
+
+	switch (inmod) {
+	case MLX4_SET_PORT_GID_TABLE:
+		memcpy(to->gid, gid_e->gid, MLX4_GID_LEN);
+		return;
+	case MLX4_SET_PORT_ROCE_ADDR:
+		memcpy(to->gid, adr_e->gid, MLX4_GID_LEN);
+		to->type = adr_e->version;
+		return;
+	default:
+		return;
+	}
+}
+
 static int mlx4_common_set_port(struct mlx4_dev *dev, int slave, u32 in_mod,
 				u8 op_mod, struct mlx4_cmd_mailbox *inbox)
 {
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	struct mlx4_port_info *port_info;
-	struct mlx4_mfunc_master_ctx *master = &priv->mfunc.master;
-	struct mlx4_slave_state *slave_st = &master->slave_state[slave];
 	struct mlx4_set_port_rqp_calc_context *qpn_context;
 	struct mlx4_set_port_general_context *gen_context;
-	struct mlx4_roce_gid_entry *gid_entry_tbl, *gid_entry_mbox, *gid_entry_mb1;
 	int reset_qkey_viols;
 	int port;
 	int is_eth;
@@ -703,23 +1497,29 @@ static int mlx4_common_set_port(struct mlx4_dev *dev, int slave, u32 in_mod,
 	int base;
 	u32 in_modifier;
 	u32 promisc;
-	u16 mtu, prev_mtu;
 	int err;
 	int i, j;
 	int offset;
 	__be32 agg_cap_mask;
 	__be32 slave_cap_mask;
 	__be32 new_cap_mask;
+	void *mbox, *mbox2;
+	enum mlx4_set_port_roce_mode slave_set_port_mode;
+	struct mlx4_mfunc_master_ctx *master = &priv->mfunc.master;
+	struct mlx4_slave_state *slave_st = &master->slave_state[slave];
 
 	port = in_mod & 0xff;
 	in_modifier = in_mod >> 8;
 	is_eth = op_mod;
 	port_info = &priv->port[port];
 
-	/* Slaves cannot perform SET_PORT operations except changing MTU */
+	/* Slaves cannot perform SET_PORT operations,
+	 * except for changing MTU and USER_MTU.
+	 */
 	if (is_eth) {
 		if (slave != dev->caps.function &&
 		    in_modifier != MLX4_SET_PORT_GENERAL &&
+		    in_modifier != MLX4_SET_PORT_ROCE_ADDR &&
 		    in_modifier != MLX4_SET_PORT_GID_TABLE) {
 			mlx4_warn(dev, "denying SET_PORT for slave:%d\n",
 					slave);
@@ -744,97 +1544,134 @@ static int mlx4_common_set_port(struct mlx4_dev *dev, int slave, u32 in_mod,
 			break;
 		case MLX4_SET_PORT_GENERAL:
 			gen_context = inbox->buf;
-			/* Mtu is configured as the max MTU among all the
-			 * the functions on the port. */
-			mtu = be16_to_cpu(gen_context->mtu);
-			mtu = min_t(int, mtu, dev->caps.eth_mtu_cap[port] +
-				    ETH_HLEN + VLAN_HLEN + ETH_FCS_LEN);
-			prev_mtu = slave_st->mtu[port];
-			slave_st->mtu[port] = mtu;
-			if (mtu > master->max_mtu[port])
-				master->max_mtu[port] = mtu;
-			if (mtu < prev_mtu && prev_mtu ==
-						master->max_mtu[port]) {
-				slave_st->mtu[port] = mtu;
-				master->max_mtu[port] = mtu;
-				for (i = 0; i < dev->num_slaves; i++) {
-					master->max_mtu[port] =
-					max(master->max_mtu[port],
-					    master->slave_state[i].mtu[port]);
+
+			if (gen_context->flags & MLX4_FLAG_V_MTU_MASK)
+				mlx4_en_set_port_mtu(dev, slave, port,
+						     gen_context);
+
+			if (gen_context->flags2 & MLX4_FLAG2_V_USER_MTU_MASK)
+				mlx4_en_set_port_user_mtu(dev, slave, port,
+							  gen_context);
+
+			if (gen_context->flags &
+			    (MLX4_FLAG_V_PPRX_MASK | MLX4_FLAG_V_PPTX_MASK))
+				mlx4_en_set_port_global_pause(dev, slave,
+							      gen_context);
+
+			/* For old slaves we parse the port settings and figure
+			 * out the roce_mode of the slave. Such slaves are
+			 * assumed to use input_modifier MLX4_SET_PORT_GID_TABLE
+			 * later on
+			 */
+#define SET_PORT_ROCE_MODE_BITS 0x10
+			if (gen_context->flags & SET_PORT_ROCE_MODE_BITS) {
+				slave_set_port_mode = (gen_context->roce_mode >> 4) & 7;
+				switch (slave_set_port_mode) {
+				case MLX4_SET_PORT_ROCE_MODE_1:
+					slave_st->slave_gid_type = MLX4_ROCE_GID_TYPE_V1;
+					break;
+				case MLX4_SET_PORT_ROCE_MODE_1_PLUS_2:
+					slave_st->slave_gid_type = MLX4_ROCE_GID_TYPE_INVALID;
+					break;
+				default:
+					return -EINVAL;
 				}
+			} else {
+				/* Old slaves don't set roce_mode in old slaves
+				 * if mode if V1
+				 */
+				slave_st->slave_gid_type = MLX4_ROCE_GID_TYPE_V1;
 			}
 
-			gen_context->mtu = cpu_to_be16(master->max_mtu[port]);
+			if ((slave_st->slave_gid_type != MLX4_ROCE_GID_TYPE_INVALID) &&
+			    (mlx4_verify_supported_gid_type(dev, slave_st->slave_gid_type, NULL))) {
+				slave_st->slave_gid_type = MLX4_ROCE_GID_TYPE_INVALID;
+				return -EINVAL;
+			}
+
+#define SET_PORT_ROCE_IP_PROTO_BITS 0x20
+			if (slave)
+				gen_context->flags &= ~(SET_PORT_ROCE_MODE_BITS |
+							SET_PORT_ROCE_IP_PROTO_BITS);
 			break;
 		case MLX4_SET_PORT_GID_TABLE:
-			/* change to MULTIPLE entries: number of guest's gids
-			 * need a FOR-loop here over number of gids the guest has.
-			 * 1. Check no duplicates in gids passed by slave
-			 */
+			if (slave_st->slave_gid_type == MLX4_ROCE_GID_TYPE_INVALID)
+				return -EINVAL;
+		case MLX4_SET_PORT_ROCE_ADDR:
 			num_gids = mlx4_get_slave_num_gids(dev, slave, port);
 			base = mlx4_get_base_gid_ix(dev, slave, port);
-			gid_entry_mbox = (struct mlx4_roce_gid_entry *)(inbox->buf);
-			for (i = 0; i < num_gids; gid_entry_mbox++, i++) {
-				if (!memcmp(gid_entry_mbox->raw, zgid_entry.raw,
-					    sizeof(zgid_entry)))
+
+			/* check that VF table is valid  */
+			mbox = (struct roce_adr_table_mbox_entry *)(inbox->buf);
+			for (i = 0;
+			     i < num_gids;
+			     i++, mbox = roce_table_entry_next(in_modifier, mbox)) {
+				if (!roce_table_entry_is_valid(dev, in_modifier, mbox)) {
+					pr_err("Invalid entry %d in RoCE GID table mailbox of slave %d\n",
+					       i, slave);
+					return -EINVAL;
+				}
+			}
+
+			/* check for duplicates inside VF mailbox */
+			mbox = (void *)(inbox->buf);
+			for (i = 0;
+			     i < num_gids;
+			     i++, mbox = roce_table_entry_next(in_modifier, mbox)) {
+				if (roce_table_entry_is_empty(in_modifier, mbox))
 					continue;
-				gid_entry_mb1 = gid_entry_mbox + 1;
-				for (j = i + 1; j < num_gids; gid_entry_mb1++, j++) {
-					if (!memcmp(gid_entry_mb1->raw,
-						    zgid_entry.raw, sizeof(zgid_entry)))
-						continue;
-					if (!memcmp(gid_entry_mb1->raw, gid_entry_mbox->raw,
-						    sizeof(gid_entry_mbox->raw))) {
-						/* found duplicate */
+
+				mbox2 = roce_table_entry_next(in_modifier, mbox);
+				for (j = i + 1;
+				     j < num_gids;
+				     j++, mbox2 = roce_table_entry_next(in_modifier, mbox2)) {
+					if (roce_table_entry_is_eq(in_modifier, mbox, mbox2)) {
+						pr_err("Duplicate entry within slave %d GID table\n", slave);
 						return -EINVAL;
 					}
 				}
 			}
 
-			/* 2. Check that do not have duplicates in OTHER
-			 *    entries in the port GID table
-			 */
-
-			mutex_lock(&(priv->port[port].gid_table.mutex));
+			mutex_lock(&priv->port[port].roce.mutex);
+			/* check for duplicates with other VFs */
 			for (i = 0; i < MLX4_ROCE_MAX_GIDS; i++) {
+				struct mlx4_roce_addr *a = &priv->port[port].roce.addr_table.addr[i];
+
 				if (i >= base && i < base + num_gids)
 					continue; /* don't compare to slave's current gids */
-				gid_entry_tbl = &priv->port[port].gid_table.roce_gids[i];
-				if (!memcmp(gid_entry_tbl->raw, zgid_entry.raw, sizeof(zgid_entry)))
+
+				if (!memcmp(a->gid, mlx4_zgid, MLX4_GID_LEN))
 					continue;
-				gid_entry_mbox = (struct mlx4_roce_gid_entry *)(inbox->buf);
-				for (j = 0; j < num_gids; gid_entry_mbox++, j++) {
-					if (!memcmp(gid_entry_mbox->raw, zgid_entry.raw,
-						    sizeof(zgid_entry)))
-						continue;
-					if (!memcmp(gid_entry_mbox->raw, gid_entry_tbl->raw,
-						    sizeof(gid_entry_tbl->raw))) {
-						/* found duplicate */
-						mlx4_warn(dev, "requested gid entry for slave:%d is a duplicate of gid at index %d\n",
-							  slave, i);
-						mutex_unlock(&(priv->port[port].gid_table.mutex));
+
+				mbox = (void *)(inbox->buf);
+				for (j = 0;
+				     j < num_gids;
+				     j++, mbox = roce_table_entry_next(in_modifier, mbox)) {
+					if (roce_table_entry_has_gid(in_modifier, mbox, a->gid)) {
+						mutex_unlock(&priv->port[port].roce.mutex);
+						pr_err("Duplicate GID for slave %d with another slave\n", slave);
 						return -EINVAL;
 					}
 				}
 			}
 
-			/* insert slave GIDs with memcpy, starting at slave's base index */
-			gid_entry_mbox = (struct mlx4_roce_gid_entry *)(inbox->buf);
-			for (i = 0, offset = base; i < num_gids; gid_entry_mbox++, offset++, i++)
-				memcpy(priv->port[port].gid_table.roce_gids[offset].raw,
-				       gid_entry_mbox->raw, MLX4_ROCE_GID_ENTRY_SIZE);
+			/* add GIDs to HW */
+			mbox = (void *)(inbox->buf);
+			for (i = 0, offset = base;
+			     i < num_gids;
+			     mbox = roce_table_entry_next(in_modifier, mbox), offset++, i++) {
+				struct mlx4_roce_addr *a = &priv->port[port].roce.addr_table.addr[offset];
 
-			/* Now, copy roce port gids table to current mailbox for passing to FW */
-			gid_entry_mbox = (struct mlx4_roce_gid_entry *)(inbox->buf);
-			for (i = 0; i < MLX4_ROCE_MAX_GIDS; gid_entry_mbox++, i++)
-				memcpy(gid_entry_mbox->raw,
-				       priv->port[port].gid_table.roce_gids[i].raw,
-				       MLX4_ROCE_GID_ENTRY_SIZE);
+				roce_table_entry_copy(in_modifier, mbox, a);
 
-			err = mlx4_cmd(dev, inbox->dma, in_mod & 0xffff, op_mod,
-				       MLX4_CMD_SET_PORT, MLX4_CMD_TIME_CLASS_B,
-				       MLX4_CMD_NATIVE);
-			mutex_unlock(&(priv->port[port].gid_table.mutex));
+				/* If slave doesn't use MLX4_SET_PORT_ROCE_ADDR
+				 * take type from slave's global RoCE mode
+				 */
+				if (in_modifier == MLX4_SET_PORT_GID_TABLE)
+					a->type = slave_st->slave_gid_type;
+			}
+			mutex_unlock(&priv->port[port].roce.mutex);
+			err = mlx4_update_roce_addr_table(dev, port, &priv->port[port].roce.addr_table, MLX4_CMD_NATIVE);
 			return err;
 		}
 
@@ -968,6 +1805,21 @@ int mlx4_SET_PORT(struct mlx4_dev *dev, u8 port, int pkey_tbl_sz)
 	return err;
 }
 
+static inline enum mlx4_set_port_roce_mode get_set_port_roce_mode(struct mlx4_dev *dev)
+{
+	switch (dev->caps.roce_mode) {
+	case MLX4_ROCE_MODE_1:
+		return MLX4_SET_PORT_ROCE_MODE_1;
+	case MLX4_ROCE_MODE_2:
+	case MLX4_ROCE_MODE_1_PLUS_2:
+		return MLX4_SET_PORT_ROCE_MODE_1_PLUS_2;
+	default:
+		return MLX4_SET_PORT_ROCE_MODE_INVALID;
+	}
+}
+
+#define SET_PORT_ROCE_MODE_FLAGS 0x10
+#define MLX4_SET_PORT_ROCE_V1_V2 0x2
 int mlx4_SET_PORT_general(struct mlx4_dev *dev, u8 port, int mtu,
 			  u8 pptx, u8 pfctx, u8 pprx, u8 pfcrx)
 {
@@ -987,6 +1839,19 @@ int mlx4_SET_PORT_general(struct mlx4_dev *dev, u8 port, int mtu,
 	context->pprx = (pprx * (!pfcrx)) << 7;
 	context->pfcrx = pfcrx;
 
+	if (dev->caps.port_type[port] == MLX4_PORT_TYPE_ETH) {
+		enum mlx4_set_port_roce_mode set_roce_mode = get_set_port_roce_mode(dev);
+
+		if (set_roce_mode == MLX4_SET_PORT_ROCE_MODE_1_PLUS_2) {
+			context->roce_mode |= (set_roce_mode & 7) << 4;
+			context->flags |= SET_PORT_ROCE_MODE_FLAGS;
+			if(!mlx4_is_slave(dev)) {
+				err = mlx4_config_roce_v2_port(dev, ROCE_V2_UDP_DPORT);
+				if (err)
+					return err;
+			}
+		}
+	}
 	in_mod = MLX4_SET_PORT_GENERAL << 8 | port;
 	err = mlx4_cmd(dev, mailbox->dma, in_mod, MLX4_SET_PORT_ETH_OPCODE,
 		       MLX4_CMD_SET_PORT, MLX4_CMD_TIME_CLASS_B,
@@ -1035,6 +1900,82 @@ int mlx4_SET_PORT_qpn_calc(struct mlx4_dev *dev, u8 port, u32 base_qpn,
 }
 EXPORT_SYMBOL(mlx4_SET_PORT_qpn_calc);
 
+int mlx4_SET_PORT_disable_mc_loopback(struct mlx4_dev *dev, u8 port,
+				      bool disable_mc_loopback)
+{
+	struct mlx4_cmd_mailbox *mailbox;
+	struct mlx4_set_port_general_context *context;
+	u32 in_mod;
+	int err;
+
+	mailbox = mlx4_alloc_cmd_mailbox(dev);
+	if (IS_ERR(mailbox))
+		return PTR_ERR(mailbox);
+
+	context = mailbox->buf;
+	context->flags2 |= MLX4_FLAG2_V_DISABLE_MC_LOOPBACK_MASK;
+	if (disable_mc_loopback)
+		context->roce_mode |=  MLX4_DISABLE_MC_LOOPBACK_MASK;
+	else
+		context->roce_mode &= ~MLX4_DISABLE_MC_LOOPBACK_MASK;
+
+	in_mod = MLX4_SET_PORT_GENERAL << 8 | port;
+	err = mlx4_cmd(dev, mailbox->dma, in_mod, 1, MLX4_CMD_SET_PORT,
+		       MLX4_CMD_TIME_CLASS_B, MLX4_CMD_NATIVE);
+
+	mlx4_free_cmd_mailbox(dev, mailbox);
+	return err;
+}
+EXPORT_SYMBOL(mlx4_SET_PORT_disable_mc_loopback);
+
+int mlx4_SET_PORT_user_mtu(struct mlx4_dev *dev, u8 port, u16 user_mtu)
+{
+	struct mlx4_cmd_mailbox *mailbox;
+	struct mlx4_set_port_general_context *context;
+	u32 in_mod;
+	int err;
+
+	mailbox = mlx4_alloc_cmd_mailbox(dev);
+	if (IS_ERR(mailbox))
+		return PTR_ERR(mailbox);
+	context = mailbox->buf;
+	context->flags2 |= MLX4_FLAG2_V_USER_MTU_MASK;
+	context->user_mtu = cpu_to_be16(user_mtu);
+
+	in_mod = MLX4_SET_PORT_GENERAL << 8 | port;
+	err = mlx4_cmd(dev, mailbox->dma, in_mod, MLX4_SET_PORT_ETH_OPCODE,
+		       MLX4_CMD_SET_PORT, MLX4_CMD_TIME_CLASS_B,
+		       MLX4_CMD_WRAPPED);
+
+	mlx4_free_cmd_mailbox(dev, mailbox);
+	return err;
+}
+EXPORT_SYMBOL(mlx4_SET_PORT_user_mtu);
+
+int mlx4_SET_PORT_user_mac(struct mlx4_dev *dev, u8 port, u8 *user_mac)
+{
+	struct mlx4_cmd_mailbox *mailbox;
+	struct mlx4_set_port_general_context *context;
+	u32 in_mod;
+	int err;
+
+	mailbox = mlx4_alloc_cmd_mailbox(dev);
+	if (IS_ERR(mailbox))
+		return PTR_ERR(mailbox);
+	context = mailbox->buf;
+	context->flags2 |= MLX4_FLAG2_V_USER_MAC_MASK;
+	memcpy(context->user_mac, user_mac, sizeof(context->user_mac));
+
+	in_mod = MLX4_SET_PORT_GENERAL << 8 | port;
+	err = mlx4_cmd(dev, mailbox->dma, in_mod, MLX4_SET_PORT_ETH_OPCODE,
+		       MLX4_CMD_SET_PORT, MLX4_CMD_TIME_CLASS_B,
+		       MLX4_CMD_NATIVE);
+
+	mlx4_free_cmd_mailbox(dev, mailbox);
+	return err;
+}
+EXPORT_SYMBOL(mlx4_SET_PORT_user_mac);
+
 int mlx4_SET_PORT_fcs_check(struct mlx4_dev *dev, u8 port, u8 ignore_fcs_value)
 {
 	struct mlx4_cmd_mailbox *mailbox;
@@ -1046,7 +1987,7 @@ int mlx4_SET_PORT_fcs_check(struct mlx4_dev *dev, u8 port, u8 ignore_fcs_value)
 	if (IS_ERR(mailbox))
 		return PTR_ERR(mailbox);
 	context = mailbox->buf;
-	context->v_ignore_fcs |= MLX4_FLAG_V_IGNORE_FCS_MASK;
+	context->flags2 |= MLX4_FLAG2_V_IGNORE_FCS_MASK;
 	if (ignore_fcs_value)
 		context->ignore_fcs |= MLX4_IGNORE_FCS_MASK;
 	else
@@ -1155,24 +2096,13 @@ int mlx4_SET_VLAN_FLTR_wrapper(struct mlx4_dev *dev, int slave,
 	return err;
 }
 
-int mlx4_common_dump_eth_stats(struct mlx4_dev *dev, int slave,
-			       u32 in_mod, struct mlx4_cmd_mailbox *outbox)
-{
-	return mlx4_cmd_box(dev, 0, outbox->dma, in_mod, 0,
-			    MLX4_CMD_DUMP_ETH_STATS, MLX4_CMD_TIME_CLASS_B,
-			    MLX4_CMD_NATIVE);
-}
-
 int mlx4_DUMP_ETH_STATS_wrapper(struct mlx4_dev *dev, int slave,
 				struct mlx4_vhcr *vhcr,
 				struct mlx4_cmd_mailbox *inbox,
 				struct mlx4_cmd_mailbox *outbox,
 				struct mlx4_cmd_info *cmd)
 {
-	if (slave != dev->caps.function)
-		return 0;
-	return mlx4_common_dump_eth_stats(dev, slave,
-					  vhcr->in_modifier, outbox);
+	return 0;
 }
 
 int mlx4_get_slave_from_roce_gid(struct mlx4_dev *dev, int port, u8 *gid,
@@ -1193,8 +2123,9 @@ int mlx4_get_slave_from_roce_gid(struct mlx4_dev *dev, int port, u8 *gid,
 				dev->persist->num_vfs + 1) - 1;
 
 	for (i = 0; i < MLX4_ROCE_MAX_GIDS; i++) {
-		if (!memcmp(priv->port[port].gid_table.roce_gids[i].raw, gid,
-			    MLX4_ROCE_GID_ENTRY_SIZE)) {
+		struct mlx4_roce_addr *a = &priv->port[port].roce.addr_table.addr[i];
+
+		if (!memcmp(a->gid, gid, MLX4_GID_LEN)) {
 			found_ix = i;
 			break;
 		}
@@ -1275,15 +2206,17 @@ int mlx4_get_slave_from_roce_gid(struct mlx4_dev *dev, int port, u8 *gid,
 EXPORT_SYMBOL(mlx4_get_slave_from_roce_gid);
 
 int mlx4_get_roce_gid_from_slave(struct mlx4_dev *dev, int port, int slave_id,
-				 u8 *gid)
+				 u8 *gid, enum mlx4_roce_gid_type *gid_type)
 {
 	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_roce_addr *a = &priv->port[port].roce.addr_table.addr[slave_id];
+
 
 	if (!mlx4_is_master(dev))
 		return -EINVAL;
 
-	memcpy(gid, priv->port[port].gid_table.roce_gids[slave_id].raw,
-	       MLX4_ROCE_GID_ENTRY_SIZE);
+	memcpy(gid, a->gid, MLX4_GID_LEN);
+	*gid_type = a->type;
 	return 0;
 }
 EXPORT_SYMBOL(mlx4_get_roce_gid_from_slave);
@@ -1443,3 +2376,71 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL(mlx4_get_module_info);
+
+int mlx4_max_tc(struct mlx4_dev *dev)
+{
+	u8 num_tc = dev->caps.max_tc_eth;
+
+	if (!num_tc)
+		num_tc = MLX4_TC_MAX_NUMBER;
+
+	return num_tc;
+}
+EXPORT_SYMBOL(mlx4_max_tc);
+
+static int mlx4_get_port_reserved_mac_num(struct mlx4_dev *mdev, int port)
+{
+	struct mlx4_priv *priv = mlx4_priv(mdev);
+	struct resource_allocator *res_alloc;
+	int reserved;
+
+	if (mlx4_is_slave(mdev))
+		return 0;
+
+	res_alloc = &priv->mfunc.master.res_tracker.res_alloc[RES_MAC];
+
+	reserved = (port > 0) ? res_alloc->res_port_rsvd[port - 1] :
+		res_alloc->res_reserved;
+
+	return reserved;
+}
+
+int mlx4_get_port_max_macs(struct mlx4_dev *mdev, int port)
+{
+	struct mlx4_port_info *info = &mlx4_priv(mdev)->port[port];
+
+	/* The maximum value should considers the reserved macs for the vfs */
+	return info->mac_table.max - mlx4_get_port_reserved_mac_num(mdev, port);
+}
+EXPORT_SYMBOL(mlx4_get_port_max_macs);
+
+int mlx4_get_port_total_macs(struct mlx4_dev *mdev, int port)
+{
+	struct mlx4_port_info *info = &mlx4_priv(mdev)->port[port];
+
+	return info->mac_table.total;
+}
+EXPORT_SYMBOL(mlx4_get_port_total_macs);
+
+int mlx4_get_port_free_macs(struct mlx4_dev *mdev, int port)
+{
+	/* slave will get the free macs (log2) from its master */
+	if (mlx4_is_slave(mdev)) {
+		struct mlx4_port_cap port_cap;
+
+		mlx4_QUERY_PORT(mdev, port, &port_cap);
+		return (1 << port_cap.log_max_macs);
+	}
+
+	return (mlx4_get_port_max_macs(mdev, port) -
+		mlx4_get_port_total_macs(mdev, port));
+}
+EXPORT_SYMBOL(mlx4_get_port_free_macs);
+
+bool mlx4_is_available_mac(struct mlx4_dev *mdev, int port)
+{
+	int free_macs = mlx4_get_port_free_macs(mdev, port);
+
+	return free_macs >= MLX4_VF_MAC_QUOTA;
+}
+EXPORT_SYMBOL(mlx4_is_available_mac);

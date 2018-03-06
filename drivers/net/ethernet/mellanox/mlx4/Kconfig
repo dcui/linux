@@ -23,13 +23,6 @@ config MLX4_EN_DCB
 
 	  If unsure, set to Y
 
-config MLX4_EN_VXLAN
-	bool "VXLAN offloads Support"
-	default y
-	depends on MLX4_EN && VXLAN && !(MLX4_EN=y && VXLAN=m)
-	---help---
-	  Say Y here if you want to use VXLAN offloads in the driver.
-
 config MLX4_CORE
 	tristate
 	depends on PCI
@@ -44,3 +37,10 @@ config MLX4_DEBUG
 	  mlx4_core driver.  The output can be turned on via the
 	  debug_level module parameter (which can also be set after
 	  the driver is loaded through sysfs).
+
+config COMPAT_DISABLE_DCB
+	bool "CONFIG_COMPAT_DISABLE_DCB"
+	default n
+
+config COMPAT_EN_SYSFS
+	bool "CONFIG_COMPAT_EN_SYSFS"

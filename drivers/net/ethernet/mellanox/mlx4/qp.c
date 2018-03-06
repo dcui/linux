@@ -167,6 +167,14 @@ static int __mlx4_qp_modify(struct mlx4_dev *dev, struct mlx4_mtt *mtt,
 		context->log_page_size   = mtt->page_shift - MLX4_ICM_PAGE_SHIFT;
 	}
 
+	if ((cur_state == MLX4_QP_STATE_RTR) &&
+	    (new_state == MLX4_QP_STATE_RTS) &&
+	    ((dev->caps.roce_mode == MLX4_ROCE_MODE_2) ||
+	     (dev->caps.roce_mode == MLX4_ROCE_MODE_1_PLUS_2)) &&
+	    !mlx4_is_mfunc(dev))
+		context->roce_entropy =
+			cpu_to_be16(mlx4_qp_roce_entropy(dev, qp->qpn));
+
 	*(__be32 *) mailbox->buf = cpu_to_be32(optpar);
 	memcpy(mailbox->buf + 8, context, sizeof *context);
 
@@ -239,8 +247,9 @@ int __mlx4_qp_reserve_range(struct mlx4_dev *dev, int cnt, int align,
 }
 
 int mlx4_qp_reserve_range(struct mlx4_dev *dev, int cnt, int align,
-			  int *base, u8 flags)
+			  int *base, u8 flags, u8 usage)
 {
+	u32 in_modifier = RES_QP | (((u32)usage & 3) << 30);
 	u64 in_param = 0;
 	u64 out_param;
 	int err;
@@ -252,7 +261,7 @@ int mlx4_qp_reserve_range(struct mlx4_dev *dev, int cnt, int align,
 		set_param_l(&in_param, (((u32)flags) << 24) | (u32)cnt);
 		set_param_h(&in_param, align);
 		err = mlx4_cmd_imm(dev, in_param, &out_param,
-				   RES_QP, RES_OP_RESERVE,
+				   in_modifier, RES_OP_RESERVE,
 				   MLX4_CMD_ALLOC_RES,
 				   MLX4_CMD_TIME_CLASS_A, MLX4_CMD_WRAPPED);
 		if (err)
@@ -378,6 +387,19 @@ static void mlx4_qp_free_icm(struct mlx4_dev *dev, int qpn)
 		__mlx4_qp_free_icm(dev, qpn);
 }
 
+struct mlx4_qp *mlx4_qp_lookup(struct mlx4_dev *dev, u32 qpn)
+{
+	struct mlx4_qp_table *qp_table = &mlx4_priv(dev)->qp_table;
+	struct mlx4_qp *qp;
+
+	spin_lock(&qp_table->lock);
+
+	qp = __mlx4_qp_lookup(dev, qpn);
+
+	spin_unlock(&qp_table->lock);
+	return qp;
+}
+
 int mlx4_qp_alloc(struct mlx4_dev *dev, int qpn, struct mlx4_qp *qp, gfp_t gfp)
 {
 	struct mlx4_priv *priv = mlx4_priv(dev);
@@ -441,7 +463,7 @@ int mlx4_update_qp(struct mlx4_dev *dev, u32 qpn,
 		      & MLX4_DEV_CAP_FLAG2_UPDATE_QP_SRC_CHECK_LB)) {
 			mlx4_warn(dev,
 				  "Trying to set src check LB, but it isn't supported\n");
-			err = -ENOTSUPP;
+			err = -EOPNOTSUPP;
 			goto out;
 		}
 		pri_addr_path_mask |=
@@ -465,6 +487,12 @@ int mlx4_update_qp(struct mlx4_dev *dev, u32 qpn,
 	}
 
 	if (attr & MLX4_UPDATE_QP_QOS_VPORT) {
+		if (!(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_QOS_VPP)) {
+			mlx4_warn(dev, "Granular QoS per VF is not enabled\n");
+			err = -EOPNOTSUPP;
+			goto out;
+		}
+
 		qp_mask |= 1ULL << MLX4_UPD_QP_MASK_QOS_VPP;
 		cmd->qp_context.qos_vport = params->qos_vport;
 	}
@@ -869,7 +897,7 @@ void mlx4_cleanup_qp_table(struct mlx4_dev *dev)
 }
 
 int mlx4_qp_query(struct mlx4_dev *dev, struct mlx4_qp *qp,
-		  struct mlx4_qp_context *context)
+		  struct mlx4_qp_context *context, int native_or_wrapped)
 {
 	struct mlx4_cmd_mailbox *mailbox;
 	int err;
@@ -880,7 +908,7 @@ int mlx4_qp_query(struct mlx4_dev *dev, struct mlx4_qp *qp,
 
 	err = mlx4_cmd_box(dev, 0, mailbox->dma, qp->qpn, 0,
 			   MLX4_CMD_QUERY_QP, MLX4_CMD_TIME_CLASS_A,
-			   MLX4_CMD_WRAPPED);
+			   native_or_wrapped);
 	if (!err)
 		memcpy(context, mailbox->buf + 8, sizeof *context);
 
@@ -921,3 +949,23 @@ int mlx4_qp_to_ready(struct mlx4_dev *dev, struct mlx4_mtt *mtt,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(mlx4_qp_to_ready);
+
+u16 mlx4_qp_roce_entropy(struct mlx4_dev *dev, u32 qpn)
+{
+	struct mlx4_qp_context context;
+	struct mlx4_qp qp;
+	int err;
+
+	qp.qpn = qpn;
+	err = mlx4_qp_query(dev, &qp, &context, MLX4_CMD_NATIVE);
+	if (!err) {
+		u32 dest_qpn = be32_to_cpu(context.remote_qpn) & 0xffffff;
+		u16 folded_dst = folded_qp(dest_qpn);
+		u16 folded_src = folded_qp(qpn);
+
+		return (dest_qpn != qpn) ?
+			((folded_dst ^ folded_src) | 0xC000) :
+			folded_src | 0xC000;
+	}
+	return 0xdead;
+}

@@ -135,7 +135,7 @@ int mlx4_do_bond(struct mlx4_dev *dev, bool enable)
 	LIST_HEAD(bond_list);
 
 	if (!(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_PORT_REMAP))
-		return -ENOTSUPP;
+		return -EOPNOTSUPP;
 
 	ret = mlx4_disable_rx_port_check(dev, enable);
 	if (ret) {
@@ -146,7 +146,7 @@ int mlx4_do_bond(struct mlx4_dev *dev, bool enable)
 	if (enable) {
 		dev->flags |= MLX4_FLAG_BONDED;
 	} else {
-		 ret = mlx4_virt2phy_port_map(dev, 1, 2);
+		ret = mlx4_virt2phy_port_map(dev, 1, 2);
 		if (ret) {
 			mlx4_err(dev, "Fail to reset port map\n");
 			return ret;
@@ -217,6 +217,9 @@ void mlx4_unregister_device(struct mlx4_dev *dev)
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	struct mlx4_interface *intf;
 
+	if (!(dev->persist->interface_state & MLX4_INTERFACE_STATE_UP))
+		return;
+
 	mlx4_stop_catas_poll(dev);
 	if (dev->persist->interface_state & MLX4_INTERFACE_STATE_DELETION &&
 	    mlx4_is_slave(dev)) {
@@ -261,3 +264,4 @@ void *mlx4_get_protocol_dev(struct mlx4_dev *dev, enum mlx4_protocol proto, int 
 	return result;
 }
 EXPORT_SYMBOL_GPL(mlx4_get_protocol_dev);
+

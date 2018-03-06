@@ -34,6 +34,7 @@
 #if !defined(IB_ADDR_H)
 #define IB_ADDR_H
 
+#include <net/addrconf.h>
 #include <linux/in.h>
 #include <linux/in6.h>
 #include <linux/if_arp.h>
@@ -83,6 +84,8 @@ struct rdma_dev_addr {
 	int bound_dev_if;
 	enum rdma_transport_type transport;
 	struct net *net;
+	enum rdma_network_type network;
+	int hoplimit;
 };
 
 /**
@@ -91,8 +94,8 @@ struct rdma_dev_addr {
  *
  * The dev_addr->net field must be initialized.
  */
-int rdma_translate_ip(struct sockaddr *addr, struct rdma_dev_addr *dev_addr,
-		      u16 *vlan_id);
+int rdma_translate_ip(const struct sockaddr *addr,
+		      struct rdma_dev_addr *dev_addr, u16 *vlan_id);
 
 /**
  * rdma_resolve_ip - Resolve source and destination IP addresses to
@@ -117,6 +120,10 @@ int rdma_resolve_ip(struct rdma_addr_client *client,
 				     struct rdma_dev_addr *addr, void *context),
 		    void *context);
 
+int rdma_resolve_ip_route(struct sockaddr *src_addr,
+			  const struct sockaddr *dst_addr,
+			  struct rdma_dev_addr *addr);
+
 void rdma_addr_cancel(struct rdma_dev_addr *addr);
 
 int rdma_copy_addr(struct rdma_dev_addr *dev_addr, struct net_device *dev,
@@ -125,8 +132,10 @@ int rdma_copy_addr(struct rdma_dev_addr *dev_addr, struct net_device *dev,
 int rdma_addr_size(struct sockaddr *addr);
 
 int rdma_addr_find_smac_by_sgid(union ib_gid *sgid, u8 *smac, u16 *vlan_id);
-int rdma_addr_find_dmac_by_grh(const union ib_gid *sgid, const union ib_gid *dgid,
-			       u8 *smac, u16 *vlan_id, int if_index);
+int rdma_addr_find_l2_eth_by_grh(const union ib_gid *sgid,
+				 const union ib_gid *dgid,
+				 u8 *smac, u16 *vlan_id, int *if_index,
+				 int *hoplimit);
 
 static inline u16 ib_addr_get_pkey(struct rdma_dev_addr *dev_addr)
 {
@@ -150,10 +159,9 @@ static inline int rdma_addr_gid_offset(struct rdma_dev_addr *dev_addr)
 	return dev_addr->dev_type == ARPHRD_INFINIBAND ? 4 : 0;
 }
 
-static inline u16 rdma_vlan_dev_vlan_id(const struct net_device *dev)
+static inline u16 rdma_vlan_dev_vlan_id(struct net_device *dev)
 {
-	return dev->priv_flags & IFF_802_1Q_VLAN ?
-		vlan_dev_vlan_id(dev) : 0xffff;
+	return is_vlan_dev(dev) ? vlan_dev_vlan_id(dev) : 0xffff;
 }
 
 static inline int rdma_ip2gid(struct sockaddr *addr, union ib_gid *gid)
@@ -198,11 +206,13 @@ static inline void iboe_addr_get_sgid(struct rdma_dev_addr *dev_addr,
 	dev = dev_get_by_index(&init_net, dev_addr->bound_dev_if);
 	if (dev) {
 		ip4 = in_dev_get(dev);
-		if (ip4 && ip4->ifa_list && ip4->ifa_list->ifa_address) {
+		if (ip4 && ip4->ifa_list && ip4->ifa_list->ifa_address)
 			ipv6_addr_set_v4mapped(ip4->ifa_list->ifa_address,
 					       (struct in6_addr *)gid);
+
+		if (ip4)
 			in_dev_put(ip4);
-		}
+
 		dev_put(dev);
 	}
 }
@@ -297,7 +307,13 @@ static inline void rdma_get_ll_mac(struct in6_addr *addr, u8 *mac)
 
 static inline int rdma_is_multicast_addr(struct in6_addr *addr)
 {
-	return addr->s6_addr[0] == 0xff;
+	u32 ipv4_addr;
+
+	if (addr->s6_addr[0] == 0xff)
+		return 1;
+
+	memcpy(&ipv4_addr, addr->s6_addr + 12, 4);
+	return (ipv6_addr_v4mapped(addr) && ipv4_is_multicast(ipv4_addr));
 }
 
 static inline void rdma_get_mcast_mac(struct in6_addr *addr, u8 *mac)
@@ -318,10 +334,28 @@ static inline u16 rdma_get_vlan_id(union ib_gid *dgid)
 	return vid < 0x1000 ? vid : 0xffff;
 }
 
-static inline struct net_device *rdma_vlan_dev_real_dev(const struct net_device *dev)
+static inline struct net_device *rdma_vlan_dev_real_dev(struct net_device *dev)
 {
-	return dev->priv_flags & IFF_802_1Q_VLAN ?
-		vlan_dev_real_dev(dev) : NULL;
+	return is_vlan_dev(dev) ? vlan_dev_real_dev(dev) : NULL;
 }
 
+static inline void rdma_addrconf_ifid_eui48(u8 *eui, struct net_device *dev)
+{
+	memcpy(eui, dev->dev_addr, 3);
+	memcpy(eui + 5, dev->dev_addr + 3, 3);
+	eui[3] = 0xff;
+	eui[4] = 0xfe;
+	eui[0] ^= 2;
+}
+
+static inline void rdma_make_default_gid(struct  net_device *dev,
+					 union ib_gid *gid,
+					 bool std)
+{
+	gid->global.subnet_prefix = cpu_to_be64(0xfe80000000000000LL);
+	if (std)
+		addrconf_ifid_eui48(&gid->raw[8], dev);
+	else
+		rdma_addrconf_ifid_eui48(&gid->raw[8], dev);
+}
 #endif /* IB_ADDR_H */

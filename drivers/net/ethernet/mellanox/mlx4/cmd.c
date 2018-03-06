@@ -43,6 +43,7 @@
 #include <linux/semaphore.h>
 #include <rdma/ib_smi.h>
 #include <linux/delay.h>
+#include <linux/etherdevice.h>
 
 #include <asm/io.h>
 
@@ -82,6 +83,8 @@ enum {
 	CMD_STAT_BAD_NVMEM	= 0x0b,
 	/* Error in ICM mapping (e.g. not enough auxiliary ICM pages to execute command): */
 	CMD_STAT_ICM_ERROR	= 0x0c,
+	/* Requester does not have sufficient permissions to execute the command): */
+	CMD_STAT_BAD_PERM	= 0x0d,
 	/* Attempt to modify a QP/EE which is not in the presumed state: */
 	CMD_STAT_BAD_QP_STATE   = 0x10,
 	/* Bad segment parameters (Address/Size): */
@@ -149,6 +152,7 @@ static int mlx4_status_to_errno(u8 status)
 		[CMD_STAT_BAD_INDEX]	  = -EBADF,
 		[CMD_STAT_BAD_NVMEM]	  = -EFAULT,
 		[CMD_STAT_ICM_ERROR]	  = -ENFILE,
+		[CMD_STAT_BAD_PERM]	  = -EPERM,
 		[CMD_STAT_BAD_QP_STATE]   = -EINVAL,
 		[CMD_STAT_BAD_SEG_PARAM]  = -EFAULT,
 		[CMD_STAT_REG_BOUND]	  = -EBUSY,
@@ -785,17 +789,23 @@ int __mlx4_cmd(struct mlx4_dev *dev, u64 in_param, u64 *out_param,
 		return mlx4_cmd_reset_flow(dev, op, op_modifier, -EIO);
 
 	if (!mlx4_is_mfunc(dev) || (native && mlx4_is_master(dev))) {
+		int ret;
+
 		if (dev->persist->state & MLX4_DEVICE_STATE_INTERNAL_ERROR)
 			return mlx4_internal_err_ret_value(dev, op,
 							  op_modifier);
+		down_read(&mlx4_priv(dev)->cmd.switch_sem);
 		if (mlx4_priv(dev)->cmd.use_events)
-			return mlx4_cmd_wait(dev, in_param, out_param,
-					     out_is_imm, in_modifier,
-					     op_modifier, op, timeout);
+			ret = mlx4_cmd_wait(dev, in_param, out_param,
+					    out_is_imm, in_modifier,
+					    op_modifier, op, timeout);
 		else
-			return mlx4_cmd_poll(dev, in_param, out_param,
-					     out_is_imm, in_modifier,
-					     op_modifier, op, timeout);
+			ret = mlx4_cmd_poll(dev, in_param, out_param,
+					    out_is_imm, in_modifier,
+					    op_modifier, op, timeout);
+
+		up_read(&mlx4_priv(dev)->cmd.switch_sem);
+		return ret;
 	}
 	return mlx4_slave_cmd(dev, in_param, out_param, out_is_imm,
 			      in_modifier, op_modifier, op, timeout);
@@ -1546,6 +1556,15 @@ static struct mlx4_cmd_info cmd_info[] = {
 		.wrapper = mlx4_QUERY_IF_STAT_wrapper
 	},
 	{
+		.opcode = MLX4_CMD_SET_IF_STAT,
+		.has_inbox = false,
+		.has_outbox = false,
+		.out_is_imm = false,
+		.encode_slave_id = false,
+		.verify = NULL,
+		.wrapper = mlx4_SET_IF_STAT_wrapper
+	},
+	{
 		.opcode = MLX4_CMD_ACCESS_REG,
 		.has_inbox = true,
 		.has_outbox = true,
@@ -1782,9 +1801,19 @@ static int mlx4_master_process_vhcr(struct mlx4_dev *dev, int slave,
 	}
 
 	if (err) {
-		if (!(dev->persist->state & MLX4_DEVICE_STATE_INTERNAL_ERROR))
-			mlx4_warn(dev, "vhcr command:0x%x slave:%d failed with error:%d, status %d\n",
-				  vhcr->op, slave, vhcr->errno, err);
+		if (!(dev->persist->state & MLX4_DEVICE_STATE_INTERNAL_ERROR)) {
+			if (vhcr->op == MLX4_CMD_ALLOC_RES &&
+			    (vhcr->in_modifier & 0xff) == RES_COUNTER &&
+			    err == -EDQUOT)
+				mlx4_dbg(dev,
+					 "Unable to allocate counter for slave %d (%d)\n",
+					 slave, err);
+			else
+				mlx4_warn(dev, "vhcr command 0x%x slave:%d in_param 0x%llx in_mod=0x%x op_mod=0x%x failed with error:%d, status %d\n",
+					  vhcr->op, slave, vhcr->in_param,
+					  vhcr->in_modifier, vhcr->op_modifier,
+					  vhcr->errno, err);
+		}
 		vhcr_cmd->status = mlx4_errno_to_status(err);
 		goto out_status;
 	}
@@ -1845,6 +1874,7 @@ static int mlx4_master_immediate_activate_vlan_qos(struct mlx4_priv *priv,
 
 	if (vp_oper->state.default_vlan == vp_admin->default_vlan &&
 	    vp_oper->state.default_qos == vp_admin->default_qos &&
+	    vp_oper->state.vlan_proto == vp_admin->vlan_proto &&
 	    vp_oper->state.link_state == vp_admin->link_state &&
 	    vp_oper->state.qos_vport == vp_admin->qos_vport)
 		return 0;
@@ -1903,6 +1933,7 @@ static int mlx4_master_immediate_activate_vlan_qos(struct mlx4_priv *priv,
 
 	vp_oper->state.default_vlan = vp_admin->default_vlan;
 	vp_oper->state.default_qos = vp_admin->default_qos;
+	vp_oper->state.vlan_proto = vp_admin->vlan_proto;
 	vp_oper->state.link_state = vp_admin->link_state;
 	vp_oper->state.qos_vport = vp_admin->qos_vport;
 
@@ -1916,10 +1947,117 @@ static int mlx4_master_immediate_activate_vlan_qos(struct mlx4_priv *priv,
 	work->qos_vport = vp_oper->state.qos_vport;
 	work->vlan_id = vp_oper->state.default_vlan;
 	work->vlan_ix = vp_oper->vlan_idx;
+	work->vlan_proto = vp_oper->state.vlan_proto;
 	work->priv = priv;
 	INIT_WORK(&work->work, mlx4_vf_immed_vlan_work_handler);
 	queue_work(priv->mfunc.master.comm_wq, &work->work);
 
+	return 0;
+}
+
+static void mlx4_reset_vlan_list(struct list_head *vlan_list)
+{
+	struct mlx4_vlan_set_node *vlan, *tmp_vlan;
+
+	if (list_empty(vlan_list))
+		return;
+
+	list_for_each_entry_safe(vlan, tmp_vlan, vlan_list, list) {
+		list_del(&vlan->list);
+		kfree(vlan);
+	}
+}
+
+static void mlx4_reset_vlan_admin_state(struct mlx4_dev *dev,
+					int port, int slave)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	mlx4_reset_vlan_list(&priv->mfunc.master.vf_admin[slave].vport[port].vlan_set);
+	priv->mfunc.master.vf_admin[slave].vport[port].vlan_set_counter = 0;
+	priv->mfunc.master.vf_admin[slave].vport[port].vgt_policy = 0;
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+}
+
+static int mlx4_get_slave_indx(struct mlx4_dev *dev, int vf)
+{
+	if ((vf < 0) || (vf >= dev->persist->num_vfs)) {
+		mlx4_err(dev, "Bad vf number:%d (number of activated vf: %d)\n",
+			 vf, dev->persist->num_vfs);
+		return -EINVAL;
+	}
+
+	return vf+1;
+}
+
+static void mlx4_reset_vlan_oper_state(struct mlx4_dev *dev,
+				       int port, int slave)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	mlx4_reset_vlan_list(&priv->mfunc.master.vf_oper[slave].vport[port].state.vlan_set);
+	priv->mfunc.master.vf_oper[slave].vport[port].state.vlan_set_counter = 0;
+	priv->mfunc.master.vf_oper[slave].vport[port].state.vgt_policy = 0;
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+}
+
+int mlx4_reset_vlan_policy(struct mlx4_dev *dev, int port, int vf)
+{
+	int slave = mlx4_get_slave_indx(dev, vf);
+
+	if (dev->caps.steering_mode != MLX4_STEERING_MODE_DEVICE_MANAGED ||
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_DMFS_TAG_MODE))
+		return -EOPNOTSUPP;
+
+	if (slave < 0)
+		return -EINVAL;
+
+	mlx4_reset_vlan_admin_state(dev, port, slave);
+
+	if (!mlx4_is_slave_active(dev, slave))
+		mlx4_reset_vlan_oper_state(dev, port, slave);
+	else
+		mlx4_warn(dev,
+			  "New VLAN policy will be fully enabled after next VF %d reset\n",
+			  vf);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mlx4_reset_vlan_policy);
+
+static int mlx4_master_activate_admin_vlan_policy(struct mlx4_dev *dev,
+					int port,
+					int vf,
+					struct mlx4_vport_oper_state *vp_oper,
+					struct mlx4_vport_state *vp_admin)
+{
+	struct mlx4_vlan_set_node *vlan, *oper;
+	struct mlx4_vlan_set_node *new_oper_vlan = NULL;
+	int found;
+
+	list_for_each_entry(vlan, &vp_admin->vlan_set, list) {
+		found = 0;
+		list_for_each_entry(oper, &vp_oper->state.vlan_set, list)
+			if (oper->vlan_id == vlan->vlan_id) {
+				found = 1;
+				break;
+			}
+		if (found)
+			continue;
+
+		new_oper_vlan = kzalloc(sizeof(*new_oper_vlan), GFP_KERNEL);
+		if (!new_oper_vlan)
+			return -ENOMEM;
+		new_oper_vlan->vlan_id = vlan->vlan_id;
+		list_add_tail(&new_oper_vlan->list, &vp_oper->state.vlan_set);
+		vp_oper->state.vlan_set_counter++;
+	}
+	/* Enable VGT policy for current VF and disable VST */
+	vp_oper->vlan_idx = NO_INDX;
+	vp_oper->mac_idx = NO_INDX;
+	vp_oper->state.default_vlan = MLX4_VGT;
+	vp_oper->state.vgt_policy = 1;
 	return 0;
 }
 
@@ -1986,6 +2124,8 @@ static int mlx4_master_activate_admin_state(struct mlx4_priv *priv, int slave)
 	int port, err;
 	struct mlx4_vport_state *vp_admin;
 	struct mlx4_vport_oper_state *vp_oper;
+	struct mlx4_slave_state *slave_state =
+		&priv->mfunc.master.slave_state[slave];
 	struct mlx4_active_ports actv_ports = mlx4_get_active_ports(
 			&priv->dev, slave);
 	int min_port = find_first_bit(actv_ports.ports,
@@ -2000,21 +2140,46 @@ static int mlx4_master_activate_admin_state(struct mlx4_priv *priv, int slave)
 			priv->mfunc.master.vf_admin[slave].enable_smi[port];
 		vp_oper = &priv->mfunc.master.vf_oper[slave].vport[port];
 		vp_admin = &priv->mfunc.master.vf_admin[slave].vport[port];
-		vp_oper->state = *vp_admin;
-		if (MLX4_VGT != vp_admin->default_vlan) {
-			err = __mlx4_register_vlan(&priv->dev, port,
-						   vp_admin->default_vlan, &(vp_oper->vlan_idx));
-			if (err) {
-				vp_oper->vlan_idx = NO_INDX;
-				mlx4_warn(&priv->dev,
-					  "No vlan resources slave %d, port %d\n",
-					  slave, port);
-				return err;
+		if (vp_admin->vgt_policy) {
+			mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+			mlx4_master_activate_admin_vlan_policy(&priv->dev, port,
+			                                       slave, vp_oper,
+			                                       vp_admin);
+			mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+
+		} else {
+			vp_oper->state.default_qos = vp_admin->default_qos;
+			vp_oper->state.default_vlan = vp_admin->default_vlan;
+			vp_oper->state.link_state = vp_admin->link_state;
+			vp_oper->state.mac = vp_admin->mac;
+			vp_oper->state.spoofchk = vp_admin->spoofchk;
+			vp_oper->state.tx_rate = vp_admin->tx_rate;
+			vp_oper->state.vgt_policy = vp_admin->vgt_policy;
+			if (MLX4_VGT != vp_admin->default_vlan) {
+				err = __mlx4_register_vlan(&priv->dev, port,
+							   vp_admin->default_vlan,
+							   &(vp_oper->vlan_idx));
+				if (err) {
+					vp_oper->vlan_idx = NO_INDX;
+					mlx4_warn((&priv->dev),
+						  "No vlan resorces slave %d, port %d\n",
+						  slave, port);
+					return err;
+				}
+
+				if (vp_admin->vlan_proto != htons(ETH_P_8021AD) ||
+				    slave_state->vst_qinq_supported) {
+					vp_oper->state.vlan_proto   = vp_admin->vlan_proto;
+					vp_oper->state.default_vlan = vp_admin->default_vlan;
+					vp_oper->state.default_qos  = vp_admin->default_qos;
+				}
+
+				mlx4_dbg((&(priv->dev)), "alloc vlan %d idx  %d slave %d port %d\n",
+					 (int)(vp_oper->state.default_vlan),
+					 vp_oper->vlan_idx, slave, port);
 			}
-			mlx4_dbg(&priv->dev, "alloc vlan %d idx  %d slave %d port %d\n",
-				 (int)(vp_oper->state.default_vlan),
-				 vp_oper->vlan_idx, slave, port);
 		}
+
 		if (vp_admin->spoofchk) {
 			vp_oper->mac_idx = __mlx4_register_mac(&priv->dev,
 							       port,
@@ -2052,7 +2217,9 @@ static void mlx4_master_deactivate_admin_state(struct mlx4_priv *priv, int slave
 		priv->mfunc.master.vf_oper[slave].smi_enabled[port] =
 			MLX4_VF_SMI_DISABLED;
 		vp_oper = &priv->mfunc.master.vf_oper[slave].vport[port];
-		if (NO_INDX != vp_oper->vlan_idx) {
+		if (vp_oper->state.vgt_policy)
+			mlx4_reset_vlan_oper_state(&priv->dev, port, slave);
+		else if (NO_INDX != vp_oper->vlan_idx) {
 			__mlx4_unregister_vlan(&priv->dev,
 					       port, vp_oper->state.default_vlan);
 			vp_oper->vlan_idx = NO_INDX;
@@ -2086,6 +2253,8 @@ static void mlx4_master_do_cmd(struct mlx4_dev *dev, int slave, u8 cmd,
 		mlx4_warn(dev, "Received reset from slave:%d\n", slave);
 		slave_state[slave].active = false;
 		slave_state[slave].old_vlan_api = false;
+		slave_state[slave].vst_qinq_supported = false;
+		slave_state[slave].counters_mode = MLX4_IF_CNT_MODE_BASIC;
 		mlx4_master_deactivate_admin_state(priv, slave);
 		for (i = 0; i < MLX4_EVENT_TYPES_NUM; ++i) {
 				slave_state[slave].event_eq[i].eqn = -1;
@@ -2344,6 +2513,9 @@ int mlx4_multi_func_init(struct mlx4_dev *dev)
 		priv->mfunc.master.slave_state =
 			kzalloc(dev->num_slaves *
 				sizeof(struct mlx4_slave_state), GFP_KERNEL);
+		for (i = 0; i < dev->num_slaves; i++)
+			priv->mfunc.master.slave_state[i].slave_gid_type = MLX4_ROCE_GID_TYPE_INVALID;
+
 		if (!priv->mfunc.master.slave_state)
 			goto err_comm;
 
@@ -2364,6 +2536,7 @@ int mlx4_multi_func_init(struct mlx4_dev *dev)
 			vf_oper = &priv->mfunc.master.vf_oper[i];
 			s_state = &priv->mfunc.master.slave_state[i];
 			s_state->last_cmd = MLX4_COMM_CMD_RESET;
+			s_state->vst_qinq_supported = false;
 			mutex_init(&priv->mfunc.master.gen_eqe_mutex[i]);
 			for (j = 0; j < MLX4_EVENT_TYPES_NUM; ++j)
 				s_state->event_eq[j].eqn = -1;
@@ -2393,11 +2566,17 @@ int mlx4_multi_func_init(struct mlx4_dev *dev)
 				admin_vport->qos_vport =
 						MLX4_VPP_DEFAULT_VPORT;
 				oper_vport->qos_vport = MLX4_VPP_DEFAULT_VPORT;
+				admin_vport->vlan_proto = htons(ETH_P_8021Q);
+				oper_vport->vlan_proto = htons(ETH_P_8021Q);
 				vf_oper->vport[port].vlan_idx = NO_INDX;
 				vf_oper->vport[port].mac_idx = NO_INDX;
 				mlx4_set_random_admin_guid(dev, i, port);
+				mutex_init(&priv->mfunc.master.vlan_set_lock[i]);
+				INIT_LIST_HEAD(&priv->mfunc.master.vf_oper[i].vport[port].state.vlan_set);
+				INIT_LIST_HEAD(&priv->mfunc.master.vf_admin[i].vport[port].vlan_set);
 			}
 			spin_lock_init(&s_state->lock);
+			s_state->counters_mode = MLX4_IF_CNT_MODE_BASIC;
 		}
 
 		if (dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_QOS_VPP) {
@@ -2440,7 +2619,7 @@ err_thread:
 	flush_workqueue(priv->mfunc.master.comm_wq);
 	destroy_workqueue(priv->mfunc.master.comm_wq);
 err_slaves:
-	while (--i) {
+	while (i--) {
 		for (port = 1; port <= MLX4_MAX_PORTS; port++)
 			kfree(priv->mfunc.master.slave_state[i].vlan_filter[port]);
 	}
@@ -2451,6 +2630,7 @@ err_comm_admin:
 	kfree(priv->mfunc.master.slave_state);
 err_comm:
 	iounmap(priv->mfunc.comm);
+	priv->mfunc.comm = NULL;
 err_vhcr:
 	dma_free_coherent(&dev->persist->pdev->dev, PAGE_SIZE,
 			  priv->mfunc.vhcr,
@@ -2465,6 +2645,7 @@ int mlx4_cmd_init(struct mlx4_dev *dev)
 	int flags = 0;
 
 	if (!priv->cmd.initialized) {
+		init_rwsem(&priv->cmd.switch_sem);
 		mutex_init(&priv->cmd.slave_cmd_mutex);
 		sema_init(&priv->cmd.poll_sem, 1);
 		priv->cmd.use_events = 0;
@@ -2518,6 +2699,13 @@ void mlx4_report_internal_err_comm_event(struct mlx4_dev *dev)
 	int slave;
 	u32 slave_read;
 
+	/* If the comm channel has not yet been initialized,
+	 * skip reporting the internal error event to all
+	 * the communication channels.
+	 */
+	if (!priv->mfunc.comm)
+		return;
+
 	/* Report an internal error event to all
 	 * communication channels.
 	 */
@@ -2542,8 +2730,10 @@ void mlx4_multi_func_cleanup(struct mlx4_dev *dev)
 		flush_workqueue(priv->mfunc.master.comm_wq);
 		destroy_workqueue(priv->mfunc.master.comm_wq);
 		for (i = 0; i < dev->num_slaves; i++) {
-			for (port = 1; port <= MLX4_MAX_PORTS; port++)
+			for (port = 1; port <= MLX4_MAX_PORTS; port++) {
 				kfree(priv->mfunc.master.slave_state[i].vlan_filter[port]);
+				mlx4_reset_vlan_oper_state(dev, port, i);
+			}
 		}
 		kfree(priv->mfunc.master.slave_state);
 		kfree(priv->mfunc.master.vf_admin);
@@ -2552,6 +2742,7 @@ void mlx4_multi_func_cleanup(struct mlx4_dev *dev)
 	}
 
 	iounmap(priv->mfunc.comm);
+	priv->mfunc.comm = NULL;
 }
 
 void mlx4_cmd_cleanup(struct mlx4_dev *dev, int cleanup_mask)
@@ -2594,6 +2785,7 @@ int mlx4_cmd_use_events(struct mlx4_dev *dev)
 	if (!priv->cmd.context)
 		return -ENOMEM;
 
+	down_write(&priv->cmd.switch_sem);
 	for (i = 0; i < priv->cmd.max_cmds; ++i) {
 		priv->cmd.context[i].token = i;
 		priv->cmd.context[i].next  = i + 1;
@@ -2608,7 +2800,6 @@ int mlx4_cmd_use_events(struct mlx4_dev *dev)
 	priv->cmd.free_head = 0;
 
 	sema_init(&priv->cmd.event_sem, priv->cmd.max_cmds);
-	spin_lock_init(&priv->cmd.context_lock);
 
 	for (priv->cmd.token_mask = 1;
 	     priv->cmd.token_mask < priv->cmd.max_cmds;
@@ -2618,6 +2809,7 @@ int mlx4_cmd_use_events(struct mlx4_dev *dev)
 
 	down(&priv->cmd.poll_sem);
 	priv->cmd.use_events = 1;
+	up_write(&priv->cmd.switch_sem);
 
 	return err;
 }
@@ -2630,6 +2822,7 @@ void mlx4_cmd_use_polling(struct mlx4_dev *dev)
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	int i;
 
+	down_write(&priv->cmd.switch_sem);
 	priv->cmd.use_events = 0;
 
 	for (i = 0; i < priv->cmd.max_cmds; ++i)
@@ -2638,6 +2831,7 @@ void mlx4_cmd_use_polling(struct mlx4_dev *dev)
 	kfree(priv->cmd.context);
 
 	up(&priv->cmd.poll_sem);
+	up_write(&priv->cmd.switch_sem);
 }
 
 struct mlx4_cmd_mailbox *mlx4_alloc_cmd_mailbox(struct mlx4_dev *dev)
@@ -2648,14 +2842,12 @@ struct mlx4_cmd_mailbox *mlx4_alloc_cmd_mailbox(struct mlx4_dev *dev)
 	if (!mailbox)
 		return ERR_PTR(-ENOMEM);
 
-	mailbox->buf = pci_pool_alloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
-				      &mailbox->dma);
+	mailbox->buf = pci_pool_zalloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
+				       &mailbox->dma);
 	if (!mailbox->buf) {
 		kfree(mailbox);
 		return ERR_PTR(-ENOMEM);
 	}
-
-	memset(mailbox->buf, 0, MLX4_MAILBOX_SIZE);
 
 	return mailbox;
 }
@@ -2675,17 +2867,6 @@ EXPORT_SYMBOL_GPL(mlx4_free_cmd_mailbox);
 u32 mlx4_comm_get_version(void)
 {
 	 return ((u32) CMD_CHAN_IF_REV << 8) | (u32) CMD_CHAN_VER;
-}
-
-static int mlx4_get_slave_indx(struct mlx4_dev *dev, int vf)
-{
-	if ((vf < 0) || (vf >= dev->persist->num_vfs)) {
-		mlx4_err(dev, "Bad vf number:%d (number of activated vf: %d)\n",
-			 vf, dev->persist->num_vfs);
-		return -EINVAL;
-	}
-
-	return vf+1;
 }
 
 int mlx4_get_vf_indx(struct mlx4_dev *dev, int slave)
@@ -2926,7 +3107,7 @@ static bool mlx4_valid_vf_state_change(struct mlx4_dev *dev, int port,
 	return false;
 }
 
-int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u64 mac)
+int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u8 *mac)
 {
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	struct mlx4_vport_state *s_info;
@@ -2935,13 +3116,22 @@ int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u64 mac)
 	if (!mlx4_is_master(dev))
 		return -EPROTONOSUPPORT;
 
+	if (is_multicast_ether_addr(mac))
+		return -EINVAL;
+
 	slave = mlx4_get_slave_indx(dev, vf);
 	if (slave < 0)
 		return -EINVAL;
 
 	port = mlx4_slaves_closest_port(dev, slave, port);
 	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
-	s_info->mac = mac;
+
+	if (s_info->spoofchk && is_zero_ether_addr(mac)) {
+		mlx4_info(dev, "MAC invalidation is not allowed when spoofchk is on\n");
+		return -EPERM;
+	}
+
+	s_info->mac = mlx4_mac_to_u64(mac);
 	mlx4_info(dev, "default mac on vf %d port %d to %llX will take effect only after vf restart\n",
 		  vf, port, s_info->mac);
 	return 0;
@@ -2949,10 +3139,13 @@ int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u64 mac)
 EXPORT_SYMBOL_GPL(mlx4_set_vf_mac);
 
 
-int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos)
+int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos,
+		     __be16 proto)
 {
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	struct mlx4_vport_state *vf_admin;
+	struct mlx4_slave_state *slave_state;
+	struct mlx4_vport_oper_state *vf_oper;
 	int slave;
 
 	if ((!mlx4_is_master(dev)) ||
@@ -2962,12 +3155,38 @@ int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos)
 	if ((vlan > 4095) || (qos > 7))
 		return -EINVAL;
 
+	if (proto == htons(ETH_P_8021AD) &&
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_SVLAN_BY_QP))
+		return -EPROTONOSUPPORT;
+
+	if (proto != htons(ETH_P_8021Q) &&
+	    proto != htons(ETH_P_8021AD))
+		return -EINVAL;
+
+	if ((proto == htons(ETH_P_8021AD)) &&
+	    ((vlan == 0) || (vlan == MLX4_VGT)))
+		return -EINVAL;
+
 	slave = mlx4_get_slave_indx(dev, vf);
 	if (slave < 0)
 		return -EINVAL;
 
+	slave_state = &priv->mfunc.master.slave_state[slave];
+	if ((proto == htons(ETH_P_8021AD)) && (slave_state->active) &&
+	    (!slave_state->vst_qinq_supported)) {
+		mlx4_err(dev, "vf %d does not support VST QinQ mode\n", vf);
+		return -EPROTONOSUPPORT;
+	}
 	port = mlx4_slaves_closest_port(dev, slave, port);
 	vf_admin = &priv->mfunc.master.vf_admin[slave].vport[port];
+	vf_oper = &priv->mfunc.master.vf_oper[slave].vport[port];
+
+	if (vf_oper->state.vgt_policy) {
+		mlx4_info(dev,
+			  "According to VLAN policy for VF %d port %d %s default VLAN can't be set\n",
+			  vf, port, (vlan == 4095) ? "VGT" : "VST");
+		return -EPERM;
+	}
 
 	if (!mlx4_valid_vf_state_change(dev, port, vf_admin, vlan, qos))
 		return -EPERM;
@@ -2977,6 +3196,7 @@ int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos)
 	else
 		vf_admin->default_vlan = vlan;
 	vf_admin->default_qos = qos;
+	vf_admin->vlan_proto = proto;
 
 	/* If rate was configured prior to VST, we saved the configured rate
 	 * in vf_admin->rate and now, if priority supported we enforce the QoS
@@ -2985,7 +3205,12 @@ int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos)
 	    vf_admin->tx_rate)
 		vf_admin->qos_vport = slave;
 
-	if (mlx4_master_immediate_activate_vlan_qos(priv, slave, port))
+	/* Try to activate new vf state without restart,
+	 * this option is not supported while moving to VST QinQ mode.
+	 */
+	if ((proto == htons(ETH_P_8021AD) &&
+	     vf_oper->state.vlan_proto != proto) ||
+	    mlx4_master_immediate_activate_vlan_qos(priv, slave, port))
 		mlx4_info(dev,
 			  "updating vf %d port %d config will take effect on next VF restart\n",
 			  vf, port);
@@ -3086,6 +3311,7 @@ int mlx4_set_vf_spoofchk(struct mlx4_dev *dev, int port, int vf, bool setting)
 	struct mlx4_priv *priv = mlx4_priv(dev);
 	struct mlx4_vport_state *s_info;
 	int slave;
+	u8 mac[ETH_ALEN];
 
 	if ((!mlx4_is_master(dev)) ||
 	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_FSM))
@@ -3097,6 +3323,13 @@ int mlx4_set_vf_spoofchk(struct mlx4_dev *dev, int port, int vf, bool setting)
 
 	port = mlx4_slaves_closest_port(dev, slave, port);
 	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+
+	mlx4_u64_to_mac(mac, s_info->mac);
+	if (setting && !is_valid_ether_addr(mac)) {
+		mlx4_info(dev, "Illegal MAC with spoofchk\n");
+		return -EPERM;
+	}
+
 	s_info->spoofchk = setting;
 
 	return 0;
@@ -3185,11 +3418,186 @@ int mlx4_set_vf_link_state(struct mlx4_dev *dev, int port, int vf, int link_stat
 
 	if (mlx4_master_immediate_activate_vlan_qos(priv, slave, port))
 		mlx4_dbg(dev,
-			 "updating vf %d port %d no link state HW enforcment\n",
+			 "updating vf %d port %d no link state HW enforcement\n",
 			 vf, port);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(mlx4_set_vf_link_state);
+
+int mlx4_get_vf_link_state(struct mlx4_dev *dev, int port, int vf)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_vport_state *s_info;
+	int slave;
+
+	if (!mlx4_is_master(dev))
+		return -EPROTONOSUPPORT;
+
+	slave = mlx4_get_slave_indx(dev, vf);
+	if (slave < 0)
+		return -EINVAL;
+
+	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+
+	return s_info->link_state;
+}
+EXPORT_SYMBOL_GPL(mlx4_get_vf_link_state);
+
+static int mlx4_vlan_id_exists(struct list_head *vlan_list,
+			       u16 vlan_id)
+{
+	struct mlx4_vlan_set_node *vlan, *tmp_vlan;
+
+	list_for_each_entry_safe(vlan, tmp_vlan, vlan_list, list)
+		if (vlan_id == vlan->vlan_id)
+			return 1;
+	       return 0;
+}
+
+int mlx4_vlan_index_exists(struct list_head *vlan_list, u16 vlan_index)
+{
+	struct mlx4_vlan_set_node *vlan, *tmp_vlan;
+
+	list_for_each_entry_safe(vlan, tmp_vlan, vlan_list, list)
+		if (vlan_index == vlan->vlan_idx)
+			return 1;
+	return 0;
+}
+
+int mlx4_vlan_blocked(struct mlx4_dev *dev, int port, int slave, u16 vlan_id)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_vport_state *s_info;
+
+	/* all vlans are allowed on PF */
+	if (slave == 0)
+		return 0;
+
+	if (slave < 1 || slave > dev->persist->num_vfs)
+		return -EINVAL;
+
+	s_info = &priv->mfunc.master.vf_oper[slave].vport[port].state;
+
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	if (s_info->vgt_policy &&
+	    !mlx4_vlan_id_exists(&s_info->vlan_set, vlan_id)) {
+		mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+		return -EPERM;
+	}
+
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mlx4_vlan_blocked);
+
+int mlx4_set_vf_vlan_next(struct mlx4_dev *dev, int port, int vf, u16 vlan_id)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_vport_state *s_info;
+	int slave;
+	struct mlx4_vlan_set_node *new_admin_vlan = NULL;
+	struct mlx4_vlan_set_node *new_oper_vlan = NULL;
+
+	slave = mlx4_get_slave_indx(dev, vf);
+	if (slave < 0)
+		return -EINVAL;
+
+	if (dev->caps.steering_mode != MLX4_STEERING_MODE_DEVICE_MANAGED ||
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_DMFS_TAG_MODE))
+		return -EOPNOTSUPP;
+
+	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	if (list_is_full(s_info)) {
+		mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+		mlx4_reset_vlan_admin_state(dev, port, slave);
+		mlx4_warn(dev,
+			  "VGT policy admin list for slave %d (port %d) is full\n",
+			  slave, port);
+		return -ENOMEM;
+	}
+
+	new_admin_vlan = kzalloc(sizeof(*new_admin_vlan), GFP_KERNEL);
+	if (!new_admin_vlan) {
+		mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+		return -ENOMEM;
+	}
+	new_admin_vlan->vlan_id = vlan_id;
+
+	/* update the admin state anyway on change in VLAN policy */
+	list_add_tail(&new_admin_vlan->list, &s_info->vlan_set);
+	s_info->vlan_set_counter++;
+	s_info->vgt_policy = 1;
+
+	/* if slave is active and already in VGT+ state update oper state */
+	if (mlx4_is_slave_active(dev, slave) &&
+	    priv->mfunc.master.vf_oper[slave].vport[port].state.vgt_policy) {
+		s_info = &priv->mfunc.master.vf_oper[slave].vport[port].state;
+		if (!mlx4_vlan_id_exists(&s_info->vlan_set, vlan_id)) {
+			if (list_is_full(s_info)) {
+				mlx4_warn(dev,
+					  "VGT policy oper list for slave %d (port %d) is full. VLAN %d will be added after next VF %d",
+					  slave, port, vlan_id, slave);
+				mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+				return 0;
+			}
+			new_oper_vlan = kzalloc(sizeof(*new_oper_vlan),
+						GFP_KERNEL);
+			if (!new_oper_vlan) {
+				mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+				return -ENOMEM;
+			}
+
+			new_oper_vlan->vlan_id = vlan_id;
+			list_add_tail(&new_oper_vlan->list, &s_info->vlan_set);
+			s_info->vlan_set_counter++;
+		}
+	}
+
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mlx4_set_vf_vlan_next);
+
+ssize_t mlx4_get_vf_vlan_set(struct mlx4_dev *dev, int port, int vf, char *buf)
+{
+	struct mlx4_priv *priv = mlx4_priv(dev);
+	struct mlx4_vport_state *s_info;
+	int slave;
+	ssize_t len = 0;
+	struct mlx4_vlan_set_node *vlan;
+
+	if (!mlx4_is_master(dev) ||
+	    dev->caps.steering_mode != MLX4_STEERING_MODE_DEVICE_MANAGED ||
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_DMFS_TAG_MODE))
+		return -EOPNOTSUPP;
+
+	slave = mlx4_get_slave_indx(dev, vf);
+	if (slave < 0)
+		return -EINVAL;
+	s_info = &priv->mfunc.master.vf_oper[slave].vport[port].state;
+
+	len += sprintf(&buf[len], "oper: ");
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	if (s_info->vgt_policy)
+		list_for_each_entry(vlan, &s_info->vlan_set, list)
+			len += sprintf(&buf[len], "%d ", vlan->vlan_id);
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+
+	len += sprintf(&buf[len], "\n");
+	len += sprintf(&buf[len], "admin: ");
+	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+	mutex_lock(&priv->mfunc.master.vlan_set_lock[slave]);
+	if (s_info->vgt_policy)
+		list_for_each_entry(vlan, &s_info->vlan_set, list)
+			len += sprintf(&buf[len], "%d ", vlan->vlan_id);
+	mutex_unlock(&priv->mfunc.master.vlan_set_lock[slave]);
+	len += sprintf(&buf[len], "\n");
+
+	return len;
+}
+EXPORT_SYMBOL_GPL(mlx4_get_vf_vlan_set);
 
 int mlx4_get_counter_stats(struct mlx4_dev *dev, int counter_index,
 			   struct mlx4_counter *counter_stats, int reset)
@@ -3225,19 +3633,44 @@ int mlx4_get_counter_stats(struct mlx4_dev *dev, int counter_index,
 	}
 	tmp_counter = (struct mlx4_counter *)mailbox->buf;
 	counter_stats->counter_mode = tmp_counter->counter_mode;
-	if (counter_stats->counter_mode == 0) {
-		counter_stats->rx_frames =
-			cpu_to_be64(be64_to_cpu(counter_stats->rx_frames) +
-				    be64_to_cpu(tmp_counter->rx_frames));
-		counter_stats->tx_frames =
-			cpu_to_be64(be64_to_cpu(counter_stats->tx_frames) +
-				    be64_to_cpu(tmp_counter->tx_frames));
-		counter_stats->rx_bytes =
-			cpu_to_be64(be64_to_cpu(counter_stats->rx_bytes) +
-				    be64_to_cpu(tmp_counter->rx_bytes));
-		counter_stats->tx_bytes =
-			cpu_to_be64(be64_to_cpu(counter_stats->tx_bytes) +
-				    be64_to_cpu(tmp_counter->tx_bytes));
+
+#define CNT_FIELD_ADD_TMP(field)	\
+		(cnt->field = cpu_to_be64(be64_to_cpu(cnt->field) + \
+					  be64_to_cpu(tmp->field)))
+
+	if (counter_stats->counter_mode == MLX4_IF_CNT_MODE_BASIC) {
+		struct mlx4_if_stat_basic *cnt = &counter_stats->basic;
+		struct mlx4_if_stat_basic *tmp = &tmp_counter->basic;
+
+		CNT_FIELD_ADD_TMP(if_rx_frames);
+		CNT_FIELD_ADD_TMP(if_tx_frames);
+		CNT_FIELD_ADD_TMP(if_rx_octets);
+		CNT_FIELD_ADD_TMP(if_tx_octets);
+	} else if (counter_stats->counter_mode == MLX4_IF_CNT_MODE_EXT) {
+		struct mlx4_if_stat_ext *cnt = &counter_stats->ext;
+		struct mlx4_if_stat_ext *tmp = &tmp_counter->ext;
+
+		CNT_FIELD_ADD_TMP(if_rx_unicast_frames);
+		CNT_FIELD_ADD_TMP(if_rx_unicast_octets);
+		CNT_FIELD_ADD_TMP(if_rx_multicast_frames);
+		CNT_FIELD_ADD_TMP(if_rx_multicast_octets);
+		CNT_FIELD_ADD_TMP(if_rx_broadcast_frames);
+		CNT_FIELD_ADD_TMP(if_rx_broadcast_octets);
+		CNT_FIELD_ADD_TMP(if_rx_nobuffer_frames);
+		CNT_FIELD_ADD_TMP(if_rx_nobuffer_octets);
+		CNT_FIELD_ADD_TMP(if_rx_error_frames);
+		CNT_FIELD_ADD_TMP(if_rx_error_octets);
+		CNT_FIELD_ADD_TMP(if_tx_unicast_frames);
+		CNT_FIELD_ADD_TMP(if_tx_unicast_octets);
+		CNT_FIELD_ADD_TMP(if_tx_multicast_frames);
+		CNT_FIELD_ADD_TMP(if_tx_multicast_octets);
+		CNT_FIELD_ADD_TMP(if_tx_broadcast_frames);
+		CNT_FIELD_ADD_TMP(if_tx_broadcast_octets);
+		CNT_FIELD_ADD_TMP(if_tx_dropped_frames);
+		CNT_FIELD_ADD_TMP(if_tx_dropped_octets);
+		CNT_FIELD_ADD_TMP(if_tx_requested_frames_sent);
+		CNT_FIELD_ADD_TMP(if_tx_generated_frames_sent);
+		CNT_FIELD_ADD_TMP(if_tx_tso_octets);
 	}
 
 if_stat_out:
@@ -3247,12 +3680,10 @@ if_stat_out:
 }
 EXPORT_SYMBOL_GPL(mlx4_get_counter_stats);
 
-int mlx4_get_vf_stats(struct mlx4_dev *dev, int port, int vf_idx,
-		      struct ifla_vf_stats *vf_stats)
+static int mlx4_calc_vf_counters_wrap(struct mlx4_dev *dev, int port,
+				      int vf_idx, struct mlx4_counter *vf_stats)
 {
-	struct mlx4_counter tmp_vf_stats;
 	int slave;
-	int err = 0;
 
 	if (!vf_stats)
 		return -EINVAL;
@@ -3265,17 +3696,104 @@ int mlx4_get_vf_stats(struct mlx4_dev *dev, int port, int vf_idx,
 		return -EINVAL;
 
 	port = mlx4_slaves_closest_port(dev, slave, port);
-	err = mlx4_calc_vf_counters(dev, slave, port, &tmp_vf_stats);
-	if (!err && tmp_vf_stats.counter_mode == 0) {
-		vf_stats->rx_packets = be64_to_cpu(tmp_vf_stats.rx_frames);
-		vf_stats->tx_packets = be64_to_cpu(tmp_vf_stats.tx_frames);
-		vf_stats->rx_bytes = be64_to_cpu(tmp_vf_stats.rx_bytes);
-		vf_stats->tx_bytes = be64_to_cpu(tmp_vf_stats.tx_bytes);
+
+	return mlx4_calc_vf_counters(dev, slave, port, vf_stats);
+}
+
+int mlx4_get_vf_stats(struct mlx4_dev *dev, int port, int vf_idx,
+		      struct ifla_vf_stats *vf_stats)
+{
+	struct mlx4_counter tmp_vf_stats;
+	int err;
+
+	err = mlx4_calc_vf_counters_wrap(dev, port, vf_idx, &tmp_vf_stats);
+	if (err)
+		return err;
+
+	memset(vf_stats, 0, sizeof(*vf_stats));
+
+	if (tmp_vf_stats.counter_mode == MLX4_IF_CNT_MODE_BASIC) {
+		struct mlx4_if_stat_basic *basic = &tmp_vf_stats.basic;
+
+		vf_stats->rx_packets = be64_to_cpu(basic->if_rx_frames);
+		vf_stats->tx_packets = be64_to_cpu(basic->if_tx_frames);
+		vf_stats->rx_bytes = be64_to_cpu(basic->if_rx_octets);
+		vf_stats->tx_bytes = be64_to_cpu(basic->if_tx_octets);
+	} else if (tmp_vf_stats.counter_mode == MLX4_IF_CNT_MODE_EXT) {
+		struct mlx4_if_stat_ext *ext = &tmp_vf_stats.ext;
+
+		vf_stats->rx_packets =
+			be64_to_cpu(ext->if_rx_broadcast_frames) +
+			be64_to_cpu(ext->if_rx_unicast_frames) +
+			be64_to_cpu(ext->if_rx_multicast_frames);
+		vf_stats->tx_packets =
+			be64_to_cpu(ext->if_tx_broadcast_frames) +
+			be64_to_cpu(ext->if_tx_unicast_frames) +
+			be64_to_cpu(ext->if_tx_multicast_frames);
+		vf_stats->rx_bytes =
+			be64_to_cpu(ext->if_rx_broadcast_octets) +
+			be64_to_cpu(ext->if_rx_unicast_octets) +
+			be64_to_cpu(ext->if_rx_multicast_octets);
+		vf_stats->tx_bytes =
+			be64_to_cpu(ext->if_tx_broadcast_octets) +
+			be64_to_cpu(ext->if_tx_unicast_octets) +
+			be64_to_cpu(ext->if_tx_multicast_octets);
+		vf_stats->multicast =
+			be64_to_cpu(ext->if_rx_multicast_frames);
 	}
 
-	return err;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(mlx4_get_vf_stats);
+
+int mlx4_get_vf_stats_netdev(struct mlx4_dev *dev, int port, int vf_idx,
+			     struct net_device_stats *vf_stats)
+{
+	struct mlx4_counter tmp_vf_stats;
+	int err;
+
+	err = mlx4_calc_vf_counters_wrap(dev, port, vf_idx, &tmp_vf_stats);
+	if (err)
+		return err;
+
+	memset(vf_stats, 0, sizeof(*vf_stats));
+
+	if (tmp_vf_stats.counter_mode == MLX4_IF_CNT_MODE_BASIC) {
+		struct mlx4_if_stat_basic *basic = &tmp_vf_stats.basic;
+
+		vf_stats->rx_packets = be64_to_cpu(basic->if_rx_frames);
+		vf_stats->tx_packets = be64_to_cpu(basic->if_tx_frames);
+		vf_stats->rx_bytes = be64_to_cpu(basic->if_rx_octets);
+		vf_stats->tx_bytes = be64_to_cpu(basic->if_tx_octets);
+	} else if (tmp_vf_stats.counter_mode == MLX4_IF_CNT_MODE_EXT) {
+		struct mlx4_if_stat_ext *ext = &tmp_vf_stats.ext;
+
+		vf_stats->rx_packets =
+			be64_to_cpu(ext->if_rx_broadcast_frames) +
+			be64_to_cpu(ext->if_rx_unicast_frames) +
+			be64_to_cpu(ext->if_rx_multicast_frames);
+		vf_stats->tx_packets =
+			be64_to_cpu(ext->if_tx_broadcast_frames) +
+			be64_to_cpu(ext->if_tx_unicast_frames) +
+			be64_to_cpu(ext->if_tx_multicast_frames);
+		vf_stats->rx_bytes =
+			be64_to_cpu(ext->if_rx_broadcast_octets) +
+			be64_to_cpu(ext->if_rx_unicast_octets) +
+			be64_to_cpu(ext->if_rx_multicast_octets);
+		vf_stats->tx_bytes =
+			be64_to_cpu(ext->if_tx_broadcast_octets) +
+			be64_to_cpu(ext->if_tx_unicast_octets) +
+			be64_to_cpu(ext->if_tx_multicast_octets);
+		vf_stats->rx_errors =
+			be64_to_cpu(ext->if_rx_error_frames);
+		vf_stats->rx_dropped = be64_to_cpu(ext->if_rx_nobuffer_frames);
+		vf_stats->tx_dropped = be64_to_cpu(ext->if_tx_dropped_frames);
+		vf_stats->multicast = be64_to_cpu(ext->if_rx_multicast_frames);
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mlx4_get_vf_stats_netdev);
 
 int mlx4_vf_smi_enabled(struct mlx4_dev *dev, int slave, int port)
 {
@@ -3334,3 +3852,60 @@ int mlx4_vf_set_enable_smi_admin(struct mlx4_dev *dev, int slave, int port,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(mlx4_vf_set_enable_smi_admin);
+
+ssize_t mlx4_get_vf_rate(struct mlx4_dev *dev, int port, int vf, char *buf)
+{
+	int slave;
+	int rate = 0;
+	ssize_t len = 0;
+	struct mlx4_vport_state *s_info;
+	struct mlx4_priv *priv = mlx4_priv(dev);
+
+	if (!mlx4_is_master(dev) ||
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_QOS_VPP))
+		return -EOPNOTSUPP;
+
+	slave = mlx4_get_slave_indx(dev, vf);
+	if (slave < 0)
+		return -EINVAL;
+
+	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+
+	if (mlx4_is_vf_vst_and_prio_qos(dev, port, s_info))
+		rate = s_info->tx_rate;
+
+	len += sprintf(&buf[len], "%d\n", rate);
+
+	return len;
+}
+EXPORT_SYMBOL_GPL(mlx4_get_vf_rate);
+
+ssize_t mlx4_get_vf_vlan_info(struct mlx4_dev *dev, int port, int vf, char *buf)
+{
+	int slave;
+	ssize_t len = 0;
+	struct mlx4_vport_state *s_info;
+	struct mlx4_priv *priv = mlx4_priv(dev);
+
+	if (!mlx4_is_master(dev) ||
+	    !(dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_SVLAN_BY_QP))
+		return -EOPNOTSUPP;
+
+	slave = mlx4_get_slave_indx(dev, vf);
+	if (slave < 0)
+		return -EINVAL;
+
+	s_info = &priv->mfunc.master.vf_admin[slave].vport[port];
+	if (s_info->default_vlan)
+		len += sprintf(&buf[len], "vlan %d", s_info->default_vlan);
+	if (s_info->default_qos)
+		len += sprintf(&buf[len], ", qos %d", s_info->default_qos);
+	if (s_info->vlan_proto == htons(ETH_P_8021AD))
+		len += sprintf(&buf[len], ", vlan protocol 802.1ad");
+	else if (s_info->default_vlan != MLX4_VGT)
+		len += sprintf(&buf[len], ", vlan protocol 802.1Q");
+	len += sprintf(&buf[len], "\n");
+
+      return len;
+}
+EXPORT_SYMBOL_GPL(mlx4_get_vf_vlan_info);

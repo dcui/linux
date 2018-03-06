@@ -38,6 +38,8 @@
 #include <linux/mlx4/device.h>
 #include <linux/netdevice.h>
 
+#include <linux/mlx_compat.h>
+
 enum {
 	/* initialization and general commands */
 	MLX4_CMD_SYS_EN		 = 0x1,
@@ -206,7 +208,8 @@ enum {
 	MLX4_SET_PORT_GID_TABLE = 0x5,
 	MLX4_SET_PORT_PRIO2TC	= 0x8,
 	MLX4_SET_PORT_SCHEDULER = 0x9,
-	MLX4_SET_PORT_VXLAN	= 0xB
+	MLX4_SET_PORT_VXLAN	= 0xB,
+	MLX4_SET_PORT_ROCE_ADDR	= 0xD
 };
 
 enum {
@@ -245,6 +248,7 @@ struct mlx4_config_dev_params {
 	u16	vxlan_udp_dport;
 	u8	rx_csum_flags_port_1;
 	u8	rx_csum_flags_port_2;
+	u16	svlan_tpid;
 };
 
 enum mlx4_en_congestion_control_algorithm {
@@ -262,6 +266,12 @@ struct mlx4_dev;
 struct mlx4_cmd_mailbox {
 	void		       *buf;
 	dma_addr_t		dma;
+};
+
+struct mlx4_vlan_set_node {
+	struct list_head		list;
+	u16				vlan_idx;
+	u16				vlan_id;
 };
 
 int __mlx4_cmd(struct mlx4_dev *dev, u64 in_param, u64 *out_param,
@@ -306,18 +316,33 @@ int mlx4_get_counter_stats(struct mlx4_dev *dev, int counter_index,
 			   struct mlx4_counter *counter_stats, int reset);
 int mlx4_get_vf_stats(struct mlx4_dev *dev, int port, int vf_idx,
 		      struct ifla_vf_stats *vf_stats);
+int mlx4_get_vf_stats_netdev(struct mlx4_dev *dev, int port, int vf_idx,
+			     struct net_device_stats *vf_stats);
+
+#define MLX4_MAX_VLAN_SET_SIZE	128
+
+ssize_t mlx4_get_vf_vlan_set(struct mlx4_dev *dev, int port, int vf, char *buf);
+int mlx4_set_vf_vlan_next(struct mlx4_dev *dev, int port, int vf, u16 vlan_id);
+int mlx4_reset_vlan_policy(struct mlx4_dev *dev, int port, int vf);
+int mlx4_vlan_index_exists(struct list_head *vlan_list, u16 vlan_id);
+int mlx4_vlan_blocked(struct mlx4_dev *dev, int port, int vf, u16 vlan_id);
+
 u32 mlx4_comm_get_version(void);
-int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u64 mac);
-int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan, u8 qos);
+int mlx4_set_vf_mac(struct mlx4_dev *dev, int port, int vf, u8 *mac);
+int mlx4_set_vf_vlan(struct mlx4_dev *dev, int port, int vf, u16 vlan,
+		     u8 qos, __be16 proto);
 int mlx4_set_vf_rate(struct mlx4_dev *dev, int port, int vf, int min_tx_rate,
 		     int max_tx_rate);
 int mlx4_set_vf_spoofchk(struct mlx4_dev *dev, int port, int vf, bool setting);
 int mlx4_get_vf_config(struct mlx4_dev *dev, int port, int vf, struct ifla_vf_info *ivf);
 int mlx4_set_vf_link_state(struct mlx4_dev *dev, int port, int vf, int link_state);
+int mlx4_get_vf_link_state(struct mlx4_dev *dev, int port, int vf);
 int mlx4_config_dev_retrieval(struct mlx4_dev *dev,
 			      struct mlx4_config_dev_params *params);
 void mlx4_cmd_wake_completions(struct mlx4_dev *dev);
 void mlx4_report_internal_err_comm_event(struct mlx4_dev *dev);
+ssize_t mlx4_get_vf_rate(struct mlx4_dev *dev, int port, int vf, char *buf);
+ssize_t mlx4_get_vf_vlan_info(struct mlx4_dev *dev, int port, int vf, char *buf);
 /*
  * mlx4_get_slave_default_vlan -
  * return true if VST ( default vlan)

@@ -65,6 +65,62 @@ struct mlx4_interface {
 	int			flags;
 };
 
+enum {
+	MLX4_MAX_DEVICES	= 32,
+	MLX4_DEVS_TBL_SIZE	= MLX4_MAX_DEVICES + 1,
+	MLX4_DBDF2VAL_STR_SIZE	= 512,
+	MLX4_STR_NAME_SIZE	= 64,
+	MLX4_MAX_BDF_VALS	= 3,
+	MLX4_ENDOF_TBL		= -1LL
+};
+
+struct mlx4_dbdf2val {
+	u64 dbdf;
+	int argc;
+	int val[MLX4_MAX_BDF_VALS];
+};
+
+struct mlx4_range {
+	int min;
+	int max;
+};
+
+/*
+ * mlx4_dbdf2val_lst struct holds all the data needed to convert
+ * dbdf-to-value-list string into dbdf-to-value table.
+ * dbdf-to-value-list string is a comma separated list of dbdf-to-value strings.
+ * the format of dbdf-to-value string is: "[mmmm:]bb:dd.f-v1[;v2]"
+ * mmmm - Domain number (optional)
+ * bb - Bus number
+ * dd - device number
+ * f  - Function number
+ * v1 - First value related to the domain-bus-device-function.
+ * v2 - Second value related to the domain-bus-device-function (optional).
+ * bb, dd - Two hexadecimal digits without preceding 0x.
+ * mmmm - Four hexadecimal digits without preceding 0x.
+ * f  - One hexadecimal without preceding 0x.
+ * v1,v2 - Number with normal convention (e.g 100, 0xd3).
+ * dbdf-to-value-list string format:
+ *     "[mmmm:]bb:dd.f-v1[;v2],[mmmm:]bb:dd.f-v1[;v2],..."
+ *
+ */
+struct mlx4_dbdf2val_lst {
+	char		name[MLX4_STR_NAME_SIZE];    /* String name */
+	char		str[MLX4_DBDF2VAL_STR_SIZE]; /* dbdf2val list str */
+	struct mlx4_dbdf2val tbl[MLX4_DEVS_TBL_SIZE];/* dbdf to value table */
+	int		num_vals;		     /* # of vals per dbdf */
+	int		def_val[MLX4_MAX_BDF_VALS];  /* Default values */
+	struct mlx4_range range;		     /* Valid values range */
+	int		num_inval_vals; /* # of values in middle of range
+					 * which are invalid
+					 */
+	int		inval_val[MLX4_MAX_BDF_VALS]; /* invalid values table */
+};
+
+int mlx4_fill_dbdf2val_tbl(struct mlx4_dbdf2val_lst *dbdf2val_lst);
+int mlx4_get_val(struct mlx4_dbdf2val *tbl, struct pci_dev *pdev, int idx,
+		 int *val);
+
 int mlx4_register_interface(struct mlx4_interface *intf);
 void mlx4_unregister_interface(struct mlx4_interface *intf);
 
@@ -75,6 +131,11 @@ static inline int mlx4_is_bonded(struct mlx4_dev *dev)
 	return !!(dev->flags & MLX4_FLAG_BONDED);
 }
 
+static inline int mlx4_is_mf_bonded(struct mlx4_dev *dev)
+{
+	return (mlx4_is_bonded(dev) && mlx4_is_mfunc(dev));
+}
+
 struct mlx4_port_map {
 	u8	port1;
 	u8	port2;
@@ -83,6 +144,7 @@ struct mlx4_port_map {
 int mlx4_port_map_set(struct mlx4_dev *dev, struct mlx4_port_map *v2p);
 
 void *mlx4_get_protocol_dev(struct mlx4_dev *dev, enum mlx4_protocol proto, int port);
+
 
 static inline u64 mlx4_mac_to_u64(u8 *addr)
 {
@@ -96,4 +158,16 @@ static inline u64 mlx4_mac_to_u64(u8 *addr)
 	return mac;
 }
 
+static inline void mlx4_u64_to_mac(u8 *addr, u64 mac)
+{
+	int i;
+
+	for (i = ETH_ALEN; i > 0; i--) {
+		addr[i - 1] = mac & 0xFF;
+		mac >>= 8;
+	}
+}
+
+int mlx4_choose_vector(struct mlx4_dev *dev, int vector, int num_comp);
+void mlx4_release_vector(struct mlx4_dev *dev, int vector);
 #endif /* MLX4_DRIVER_H */

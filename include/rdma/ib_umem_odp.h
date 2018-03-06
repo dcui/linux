@@ -35,12 +35,17 @@
 
 #include <rdma/ib_umem.h>
 #include <rdma/ib_verbs.h>
+#ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
 #include <linux/interval_tree.h>
+#endif
+#include <rdma/ib_umem_odp_exp.h>
 
+#ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
 struct umem_odp_node {
 	u64 __subtree_last;
 	struct rb_node rb;
 };
+#endif
 
 struct ib_umem_odp {
 	/*
@@ -72,6 +77,7 @@ struct ib_umem_odp {
 	/* A linked list of umems that don't have private mmu notifier
 	 * counters yet. */
 	struct list_head no_private_counters;
+#ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
 	struct ib_umem		*umem;
 
 	/* Tree tracking */
@@ -79,11 +85,17 @@ struct ib_umem_odp {
 
 	struct completion	notifier_completion;
 	int			dying;
+	struct work_struct	work;
+#endif /* CONFIG_INFINIBAND_ON_DEMAND_PAGING */
 };
 
 #ifdef CONFIG_INFINIBAND_ON_DEMAND_PAGING
 
-int ib_umem_odp_get(struct ib_ucontext *context, struct ib_umem *umem);
+int ib_umem_odp_get(struct ib_ucontext *context, struct ib_umem *umem,
+		    int access);
+struct ib_umem *ib_alloc_odp_umem(struct ib_ucontext *context,
+				  unsigned long addr,
+				  size_t size);
 
 void ib_umem_odp_release(struct ib_umem *umem);
 
@@ -101,10 +113,12 @@ void ib_umem_odp_release(struct ib_umem *umem);
 #define ODP_DMA_ADDR_MASK (~(ODP_READ_ALLOWED_BIT | ODP_WRITE_ALLOWED_BIT))
 
 int ib_umem_odp_map_dma_pages(struct ib_umem *umem, u64 start_offset, u64 bcnt,
-			      u64 access_mask, unsigned long current_seq);
+			      u64 access_mask, unsigned long current_seq,
+			      enum ib_odp_dma_map_flags flags,
+			      int *num_pages);
 
 void ib_umem_odp_unmap_dma_pages(struct ib_umem *umem, u64 start_offset,
-				 u64 bound);
+				 u64 bound, int *num_pages);
 
 void rbt_ib_umem_insert(struct umem_odp_node *node, struct rb_root *root);
 void rbt_ib_umem_remove(struct umem_odp_node *node, struct rb_root *root);
@@ -117,10 +131,12 @@ typedef int (*umem_call_back)(struct ib_umem *item, u64 start, u64 end,
 int rbt_ib_umem_for_each_in_range(struct rb_root *root, u64 start, u64 end,
 				  umem_call_back cb, void *cookie);
 
-struct umem_odp_node *rbt_ib_umem_iter_first(struct rb_root *root,
-					     u64 start, u64 last);
-struct umem_odp_node *rbt_ib_umem_iter_next(struct umem_odp_node *node,
-					    u64 start, u64 last);
+/*
+ * Find first region intersecting with address range.
+ * Return NULL if not found
+ */
+struct ib_umem_odp *rbt_ib_umem_lookup(struct rb_root *root,
+				       u64 addr, u64 length);
 
 static inline int ib_umem_mmu_notifier_retry(struct ib_umem *item,
 					     unsigned long mmu_seq)
@@ -138,19 +154,33 @@ static inline int ib_umem_mmu_notifier_retry(struct ib_umem *item,
 	if (!item->odp_data->mn_counters_active)
 		return 1;
 
-	if (unlikely(item->odp_data->notifiers_count))
+	if (unlikely(item->odp_data->notifiers_count)) {
+		ib_umem_odp_account_invalidations_fault_contentions(item->context->device);
 		return 1;
-	if (item->odp_data->notifiers_seq != mmu_seq)
+	}
+
+	if (item->odp_data->notifiers_seq != mmu_seq) {
+		ib_umem_odp_account_invalidations_fault_contentions(item->context->device);
 		return 1;
+	}
+
 	return 0;
 }
 
 #else /* CONFIG_INFINIBAND_ON_DEMAND_PAGING */
 
 static inline int ib_umem_odp_get(struct ib_ucontext *context,
-				  struct ib_umem *umem)
+				  struct ib_umem *umem,
+				  int access)
 {
 	return -EINVAL;
+}
+
+static inline struct ib_umem *ib_alloc_odp_umem(struct ib_ucontext *context,
+						unsigned long addr,
+						size_t size)
+{
+	return ERR_PTR(-EINVAL);
 }
 
 static inline void ib_umem_odp_release(struct ib_umem *umem) {}

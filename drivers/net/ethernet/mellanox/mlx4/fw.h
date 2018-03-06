@@ -44,6 +44,7 @@ struct mlx4_mod_stat_cfg {
 };
 
 struct mlx4_port_cap {
+	u8  link_state;
 	u8  supported_port_types;
 	u8  suggested_type;
 	u8  default_sense;
@@ -52,6 +53,7 @@ struct mlx4_port_cap {
 	int ib_mtu;
 	int max_port_width;
 	int max_vl;
+	int max_tc_eth;
 	int max_gids;
 	int max_pkeys;
 	u64 def_mac;
@@ -78,9 +80,7 @@ struct mlx4_dev_cap {
 	int max_eqs;
 	int num_sys_eqs;
 	int reserved_mtts;
-	int max_mrw_sz;
 	int reserved_mrws;
-	int max_mtt_seg;
 	int max_requester_per_qp;
 	int max_responder_per_qp;
 	int max_rdma_global;
@@ -119,16 +119,21 @@ struct mlx4_dev_cap {
 	int cmpt_entry_sz;
 	int mtt_entry_sz;
 	int resize_srq;
+	u8 cq_overrun;
 	u32 bmme_flags;
 	u32 reserved_lkey;
 	u64 max_icm_sz;
 	int max_gso_sz;
 	int max_rss_tbl_sz;
 	u32 max_counters;
+	u32 max_counters_basic;
+	u32 max_counters_ext;
 	u32 dmfs_high_rate_qpn_base;
 	u32 dmfs_high_rate_qpn_range;
 	struct mlx4_rate_limit_caps rl_caps;
+	u32 health_buffer_addrs;
 	struct mlx4_port_cap port_cap[MLX4_MAX_PORTS + 1];
+	bool wol_port[MLX4_MAX_PORTS + 1];
 };
 
 struct mlx4_func_cap {
@@ -150,10 +155,11 @@ struct mlx4_func_cap {
 	u32	qp1_proxy_qpn;
 	u32	reserved_lkey;
 	u8	physical_port;
-	u8	port_flags;
+	u8	flags0;
 	u8	flags1;
 	u64	phys_port_id;
 	u32	extra_flags;
+	u8	fvl;
 };
 
 struct mlx4_func {
@@ -200,6 +206,7 @@ struct mlx4_init_hca_param {
 	u8  uar_page_sz; /* log pg sz in 4k chunks */
 	u8  steering_mode; /* for QUERY_HCA */
 	u8  dmfs_high_steer_mode; /* for QUERY_HCA */
+	u8  steering_attr; /* for QUERY_HCA */
 	u64 dev_cap_enabled;
 	u16 cqe_size; /* For use only when CQE stride feature enabled */
 	u16 eqe_size; /* For use only when EQE stride feature enabled */
