@@ -821,10 +821,10 @@ static void hv_process_timer_expiration(struct hv_message *msg,
 
 void vmbus_on_msg_dpc(unsigned long data)
 {
+	unsigned int sint = hv_get_sint();
 	struct hv_per_cpu_context *hv_cpu = (void *)data;
 	void *page_addr = hv_cpu->synic_message_page;
-	struct hv_message *msg = (struct hv_message *)page_addr +
-				  VMBUS_MESSAGE_SINT;
+	struct hv_message *msg = (struct hv_message *)page_addr +  sint;
 	struct vmbus_channel_message_header *hdr;
 	const struct vmbus_channel_message_table_entry *entry;
 	struct onmessage_work_context *ctx;
@@ -903,6 +903,8 @@ static void vmbus_channel_isr(struct vmbus_channel *channel)
  */
 static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
 {
+	unsigned int sint = hv_get_sint();
+
 	unsigned long *recv_int_page;
 	u32 maxbits, relid;
 
@@ -917,8 +919,7 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
 		 */
 		void *page_addr = hv_cpu->synic_event_page;
 		union hv_synic_event_flags *event
-			= (union hv_synic_event_flags *)page_addr +
-						 VMBUS_MESSAGE_SINT;
+			= (union hv_synic_event_flags *)page_addr + sint;
 
 		maxbits = HV_EVENT_FLAGS_COUNT;
 		recv_int_page = event->flags;
@@ -970,6 +971,8 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
 
 static void vmbus_isr(void)
 {
+	unsigned int sint = hv_get_sint();
+
 	struct hv_per_cpu_context *hv_cpu
 		= this_cpu_ptr(hv_context.cpu_context);
 	void *page_addr = hv_cpu->synic_event_page;
@@ -980,8 +983,7 @@ static void vmbus_isr(void)
 	if (unlikely(page_addr == NULL))
 		return;
 
-	event = (union hv_synic_event_flags *)page_addr +
-					 VMBUS_MESSAGE_SINT;
+	event = (union hv_synic_event_flags *)page_addr + sint;
 	/*
 	 * Check for events before checking for messages. This is the order
 	 * in which events and messages are checked in Windows guests on
@@ -1008,7 +1010,7 @@ static void vmbus_isr(void)
 		vmbus_chan_sched(hv_cpu);
 
 	page_addr = hv_cpu->synic_message_page;
-	msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT;
+	msg = (struct hv_message *)page_addr + sint;
 
 	/* Check if there are actual msgs to be processed */
 	if (msg->header.message_type != HVMSG_NONE) {

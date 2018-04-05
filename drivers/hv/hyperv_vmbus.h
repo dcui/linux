@@ -187,13 +187,22 @@ struct hv_input_post_message {
 
 enum {
 	VMBUS_MESSAGE_CONNECTION_ID	= 1,
+	VMBUS_MESSAGE_CONNECTION_ID_4	= 4,
 	VMBUS_MESSAGE_PORT_ID		= 1,
 	VMBUS_EVENT_CONNECTION_ID	= 2,
 	VMBUS_EVENT_PORT_ID		= 2,
 	VMBUS_MONITOR_CONNECTION_ID	= 3,
 	VMBUS_MONITOR_PORT_ID		= 3,
 	VMBUS_MESSAGE_SINT		= 2,
+	VMBUS_MESSAGE_SINT_3		= 3,
 };
+
+static inline
+unsigned int hv_get_sint(void)
+{
+	return (vmbus_proto_version >= VERSION_WIN10_V5) ?
+		VMBUS_MESSAGE_SINT_3 : VMBUS_MESSAGE_SINT;
+}
 
 /*
  * Per cpu state for channel handling
@@ -306,6 +315,8 @@ struct vmbus_connection {
 	 * CPU on which the initial host contact was made.
 	 */
 	int connect_cpu;
+
+	u32 msg_conn_id;
 
 	atomic_t offer_in_progress;
 
