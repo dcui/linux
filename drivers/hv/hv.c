@@ -319,6 +319,14 @@ int hv_synic_init(unsigned int cpu)
 
 	hv_context.synic_initialized = true;
 
+	return 0;
+}
+
+int hv_synic_timer_init(unsigned int cpu)
+{
+	struct hv_per_cpu_context *hv_cpu
+		= per_cpu_ptr(hv_context.cpu_context, cpu);
+
 	/*
 	 * Register the per-cpu clockevent source.
 	 */
@@ -349,6 +357,20 @@ void hv_synic_clockevents_cleanup(void)
 
 		clockevents_unbind_device(hv_cpu->clk_evt, cpu);
 	}
+}
+
+int hv_synic_timer_cleanup(unsigned int cpu)
+{
+	/* Turn off clockevent device */
+	if (ms_hyperv.features & HV_X64_MSR_SYNTIMER_AVAILABLE) {
+		struct hv_per_cpu_context *hv_cpu
+			= this_cpu_ptr(hv_context.cpu_context);
+
+		clockevents_unbind_device(hv_cpu->clk_evt, cpu);
+		hv_ce_shutdown(hv_cpu->clk_evt);
+	}
+
+	return 0;
 }
 
 /*
@@ -395,15 +417,7 @@ int hv_synic_cleanup(unsigned int cpu)
 	if (channel_found && vmbus_connection.conn_state == CONNECTED)
 		return -EBUSY;
 
-	/* Turn off clockevent device */
-	if (ms_hyperv.features & HV_X64_MSR_SYNTIMER_AVAILABLE) {
-		struct hv_per_cpu_context *hv_cpu
-			= this_cpu_ptr(hv_context.cpu_context);
-
-		clockevents_unbind_device(hv_cpu->clk_evt, cpu);
-		hv_ce_shutdown(hv_cpu->clk_evt);
-		put_cpu_ptr(hv_cpu);
-	}
+	hv_synic_timer_cleanup(cpu);
 
 	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
 			    shared_sint.as_uint64);

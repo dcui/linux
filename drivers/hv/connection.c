@@ -31,6 +31,7 @@
 #include <linux/vmalloc.h>
 #include <linux/hyperv.h>
 #include <linux/export.h>
+#include <linux/cpuhotplug.h>
 #include <asm/mshyperv.h>
 
 #include "hyperv_vmbus.h"
@@ -45,7 +46,7 @@ EXPORT_SYMBOL_GPL(vmbus_connection);
 /*
  * Negotiated protocol version with the host.
  */
-__u32 vmbus_proto_version;
+__u32 vmbus_proto_version __read_mostly;
 EXPORT_SYMBOL_GPL(vmbus_proto_version);
 
 static __u32 vmbus_get_next_version(__u32 current_version)
@@ -151,7 +152,6 @@ int vmbus_connect(void)
 {
 	int ret = 0;
 	struct vmbus_channel_msginfo *msginfo = NULL;
-	__u32 version;
 
 	/* Initialize the vmbus connection */
 	vmbus_connection.conn_state = CONNECTING;
@@ -208,32 +208,60 @@ int vmbus_connect(void)
 	 * host. We start with the highest number we can support
 	 * and work our way down until we negotiate a compatible
 	 * version.
+	 *
+	 * Note: we must save the current version that we're negotiating with
+	 * to the *global* variable vmbus_proto_version, because it's used in
+	 * vmbus_isr(), and the below vmbus_negotiate_version() depends on
+	 * vmbus_isr().
+	 *
+	 * Note: hv_synic_init() will depend on vmbus_proto_version in the
+	 * next patch that will enable VMBus version 5.0, so let't call
+	 * cpuhp_setup_state() (which calls hv_synic_init() and
+	 * hv_synic_cleanup()) for in every VMBus version we're negotiating
+	 * with. And, we must initialize Hyper-V timers *after*
+	 * vmbus_connect() succeeds, because before the correct VMBus version
+	 * is determined, the Hyper-V timer can't work: hv_ce_set_oneshot()
+	 * doesn't know what the correct SINT should be, if the VMBus version
+	 * 5.0 is used.
 	 */
 
-	version = VERSION_CURRENT;
+	vmbus_proto_version = VERSION_CURRENT;
 
 	do {
-		ret = vmbus_negotiate_version(msginfo, version);
-		if (ret == -ETIMEDOUT)
+		ret = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
+					"hyperv/vmbus:online",
+					hv_synic_init, hv_synic_cleanup);
+		if (ret < 0)
 			goto cleanup;
+		hyperv_cpuhp_online = ret;
+
+		ret = vmbus_negotiate_version(msginfo, vmbus_proto_version);
+		if (ret == -ETIMEDOUT)
+			goto synic_cleanup;
 
 		if (vmbus_connection.conn_state == CONNECTED)
 			break;
 
-		version = vmbus_get_next_version(version);
-	} while (version != VERSION_INVAL);
+		cpuhp_remove_state(hyperv_cpuhp_online);
 
-	if (version == VERSION_INVAL)
+		vmbus_proto_version =
+			vmbus_get_next_version(vmbus_proto_version);
+
+	} while (vmbus_proto_version != VERSION_INVAL);
+
+	if (vmbus_proto_version == VERSION_INVAL)
 		goto cleanup;
 
-	vmbus_proto_version = version;
 	pr_info("Vmbus version:%d.%d\n",
-		version >> 16, version & 0xFFFF);
+		vmbus_proto_version >> 16, vmbus_proto_version & 0xFFFF);
 
 	kfree(msginfo);
 	return 0;
 
+synic_cleanup:
+	cpuhp_remove_state(hyperv_cpuhp_online);
 cleanup:
+	vmbus_proto_version = VERSION_INVAL;
 	pr_err("Unable to connect to host\n");
 
 	vmbus_connection.conn_state = DISCONNECTED;

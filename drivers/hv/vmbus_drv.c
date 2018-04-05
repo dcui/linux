@@ -54,7 +54,10 @@ static struct acpi_device  *hv_acpi_dev;
 
 static struct completion probe_event;
 
-static int hyperv_cpuhp_online;
+/* It can't be static, as it's also used in vmbus_connect() in vmbus_drv.c. */
+int hyperv_cpuhp_online;
+
+static int hyperv_cpuhp_timer;
 
 static int hyperv_panic_event(struct notifier_block *nb, unsigned long val,
 			      void *args)
@@ -1047,19 +1050,16 @@ static int vmbus_bus_init(void)
 	ret = hv_synic_alloc();
 	if (ret)
 		goto err_alloc;
-	/*
-	 * Initialize the per-cpu interrupt state and
-	 * connect to the host.
-	 */
-	ret = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "hyperv/vmbus:online",
-				hv_synic_init, hv_synic_cleanup);
-	if (ret < 0)
-		goto err_alloc;
-	hyperv_cpuhp_online = ret;
 
 	ret = vmbus_connect();
 	if (ret)
 		goto err_connect;
+
+	ret = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "hyperv/vmbus:timer",
+				hv_synic_timer_init, hv_synic_timer_cleanup);
+	if (ret < 0)
+		goto err_connect;
+	hyperv_cpuhp_timer = ret;
 
 	/*
 	 * Only register if the crash MSRs are available
@@ -1711,6 +1711,7 @@ static void hv_kexec_handler(void)
 	vmbus_connection.conn_state = DISCONNECTED;
 	/* Make sure conn_state is set as hv_synic_cleanup checks for it */
 	mb();
+	cpuhp_remove_state(hyperv_cpuhp_timer);
 	cpuhp_remove_state(hyperv_cpuhp_online);
 	hyperv_cleanup();
 };
@@ -1791,6 +1792,7 @@ static void __exit vmbus_exit(void)
 	}
 	bus_unregister(&hv_bus);
 
+	cpuhp_remove_state(hyperv_cpuhp_timer);
 	cpuhp_remove_state(hyperv_cpuhp_online);
 	hv_synic_free();
 	acpi_bus_unregister_driver(&vmbus_acpi_driver);
