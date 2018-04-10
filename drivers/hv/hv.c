@@ -36,6 +36,7 @@
 struct hv_context hv_context = {
 	.synic_initialized	= false,
 };
+EXPORT_SYMBOL_GPL(hv_context);
 
 /*
  * If false, we're using the old mechanism for stimer0 interrupts
