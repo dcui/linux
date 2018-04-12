@@ -170,13 +170,13 @@ void hv_synic_free(void)
 }
 
 /*
- * hv_synic_init - Initialize the Synthethic Interrupt Controller.
+ * hv_synic_init2 - Initialize the Synthethic Interrupt Controller.
  *
  * If it is already initialized by another entity (ie x2v shim), we need to
  * retrieve the initialized message and event pages.  Otherwise, we create and
  * initialize the message and event pages.
  */
-int hv_synic_init(unsigned int cpu)
+int hv_synic_init2(unsigned int cpu)
 {
 	//struct hv_per_cpu_context *hv_cpu
 	//	= per_cpu_ptr(hv_context2.cpu_context, cpu);
@@ -233,9 +233,9 @@ int hv_synic_init(unsigned int cpu)
 }
 
 /*
- * hv_synic_cleanup - Cleanup routine for hv_synic_init().
+ * hv_synic_cleanup2 - Cleanup routine for hv_synic_init2().
  */
-int hv_synic_cleanup(unsigned int cpu)
+int hv_synic_cleanup2(unsigned int cpu)
 {
 	union hv_synic_sint shared_sint;
 	union hv_synic_simp simp;

@@ -238,6 +238,7 @@ struct hv_context {
 
 extern struct hv_context hv_context;
 extern struct hv_context hv_context2;
+extern int hyperv_cpuhp_online2;
 
 /* Hv Interface */
 
@@ -251,11 +252,9 @@ extern int hv_synic_alloc(void);
 
 extern void hv_synic_free(void);
 
-extern int hv_synic_init(unsigned int cpu);
+extern int hv_synic_init2(unsigned int cpu);
 
-extern int hv_synic_cleanup(unsigned int cpu);
-
-extern void hv_synic_clockevents_cleanup(void);
+extern int hv_synic_cleanup2(unsigned int cpu);
 
 /* Interface */
 

@@ -31,6 +31,7 @@
 #include <linux/vmalloc.h>
 #include <linux/hyperv.h>
 #include <linux/export.h>
+#include <linux/cpuhotplug.h>
 #include <asm/mshyperv.h>
 
 #include "hyperv_vmbus2.h"
@@ -42,10 +43,12 @@ struct vmbus_connection vmbus_connection2 = {
 };
 EXPORT_SYMBOL_GPL(vmbus_connection2);
 
+int hyperv_cpuhp_online2;
+
 /*
  * Negotiated protocol version with the host.
  */
-__u32 vmbus_proto_version2;
+__u32 vmbus_proto_version2 __read_mostly;
 EXPORT_SYMBOL_GPL(vmbus_proto_version2);
 
 static __u32 vmbus_get_next_version(__u32 current_version)
@@ -149,7 +152,6 @@ int vmbus_connect(void)
 {
 	int ret = 0;
 	struct vmbus_channel_msginfo *msginfo = NULL;
-	__u32 version;
 
 	/* Initialize the vmbus connection */
 	vmbus_connection2.conn_state = CONNECTING;
@@ -212,33 +214,45 @@ int vmbus_connect(void)
 	 * version.
 	 */
 
-	//version = VERSION_CURRENT;
-	vmbus_proto_version2 = version = VERSION_WIN10;
+	vmbus_proto_version2 = VERSION_WIN10;
 
 	do {
-		ret = vmbus_negotiate_version(msginfo, version);
-		if (ret == -ETIMEDOUT)
+		ret = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
+			"hyperv/vmbus2:online",
+			hv_synic_init2, hv_synic_cleanup2);
+		if (ret < 0)
 			goto cleanup;
+		hyperv_cpuhp_online2 = ret;
+
+		ret = vmbus_negotiate_version(msginfo, vmbus_proto_version2);
+		if (ret == -ETIMEDOUT)
+			goto synic_cleanup;
 
 		if (vmbus_connection2.conn_state == CONNECTED)
 			break;
 
-		version = vmbus_get_next_version(version);
-	} while (version != VERSION_INVAL);
+		cpuhp_remove_state(hyperv_cpuhp_online2);
 
-	if (version == VERSION_INVAL)
+		vmbus_proto_version2 =
+			vmbus_get_next_version(vmbus_proto_version2);
+
+	} while (vmbus_proto_version2 != VERSION_INVAL);
+
+	if (vmbus_proto_version2 == VERSION_INVAL)
 		goto cleanup;
 
-	vmbus_proto_version2 = version;
-	pr_info("Vmbus2 version:%d.%d\n",
-		version >> 16, version & 0xFFFF);
+	pr_info("Vmbus2 version2:%d.%d\n",
+		vmbus_proto_version2 >> 16, vmbus_proto_version2 & 0xFFFF);
 
 	kfree(msginfo);
 	return 0;
 
+synic_cleanup:
+	cpuhp_remove_state(hyperv_cpuhp_online2);
+
 cleanup:
 	pr_err("Unable to connect to host\n");
-	vmbus_proto_version2 = 0;
+	vmbus_proto_version2 = VERSION_INVAL;
 
 	vmbus_connection2.conn_state = DISCONNECTED;
 	vmbus_disconnect();

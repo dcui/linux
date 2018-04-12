@@ -51,8 +51,6 @@ struct vmbus_dynid {
 	struct hv_vmbus_device_id id;
 };
 
-static int hyperv_cpuhp_online;
-
 #define VMBUS_ALIAS_LEN ((sizeof((struct hv_vmbus_device_id *)0)->guid) * 2)
 static void print_alias_name(struct hv_device *hv_dev, char *alias_name)
 {
@@ -996,27 +994,16 @@ static int vmbus_bus_init(void)
 	ret = hv_synic_alloc();
 	if (ret)
 		goto err_alloc;
-	/*
-	 * Initialize the per-cpu interrupt state and
-	 * connect to the host.
-	 */
-	ret = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "x86/hyperv:online",
-				hv_synic_init, hv_synic_cleanup);
-	if (ret < 0)
-		goto err_alloc;
-	hyperv_cpuhp_online = ret;
 
 	ret = vmbus_connect();
 	if (ret)
 		goto err_connect;
-
 
 	vmbus_request_offers();
 
 	return 0;
 
 err_connect:
-	cpuhp_remove_state(hyperv_cpuhp_online);
 err_alloc:
 	//hv_synic_free();
 	//hv_remove_vmbus_irq();
@@ -1192,8 +1179,9 @@ static void __exit vmbus_exit(void)
 	vmbus_free_channels();
 
 	bus_unregister(&hv_bus);
+	//cpuhp_remove_state(hyperv_cpuhp_timer);
 
-	cpuhp_remove_state(hyperv_cpuhp_online);
+	cpuhp_remove_state(hyperv_cpuhp_online2);
 	hv_synic_free();
 }
 
