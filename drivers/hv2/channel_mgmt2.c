@@ -707,6 +707,7 @@ static void vmbus_wait_for_unload(void)
 	struct hv_message *msg;
 	struct vmbus_channel_message_header *hdr;
 	u32 message_type;
+	unsigned int sint = hv_get_sint2();
 
 	/*
 	 * CHANNELMSG_UNLOAD_RESPONSE is always delivered to the CPU which was
@@ -726,8 +727,7 @@ static void vmbus_wait_for_unload(void)
 				= per_cpu_ptr(hv_context2.cpu_context, cpu);
 
 			page_addr = hv_cpu->synic_message_page;
-			msg = (struct hv_message *)page_addr
-				+ VMBUS_MESSAGE_SINT;
+			msg = (struct hv_message *)page_addr + sint;
 
 			message_type = READ_ONCE(msg->header.message_type);
 			if (message_type == HVMSG_NONE)
@@ -755,7 +755,7 @@ static void vmbus_wait_for_unload(void)
 			= per_cpu_ptr(hv_context2.cpu_context, cpu);
 
 		page_addr = hv_cpu->synic_message_page;
-		msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT;
+		msg = (struct hv_message *)page_addr + sint;
 		msg->header.message_type = HVMSG_NONE;
 	}
 }

@@ -195,6 +195,7 @@ enum {
 	VMBUS_MONITOR_PORT_ID		= 3,
 	VMBUS_MESSAGE_SINT		= 2,
 	VMBUS_MESSAGE_SINT_3		= 3,
+	VMBUS_MESSAGE_SINT_4		= 4,
 };
 
 static inline

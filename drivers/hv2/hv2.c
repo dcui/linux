@@ -184,6 +184,7 @@ int hv_synic_init2(unsigned int cpu)
 	//union hv_synic_siefp siefp;
 	union hv_synic_sint shared_sint;
 	union hv_synic_scontrol sctrl;
+	unsigned int sint = hv_get_sint2();
 
 #if 0
 	//XXX: we must share the pages with the primary vmbus driver!!!
@@ -205,7 +206,7 @@ int hv_synic_init2(unsigned int cpu)
 #endif
 
 	/* Setup the shared SINT. */
-	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_get_synint_state(HV_X64_MSR_SINT0 + sint,
 			    shared_sint.as_uint64);
 
 	//shared_sint.as_uint64 = 0;
@@ -216,7 +217,7 @@ int hv_synic_init2(unsigned int cpu)
 	else
 		shared_sint.auto_eoi = true;
 
-	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_set_synint_state(HV_X64_MSR_SINT0 + sint,
 			    shared_sint.as_uint64);
 
 	//XXX: re-enable this after the primary loads???
@@ -244,6 +245,7 @@ int hv_synic_cleanup2(unsigned int cpu)
 	struct vmbus_channel *channel, *sc;
 	bool channel_found = false;
 	unsigned long flags;
+	unsigned int sint = hv_get_sint2();
 
 	WARN_ON(1);
 	if (!hv_context2.synic_initialized)
@@ -277,14 +279,14 @@ int hv_synic_cleanup2(unsigned int cpu)
 	if (channel_found && vmbus_connection2.conn_state == CONNECTED)
 		return -EBUSY;
 
-	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_get_synint_state(HV_X64_MSR_SINT0 + sint,
 			    shared_sint.as_uint64);
 
 	shared_sint.masked = 1;
 
 	/* Need to correctly cleanup in the case of SMP!!! */
 	/* Disable the interrupt */
-	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_set_synint_state(HV_X64_MSR_SINT0 + sint,
 			    shared_sint.as_uint64);
 
 	hv_get_simp(simp.as_uint64);
