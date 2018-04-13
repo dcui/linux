@@ -1,0 +1,14 @@
+repo_list=(
+	"http://ppa.launchpad.net/mhcerri/azure-edge/ubuntu/pool/main/l/linux-azure-edge"
+	"http://archive.ubuntu.com/ubuntu/pool/main/l/linux-azure-edge"
+	"http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux-azure-edge"
+	"http://archive.ubuntu.com/ubuntu/pool/universe/l/linux-azure-edge"
+	"http://ports.ubuntu.com/ubuntu-ports/pool/universe/l/linux-azure-edge"
+	"http://ppa.launchpad.net/canonical-kernel-team/ppa/ubuntu/pool/main/l/linux-azure-edge"
+)
+
+package_prefixes linux-image
+
+getall amd64 azure
+
+# Ports arches and flavours.
