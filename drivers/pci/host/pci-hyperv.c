@@ -368,6 +368,11 @@ struct pci_read_block {
 	u32 bytes_requested;
 } __packed;
 
+struct pci_read_block_response {
+	struct pci_response response;
+	u8 bytes[CONFIG_BLOCK_SIZE_MAX];
+} __packed;
+
 struct pci_write_block {
 	struct pci_message message_type;
 	u32 block_id;
@@ -850,11 +855,11 @@ static struct pci_ops hv_pcifront_ops = {
  */
 
 struct hv_read_config_compl {
-	struct hv_pci_compl gen_compl;
+	struct hv_pci_compl comp_pkt;
 	void *buf;
 	int len;
 	int bytes_returned;
-	};
+};
 
 /**
  * hv_pci_read_config_compl() - Invoked when a response packet
@@ -866,18 +871,24 @@ struct hv_read_config_compl {
 static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 				     int resp_packet_size)
 {
-	struct hv_read_config_compl *comp_pkt = context;
+	struct hv_read_config_compl *comp = context;
+	struct pci_read_block_response *read_resp =
+		(struct pci_read_block_response *)resp;
 	int data_len;
-	void *data;
 
-	data_len = resp_packet_size - offsetof(struct pci_response, status);
+	comp->comp_pkt.completion_status = resp->status;
+	if (comp->comp_pkt.completion_status < 0)
+		goto out;
 
+	data_len = resp_packet_size - sizeof(struct pci_response);
 	if (data_len > 0) {
-		data = ((char *)resp) + offsetof(struct pci_response, status);
-		memcpy(comp_pkt->buf, data, max(comp_pkt->len, data_len));
+		comp->bytes_returned = min(comp->len, data_len);
+		memcpy(comp->buf, read_resp->bytes, comp->bytes_returned);
+	} else {
+		comp->comp_pkt.completion_status = -1;
 	}
-	comp_pkt->bytes_returned = data_len;
-	complete(&comp_pkt->gen_compl.host_event);
+out:
+	complete(&comp->comp_pkt.host_event);
 }
 
 /**
@@ -903,18 +914,20 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 			     sysdata);
 	struct {
 		struct pci_packet pkt;
-		char buf[sizeof(struct pci_read_block) -
-			 offsetof(struct pci_packet, message)];
+		char buf[sizeof(struct pci_read_block)];
 	} pkt;
 	struct hv_read_config_compl comp_pkt;
 	struct pci_read_block *read_blk;
 	int ret;
 
 	if (buf_len > CONFIG_BLOCK_SIZE_MAX)
-		return -ENOSPC;
+		return -EINVAL;
+
+	init_completion(&comp_pkt.comp_pkt.host_event);
+	comp_pkt.buf = buf;
+	comp_pkt.len = buf_len;
 
 	memset(&pkt, 0, sizeof(pkt));
-	init_completion(&comp_pkt.gen_compl.host_event);
 	pkt.pkt.completion_func = hv_pci_read_config_compl;
 	pkt.pkt.compl_ctxt = &comp_pkt;
 	read_blk = (struct pci_read_block *)&pkt.pkt.message;
@@ -923,16 +936,21 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 	read_blk->block_id = block_id;
 	read_blk->bytes_requested = buf_len;
 
-	ret = vmbus_sendpacket(hbus->hdev->channel, &pkt, sizeof(pkt),
-			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
+	ret = vmbus_sendpacket(hbus->hdev->channel, read_blk,
+			       sizeof(*read_blk), (unsigned long)&pkt.pkt,
+			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
 	if (!ret) {
-		wait_for_completion(&comp_pkt.gen_compl.host_event);
+		wait_for_completion(&comp_pkt.comp_pkt.host_event);
+
+		if (comp_pkt.comp_pkt.completion_status < 0)
+			return -EIO;
+
 		*bytes_returned = comp_pkt.bytes_returned;
 	}
 
 	return ret;
-	}
+}
 EXPORT_SYMBOL(hv_read_config_block);
 
 /**
@@ -957,8 +975,7 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 			     sysdata);
 	struct {
 		struct pci_packet pkt;
-		char buf[sizeof(struct pci_write_block) -
-			 offsetof(struct pci_packet, message)];
+		char buf[sizeof(struct pci_write_block)];
 	} pkt;
 	struct hv_pci_compl comp_pkt;
 	struct pci_write_block *write_blk;
@@ -966,10 +983,11 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	int ret;
 
 	if (len > CONFIG_BLOCK_SIZE_MAX)
-		return -ENOSPC;
+		return -EINVAL;
+
+	init_completion(&comp_pkt.host_event);
 
 	memset(&pkt, 0, sizeof(pkt));
-	init_completion(&comp_pkt.host_event);
 	pkt.pkt.completion_func = hv_pci_generic_compl;
 	pkt.pkt.compl_ctxt = &comp_pkt;
 	write_blk = (struct pci_write_block *)&pkt.pkt.message;
@@ -980,11 +998,15 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	memcpy(write_blk->bytes, buf, len);
 	pkt_size = offsetof(struct pci_write_block, bytes) + len;
 
-	ret = vmbus_sendpacket(hbus->hdev->channel, &pkt, pkt_size,
+	ret = vmbus_sendpacket(hbus->hdev->channel, write_blk, pkt_size,
 			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret)
+	if (!ret) {
 		wait_for_completion(&comp_pkt.host_event);
+
+		if (comp_pkt.completion_status < 0)
+			return -EIO;
+	}
 
 	return ret;
 }
@@ -2231,7 +2253,8 @@ static void hv_pci_onchannelcallback(void *context)
 			case PCI_INVALIDATE_BLOCK:
 
 				inval = (struct pci_dev_inval_block *)buffer;
-				hpdev = get_pcichild_wslot(hbus, inval->wslot.slot);
+				hpdev = get_pcichild_wslot(hbus,
+							   inval->wslot.slot);
 				if (hpdev) {
 					if (hpdev->block_invalidate) {
 						hpdev->block_invalidate(
@@ -2239,7 +2262,7 @@ static void hv_pci_onchannelcallback(void *context)
 						    inval->block_mask);
 					}
 					put_pcichild(hpdev,
-							hv_pcidev_ref_by_slot);
+						     hv_pcidev_ref_by_slot);
 				}
 				break;
 
