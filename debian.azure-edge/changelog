@@ -1,4 +1,6 @@
-linux-azure (4.15.0-1006.6) bionic; urgency=medium
+linux-azure-edge (4.15.0-1006.6~16.04.1) xenial; urgency=medium
+
+  * linux-azure-edge: 4.15.0-1006.6~16.04.1 -proposed tracker (LP: #1765176)
 
   * linux-azure: 4.15.0-1006.6 -proposed tracker (LP: #1763772)
 
