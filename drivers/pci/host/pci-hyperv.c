@@ -361,6 +361,9 @@ struct pci_delete_interrupt {
 	struct tran_int_desc int_desc;
 } __packed;
 
+/*
+ * Note: the VM must pass a valid block id, wslot and bytes_requested.
+ */
 struct pci_read_block {
 	struct pci_message message_type;
 	u32 block_id;
@@ -368,11 +371,18 @@ struct pci_read_block {
 	u32 bytes_requested;
 } __packed;
 
+/*
+ * The response message has no 'status' field, because the host
+ * guarantees the Read Block request from the VM can never fail.
+ */
 struct pci_read_block_response {
-	struct pci_response response;
+	struct vmpacket_descriptor hdr;
 	u8 bytes[CONFIG_BLOCK_SIZE_MAX];
 } __packed;
 
+/*
+ * Note: the VM must pass a valid block id, wslot and byte_count.
+ */
 struct pci_write_block {
 	struct pci_message message_type;
 	u32 block_id;
@@ -876,18 +886,16 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 		(struct pci_read_block_response *)resp;
 	int data_len;
 
-	comp->comp_pkt.completion_status = resp->status;
-	if (comp->comp_pkt.completion_status < 0)
-		goto out;
+	data_len = resp_packet_size -
+		   offsetof(struct pci_read_block_response, bytes);
 
-	data_len = resp_packet_size - sizeof(struct pci_response);
 	if (data_len > 0) {
 		comp->bytes_returned = min(comp->len, data_len);
 		memcpy(comp->buf, read_resp->bytes, comp->bytes_returned);
 	} else {
-		comp->comp_pkt.completion_status = -1;
+		comp->bytes_returned = 0;
 	}
-out:
+
 	complete(&comp->comp_pkt.host_event);
 }
 
@@ -942,16 +950,31 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
 	if (!ret) {
 		wait_for_completion(&comp_pkt.comp_pkt.host_event);
-
-		if (comp_pkt.comp_pkt.completion_status < 0)
-			return -EIO;
-
 		*bytes_returned = comp_pkt.bytes_returned;
 	}
 
 	return ret;
 }
 EXPORT_SYMBOL(hv_read_config_block);
+
+/**
+ * hv_pci_write_config_compl() - Invoked when a response packet
+ * for a write config block operation arrives.
+ * @context:		Identifies the write config operation
+ * @resp:		The response packet itself
+ * @resp_packet_size:	Size in bytes of the response packet
+ */
+static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
+				      int resp_packet_size)
+{
+	struct hv_pci_compl *comp_pkt = context;
+
+	/*
+	 * The response message has no 'status' field, because the host
+	 * guarantees the Write Block request from the VM can never fail.
+	 */
+	complete(&comp_pkt->host_event);
+}
 
 /**
  * hv_write_config_block() - Sends a write config block request
@@ -988,7 +1011,7 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	init_completion(&comp_pkt.host_event);
 
 	memset(&pkt, 0, sizeof(pkt));
-	pkt.pkt.completion_func = hv_pci_generic_compl;
+	pkt.pkt.completion_func = hv_pci_write_config_compl;
 	pkt.pkt.compl_ctxt = &comp_pkt;
 	write_blk = (struct pci_write_block *)&pkt.pkt.message;
 	write_blk->message_type.type = PCI_WRITE_BLOCK;
@@ -1001,12 +1024,8 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	ret = vmbus_sendpacket(hbus->hdev->channel, write_blk, pkt_size,
 			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret) {
+	if (!ret)
 		wait_for_completion(&comp_pkt.host_event);
-
-		if (comp_pkt.completion_status < 0)
-			return -EIO;
-	}
 
 	return ret;
 }
