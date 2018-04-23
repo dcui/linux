@@ -79,12 +79,12 @@ BASE_COMMIT=`git log --pretty=one | \
     awk -v name="$BASE_NAME" '
 	/Ubuntu-/ {
 		if (match($0, "UBUNTU: Ubuntu"name"-[0-9]")) {
+			if (!match($0, "~")) {
 				print $1
 				exit
-                        }
-                }
-        '
-`
+			}
+		}
+	}'`
 if [ "${MASTER_COMMIT}" = "${BASE_COMMIT}" ]
 then
 	echo Already up to date.
