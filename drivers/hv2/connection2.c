@@ -48,6 +48,7 @@ EXPORT_SYMBOL_GPL(vmbus_connection2);
 __u32 vmbus_proto_version2;
 EXPORT_SYMBOL_GPL(vmbus_proto_version2);
 
+#if 0
 static __u32 vmbus_get_next_version(__u32 current_version)
 {
 	switch (current_version) {
@@ -63,11 +64,15 @@ static __u32 vmbus_get_next_version(__u32 current_version)
 	case (VERSION_WIN10):
 		return VERSION_WIN8_1;
 
+	case (VERSION_WIN10_V5):
+		return VERSION_WIN10;
+
 	case (VERSION_WS2008):
 	default:
 		return VERSION_INVAL;
 	}
 }
+#endif
 
 static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 					__u32 version)
@@ -80,9 +85,18 @@ static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 
 	msg = (struct vmbus_channel_initiate_contact *)msginfo->msg;
 
+	memset(msg, 0, sizeof(*msg));
 	msg->header.msgtype = CHANNELMSG_INITIATE_CONTACT;
 	msg->vmbus_version_requested = version;
-	msg->interrupt_page = virt_to_phys(vmbus_connection.int_page);
+
+	if (version < VERSION_WIN10_V5) {
+		msg->interrupt_page = virt_to_phys(vmbus_connection.int_page);
+		vmbus_connection2.msg_conn_id = VMBUS_MESSAGE_CONNECTION_ID;
+	} else {
+		msg->msg_sint = VMBUS_MESSAGE_SINT_3;
+		vmbus_connection2.msg_conn_id = VMBUS_MESSAGE_CONNECTION_ID_4;
+	}
+
 	msg->monitor_page1 = virt_to_phys(vmbus_connection.monitor_pages[0]);
 	msg->monitor_page2 = virt_to_phys(vmbus_connection.monitor_pages[1]);
 	/*
@@ -135,6 +149,11 @@ static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 	/* Check if successful */
 	if (msginfo->response.version_response.version_supported) {
 		vmbus_connection2.conn_state = CONNECTED;
+
+		if (version >= VERSION_WIN10_V5)
+			vmbus_connection2.msg_conn_id =
+				msginfo->response.version_response.msg_conn_id;
+
 	} else {
 		return -ECONNREFUSED;
 	}
@@ -212,33 +231,20 @@ int vmbus_connect(void)
 	 * version.
 	 */
 
-	//version = VERSION_CURRENT;
-	vmbus_proto_version2 = version = VERSION_WIN10;
-
-	do {
-		ret = vmbus_negotiate_version(msginfo, version);
-		if (ret == -ETIMEDOUT)
-			goto cleanup;
-
-		if (vmbus_connection2.conn_state == CONNECTED)
-			break;
-
-		version = vmbus_get_next_version(version);
-	} while (version != VERSION_INVAL);
-
-	if (version == VERSION_INVAL)
+	version = VERSION_WIN10_V5;
+	ret = vmbus_negotiate_version(msginfo, version);
+	if (ret != 0 || vmbus_connection2.conn_state != CONNECTED)
 		goto cleanup;
 
 	vmbus_proto_version2 = version;
-	pr_info("Vmbus2 version:%d.%d\n",
-		version >> 16, version & 0xFFFF);
+	pr_info("Vmbus2 version:%d.%d\n", version >> 16, version & 0xFFFF);
 
 	kfree(msginfo);
 	return 0;
 
 cleanup:
 	pr_err("Unable to connect to host\n");
-	vmbus_proto_version2 = 0;
+	vmbus_proto_version2 = VERSION_INVAL;
 
 	vmbus_connection2.conn_state = DISCONNECTED;
 	vmbus_disconnect();
@@ -362,7 +368,7 @@ int vmbus_post_msg(void *buffer, size_t buflen, bool can_sleep)
 	u32 usec = 1;
 
 	conn_id.asu32 = 0;
-	conn_id.u.id = VMBUS_MESSAGE_CONNECTION_ID;
+	conn_id.u.id = vmbus_connection2.msg_conn_id;
 
 	/*
 	 * hv_post_message() can have transient failures because of

@@ -727,7 +727,7 @@ static void vmbus_wait_for_unload(void)
 
 			page_addr = hv_cpu->synic_message_page;
 			msg = (struct hv_message *)page_addr
-				+ VMBUS_MESSAGE_SINT;
+				+ VMBUS_MESSAGE_SINT_3;
 
 			message_type = READ_ONCE(msg->header.message_type);
 			if (message_type == HVMSG_NONE)
@@ -755,7 +755,7 @@ static void vmbus_wait_for_unload(void)
 			= per_cpu_ptr(hv_context2.cpu_context, cpu);
 
 		page_addr = hv_cpu->synic_message_page;
-		msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT;
+		msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT_3;
 		msg->header.message_type = HVMSG_NONE;
 	}
 }

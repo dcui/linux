@@ -767,7 +767,7 @@ static void vmbus_on_msg_dpc2(unsigned long data)
 	struct hv_per_cpu_context *hv_cpu = (void *)data;
 	void *page_addr = hv_cpu->synic_message_page;
 	struct hv_message *msg = (struct hv_message *)page_addr +
-				  VMBUS_MESSAGE_SINT;
+				  VMBUS_MESSAGE_SINT_3;
 	struct vmbus_channel_message_header *hdr;
 	const struct vmbus_channel_message_table_entry *entry;
 	struct onmessage_work_context *ctx;
@@ -866,7 +866,7 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu_1)
 		void *page_addr = hv_cpu_1->synic_event_page;
 		union hv_synic_event_flags *event
 			= (union hv_synic_event_flags *)page_addr +
-						 VMBUS_MESSAGE_SINT;
+						 VMBUS_MESSAGE_SINT_3;
 
 		maxbits = HV_EVENT_FLAGS_COUNT;
 		recv_int_page = event->flags;
@@ -927,7 +927,7 @@ static void vmbus_isr(void)
 		return;
 
 	event = (union hv_synic_event_flags *)page_addr +
-					 VMBUS_MESSAGE_SINT;
+					 VMBUS_MESSAGE_SINT_3;
 	/*
 	 * Check for events before checking for messages. This is the order
 	 * in which events and messages are checked in Windows guests on
@@ -954,7 +954,7 @@ static void vmbus_isr(void)
 		vmbus_chan_sched(hv_cpu);
 
 	page_addr = hv_cpu->synic_message_page;
-	msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT;
+	msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT_3;
 
 	/* Check if there are actual msgs to be processed */
 	if (msg->header.message_type != HVMSG_NONE) {

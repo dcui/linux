@@ -205,7 +205,7 @@ int hv_synic_init(unsigned int cpu)
 #endif
 
 	/* Setup the shared SINT. */
-	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT_3,
 			    shared_sint.as_uint64);
 
 	//shared_sint.as_uint64 = 0;
@@ -216,7 +216,7 @@ int hv_synic_init(unsigned int cpu)
 	else
 		shared_sint.auto_eoi = true;
 
-	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT_3,
 			    shared_sint.as_uint64);
 
 	//XXX: re-enable this after the primary loads???
@@ -277,14 +277,14 @@ int hv_synic_cleanup(unsigned int cpu)
 	if (channel_found && vmbus_connection2.conn_state == CONNECTED)
 		return -EBUSY;
 
-	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_get_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT_3,
 			    shared_sint.as_uint64);
 
 	shared_sint.masked = 1;
 
 	/* Need to correctly cleanup in the case of SMP!!! */
 	/* Disable the interrupt */
-	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT,
+	hv_set_synint_state(HV_X64_MSR_SINT0 + VMBUS_MESSAGE_SINT_3,
 			    shared_sint.as_uint64);
 
 	hv_get_simp(simp.as_uint64);
