@@ -1,3 +1,12 @@
+linux-azure-edge (4.15.0-1006.6~16.04.2) xenial; urgency=medium
+
+  * linux-azure-edge: 4.15.0-1006.6~16.04.2 -proposed tracker (LP: #1766595)
+
+  * fsnotify: Fix fsnotify_mark_connector race (LP: #1765564)
+    - fsnotify: Fix fsnotify_mark_connector race
+
+ -- Kamal Mostafa <kamal@canonical.com>  Thu, 10 May 2018 09:31:29 -0700
+
 linux-azure-edge (4.15.0-1006.6~16.04.1) xenial; urgency=medium
 
   * linux-azure-edge: 4.15.0-1006.6~16.04.1 -proposed tracker (LP: #1765176)
