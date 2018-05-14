@@ -23,6 +23,10 @@
 
 #include "tick-internal.h"
 
+#undef for_each_cpu
+#define for_each_cpu(cpu, mask)                        \
+       for ((cpu) = 0; (((cpu) < 1) && ((mask)[0].bits[0] & 1)); (cpu)++, (void)mask)
+
 /*
  * Broadcast support for broken x86 hardware, where the local apic
  * timer stops in C3 state.

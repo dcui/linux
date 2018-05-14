@@ -4717,7 +4717,17 @@ mpt3sas_base_get_iocstate(struct MPT3SAS_ADAPTER *ioc, int cooked)
 {
 	u32 s, sc;
 
+do {
 	s = readl(&ioc->chip->Doorbell);
+
+       if (s == 0xFFFFFFFF) {
+               printk("cdx: mpt3sas_base_get_iocstate: reading va=0x%px (pa=0x%llx) got 0xFFFFFFFF\n",
+                       &ioc->chip->Doorbell, (unsigned long long)slow_virt_to_phys((void*)&ioc->chip->Doorbell));
+               WARN_ON_ONCE(1); // only dump the call-stack once.
+               ssleep(10); //sleep 10 seconds
+       }
+} while (s == 0xFFFFFFFF);
+
 	sc = s & MPI2_IOC_STATE_MASK;
 	return cooked ? sc : s;
 }
