@@ -1,3 +1,12 @@
+linux-azure-edge (4.15.0-1012.12~16.04.2) xenial; urgency=medium
+
+  * linux-azure-edge headers are broken after change to support scripted
+    rebases (LP: #1772058)
+    - [Packaging]: azure-edge: Fix headers packages after switching to scripted
+      rebase
+
+ -- Kamal Mostafa <kamal@canonical.com>  Fri, 18 May 2018 09:43:44 -0700
+
 linux-azure-edge (4.15.0-1012.12~16.04.1) xenial; urgency=medium
 
   * linux-image-4.15.0-20-generic install after upgrade from xenial breaks
