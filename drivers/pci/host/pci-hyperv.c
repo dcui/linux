@@ -371,12 +371,9 @@ struct pci_read_block {
 	u32 bytes_requested;
 } __packed;
 
-/*
- * The response message has no 'status' field, because the host
- * guarantees the Read Block request from the VM can never fail.
- */
 struct pci_read_block_response {
 	struct vmpacket_descriptor hdr;
+	u32 status;
 	u8 bytes[CONFIG_BLOCK_SIZE_MAX];
 } __packed;
 
@@ -889,7 +886,7 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 	data_len = resp_packet_size -
 		   offsetof(struct pci_read_block_response, bytes);
 
-	if (data_len > 0) {
+	if (data_len > 0 && read_resp->status == 0) {
 		comp->bytes_returned = min(comp->len, data_len);
 		memcpy(comp->buf, read_resp->bytes, comp->bytes_returned);
 	} else {
