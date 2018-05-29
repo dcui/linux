@@ -15274,6 +15274,10 @@ EXPORT_SYMBOL_GPL vmlinux 0x00000000	x509_free_certificate
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_family
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_model
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_platform
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_spec_ctrl_get_default
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_spec_ctrl_restore_host
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_spec_ctrl_set
+EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_spec_ctrl_set_guest
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_stepping
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	x86_vector_domain
 EXPORT_SYMBOL_GPL vmlinux 0x00000000	xattr_getsecurity
