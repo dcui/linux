@@ -10,7 +10,7 @@ SOURCE_RELEASE_BRANCH=${_SOURCE_RELEASE_BRANCH:=master-next}
 DEBIAN_SOURCE=debian.azure
 
 TARGET_RELEASE=xenial
-TARGET_RELEASE_BRANCH=azure-edge
+TARGET_RELEASE_BRANCH=azure-xenial
 TARGET_RELEASE_NUMBER=16.04
 DEBIAN_TARGET=debian.${TARGET_RELEASE_BRANCH}
 
@@ -142,9 +142,10 @@ git add ${DEBIAN_TARGET}/abi ${DEBIAN_TARGET}/d-i ${DEBIAN_TARGET}/config \
 #
 # Update changelog from the source release changelog. Change the release pocket and ABI.
 #
+SERIES="`dpkg-parsechangelog -l${DEBIAN_TARGET}/changelog  | awk '/^Distribution:/ {print $2}'`"
 cp ${DEBIAN_SOURCE}/changelog ${DEBIAN_TARGET}/changelog
 sed -i -e '1s/'${SOURCE_RELEASE}'.*;/'${TARGET_RELEASE}${POCKET}';/' \
-	-e '1s/^linux\S* /linux-'${TARGET_RELEASE_BRANCH}' /' \
+	-e '1s/^linux\S* /linux-'${TARGET_RELEASE_BRANCH%-$SERIES}' /' \
 	-e '1s/)/~'${TARGET_RELEASE_NUMBER}'.1)/' \
 	${DEBIAN_TARGET}/changelog
 git add ${DEBIAN_TARGET}/changelog

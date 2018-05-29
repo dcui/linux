@@ -1,4 +1,4 @@
-linux-azure-edge (4.15.0-1012.12~16.04.2) xenial; urgency=medium
+linux-azure (4.15.0-1012.12~16.04.2) xenial; urgency=medium
 
   * linux-azure-edge headers are broken after change to support scripted
     rebases (LP: #1772058)
