@@ -1,6 +1,6 @@
-linux-azure (4.15.0-1013.13~16.04.1) xenial; urgency=medium
+linux-azure (4.15.0-1013.13~16.04.2) xenial; urgency=medium
 
-  * linux-azure: 4.15.0-1013.13~16.04.1 -proposed tracker (LP: #1772940)
+  * linux-azure: 4.15.0-1013.13~16.04.2 -proposed tracker (LP: #1772940)
 
   * linux-azure: 4.15.0-1013.13 -proposed tracker (LP: #1772930)
 
@@ -208,7 +208,7 @@ linux-azure (4.15.0-1013.13~16.04.1) xenial; urgency=medium
   * [8086:3e92] display becomes blank after S3 (LP: #1763271)
     - drm/i915/edp: Do not do link training fallback or prune modes on EDP
 
- -- Marcelo Henrique Cerri <marcelo.cerri@canonical.com>  Thu, 24 May 2018 10:44:42 -0300
+ -- Marcelo Henrique Cerri <marcelo.cerri@canonical.com>  Tue, 29 May 2018 22:19:13 -0300
 
 linux-azure (4.15.0-1012.12) bionic; urgency=medium
 
