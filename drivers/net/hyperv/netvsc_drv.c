@@ -126,8 +126,19 @@ static int netvsc_open(struct net_device *net)
 	}
 
 	rdev = nvdev->extension;
-	if (!rdev->link_state)
+	if (!rdev->link_state) {
 		netif_carrier_on(net);
+
+		/* When the NIC has sub-channels, usually we enable all the
+		 * TX queues after all sub-channels are set up: see
+		 * rndis_set_subchannel() -> netif_device_attach(), but in
+		 * the case of "ifdown eth0; ifup eth0" where the number of
+		 * channels doesn't change, we also must make sure the
+		 * TX queues are enabled.
+		 */
+		if (atomic_read(&nvdev->open_chn) == nvdev->num_chn)
+			netif_tx_wake_all_queues(net);
+	}
 
 	if (vf_netdev) {
 		/* Setting synthetic device up transparently sets
