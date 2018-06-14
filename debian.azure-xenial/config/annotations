@@ -11070,7 +11070,7 @@ CONFIG_PERCPU_STATS                             policy<{'amd64': 'n', 'arm64': '
 CONFIG_GUP_BENCHMARK                            policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n', 's390x': 'n'}>
 CONFIG_SCHED_MC                                 policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 's390x': 'y'}>
 CONFIG_SCHED_SMT                                policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'n', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
-CONFIG_HOTPLUG_CPU                              policy<{'amd64': 'y', 'arm64': 'y', 'armhf': 'y', 'i386': 'y', 'ppc64el': 'y', 's390x': 'y'}>
+CONFIG_HOTPLUG_CPU                              policy<{'amd64': 'n', 'arm64': 'n', 'armhf': 'n', 'i386': 'n', 'ppc64el': 'n', 's390x': 'n'}>
 CONFIG_NUMA                                     policy<{'amd64': 'y', 'arm64': 'y', 'ppc64el': 'y', 's390x': 'y'}>
 CONFIG_NODES_SHIFT                              policy<{'amd64': '10', 'arm64': '6', 'ppc64el': '8', 's390x': '4'}>
 CONFIG_HIGHPTE                                  policy<{'armhf': 'y', 'i386': 'y'}>
@@ -11091,7 +11091,7 @@ CONFIG_MEM_SOFT_DIRTY                           flag<REVIEW>
 CONFIG_IDLE_PAGE_TRACKING                       flag<REVIEW> note<is there a cost associated with this?>
 CONFIG_PERCPU_STATS                             flag<REVIEW>
 CONFIG_RELOCATABLE                              flag<REVIEW>
-CONFIG_HOTPLUG_CPU                              flag<REVIEW>
+CONFIG_HOTPLUG_CPU                              mark<ENFORCED> node<LP:1776293>
 CONFIG_NUMA                                     note<LP:1543165 LP:1557690>
 
 # Menu: Processor type and features >> ARM errata workarounds via the alternatives framework >> Architecture: arm64
