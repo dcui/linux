@@ -914,7 +914,7 @@ static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu_1)
 	}
 }
 
-static void vmbus_isr(void)
+static void vmbus_isr2(void)
 {
 	struct hv_per_cpu_context *hv_cpu
 		= this_cpu_ptr(hv_context.cpu_context); //XXX:TODO
@@ -967,6 +967,25 @@ static void vmbus_isr(void)
 	add_interrupt_randomness(HYPERVISOR_CALLBACK_VECTOR, 0);
 }
 
+static DEFINE_PER_CPU(struct hrtimer, vmbus2_poll_timer);
+
+static enum hrtimer_restart vmbus2_poll_timer_fn(struct hrtimer *hrtimer)
+{
+	vmbus_isr2();
+
+	hrtimer_forward_now(hrtimer, ms_to_ktime(1));
+
+	return HRTIMER_RESTART;
+}
+
+static void vmbus2_setup_poll_timer_oncpu(void *arg)
+{
+	struct hrtimer *hrtimer = this_cpu_ptr(&vmbus2_poll_timer);
+
+	hrtimer_init(hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	hrtimer->function = vmbus2_poll_timer_fn;
+	hrtimer_start(hrtimer, ms_to_ktime(1), HRTIMER_MODE_REL_PINNED);
+}
 
 /*
  * vmbus_bus_init -Main vmbus driver initialization routine.
@@ -991,7 +1010,12 @@ static int vmbus_bus_init(void)
 	if (ret)
 		return ret;
 
-	hv_setup_vmbus_irq(vmbus_isr);
+#if 0
+	//we're tring to use polling for VMBus-S
+	hv_setup_vmbus_irq(vmbus_isr2);
+#else
+	on_each_cpu(vmbus2_setup_poll_timer_oncpu, NULL, 1);
+#endif
 
 	ret = hv_synic_alloc();
 	if (ret)

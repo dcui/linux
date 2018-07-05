@@ -51,8 +51,11 @@ void hyperv_vector_handler(struct pt_regs *regs)
 	if (vmbus_handler)
 		vmbus_handler();
 
-	if (vmbus_handler2)
+	if (vmbus_handler2) {
+		BUG_ON(1);
 		vmbus_handler2();
+	}
+
 	if (ms_hyperv.hints & HV_X64_DEPRECATING_AEOI_RECOMMENDED)
 		ack_APIC_irq();
 
@@ -65,8 +68,10 @@ void hv_setup_vmbus_irq(void (*handler)(void))
 	//TODO: use a different vector for the 2nd vmbus driver
 	if (!vmbus_handler)
 		vmbus_handler = handler;
-	else
+	else {
+		BUG_ON(1);
 		vmbus_handler2 = handler;
+	}
 }
 
 void hv_remove_vmbus_irq(void)
@@ -223,8 +228,11 @@ static void __init ms_hyperv_init_platform(void)
 	ms_hyperv.misc_features = cpuid_edx(HYPERV_CPUID_FEATURES);
 	ms_hyperv.hints    = cpuid_eax(HYPERV_CPUID_ENLIGHTMENT_INFO);
 
-	pr_info("Hyper-V: features 0x%x, hints 0x%x\n",
-		ms_hyperv.features, ms_hyperv.hints);
+	pr_info("Hyper-V: features 0x%x, hints 0x%x, misc_feature 0x%x\n",
+		ms_hyperv.features, ms_hyperv.hints, ms_hyperv.misc_features);
+
+	// SintPollingModeAvailable
+	BUG_ON((ms_hyperv.misc_features & BIT(18)) == 0);
 
 	ms_hyperv.max_vp_index = cpuid_eax(HYPERV_CPUID_IMPLEMENT_LIMITS);
 	ms_hyperv.max_lp_index = cpuid_ebx(HYPERV_CPUID_IMPLEMENT_LIMITS);

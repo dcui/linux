@@ -209,7 +209,8 @@ int hv_synic_init(unsigned int cpu)
 			    shared_sint.as_uint64);
 
 	//shared_sint.as_uint64 = 0;
-	shared_sint.vector = HYPERVISOR_CALLBACK_VECTOR;
+	//shared_sint.vector = HYPERVISOR_CALLBACK_VECTOR;
+	shared_sint.polling = true;
 	shared_sint.masked = false;
 	if (ms_hyperv.hints & HV_X64_DEPRECATING_AEOI_RECOMMENDED)
 		shared_sint.auto_eoi = false;
