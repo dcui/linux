@@ -1328,6 +1328,11 @@ static void survey_child_resources(struct hv_pcibus_device *hbus)
 	 */
 	list_for_each_entry(hpdev, &hbus->children, list_entry) {
 		for (i = 0; i < 6; i++) {
+			printk("cdx: survey_child_resources: hpdev=%px, BAR[%d] = 0x%x\n",
+				hpdev, i, hpdev->probed_bar[i]);
+		}
+
+		for (i = 0; i < 6; i++) {
 			if (hpdev->probed_bar[i] & PCI_BASE_ADDRESS_SPACE_IO)
 				dev_err(&hbus->hdev->device,
 					"There's an I/O BAR in this list!\n");
@@ -1345,7 +1350,9 @@ static void survey_child_resources(struct hv_pcibus_device *hbus)
 				else
 					bar_val |= 0xffffffff00000000ULL;
 
+				printk("cdx: survey_child_resources: bar_val = 0x%llx\n", (unsigned long long)bar_val);
 				bar_size = get_bar_size(bar_val);
+				printk("cdx: survey_child_resources: bar_sz = 0x%llx\n", (unsigned long long)bar_size);
 
 				if (bar_val & PCI_BASE_ADDRESS_MEM_TYPE_64)
 					hbus->high_mmio_space += bar_size;
@@ -1388,12 +1395,16 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 	if (hbus->low_mmio_space) {
 		low_size = 1ULL << (63 - __builtin_clzll(hbus->low_mmio_space));
 		low_base = hbus->low_mmio_res->start;
+		printk("cdx: prepopulate_bars: low: low_sz=0x%llx, total_sz=0x%llx, start=0x%llx\n",
+			(unsigned long long)low_size, (unsigned long long)hbus->low_mmio_space, (unsigned long long)hbus->low_mmio_res->start);
 	}
 
 	if (hbus->high_mmio_space) {
 		high_size = 1ULL <<
 			(63 - __builtin_clzll(hbus->high_mmio_space));
 		high_base = hbus->high_mmio_res->start;
+		printk("cdx: prepopulate_bars: hi: hi_sz=0x%llx, total_sz=0x%llx, start=0x%llx\n",
+			(unsigned long long)high_size, (unsigned long long)hbus->high_mmio_space, (unsigned long long)hbus->high_mmio_res->start);
 	}
 
 	spin_lock_irqsave(&hbus->device_list_lock, flags);
@@ -1515,6 +1526,8 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
 		for (i = 0; i < 6; i++) {
 			completion->hpdev->probed_bar[i] =
 				q_res_req->probed_bar[i];
+			printk("cdx: q_resource_requirements: hpdev=%px, res_req->probed_bar[%d] = 0x%x\n",
+				completion->hpdev, i, q_res_req->probed_bar[i]);
 		}
 	}
 
@@ -2145,6 +2158,9 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
 
 	if (hbus->low_mmio_space) {
 		align = 1ULL << (63 - __builtin_clzll(hbus->low_mmio_space));
+		printk("cdx: hv_pci_allocate_bridge_windows: low: align=0x%llx, total_sz=0x%llx\n",
+			(unsigned long long)align, (unsigned long long)hbus->low_mmio_space);
+
 		ret = vmbus_allocate_mmio(&hbus->low_mmio_res, hbus->hdev, 0,
 					  (u64)(u32)0xffffffff,
 					  hbus->low_mmio_space,
@@ -2165,6 +2181,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
 
 	if (hbus->high_mmio_space) {
 		align = 1ULL << (63 - __builtin_clzll(hbus->high_mmio_space));
+		printk("cdx: hv_pci_allocate_bridge_windows: hi: align=0x%llx, total_sz=0x%llx\n",
+			(unsigned long long)align, (unsigned long long)hbus->high_mmio_space);
 		ret = vmbus_allocate_mmio(&hbus->high_mmio_res, hbus->hdev,
 					  0x100000000, -1,
 					  hbus->high_mmio_space, align,
