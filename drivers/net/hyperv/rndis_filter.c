@@ -478,7 +478,6 @@ static int rndis_filter_query_device(struct rndis_device *dev, u32 oid,
 	struct rndis_query_request *query;
 	struct rndis_query_complete *query_complete;
 	int ret = 0;
-	unsigned long t;
 
 	if (!result)
 		return -EINVAL;
@@ -515,11 +514,7 @@ static int rndis_filter_query_device(struct rndis_device *dev, u32 oid,
 	if (ret != 0)
 		goto cleanup;
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-	if (t == 0) {
-		ret = -ETIMEDOUT;
-		goto cleanup;
-	}
+	wait_for_completion(&request->wait_event);
 
 	/* Copy the response back */
 	query_complete = &request->response_msg.msg.query_complete;
@@ -569,7 +564,6 @@ int rndis_filter_set_device_mac(struct hv_device *hdev, char *mac)
 	u32 extlen = sizeof(struct rndis_config_parameter_info) +
 		2*NWADR_STRLEN + 4*ETH_ALEN;
 	int ret;
-	unsigned long t;
 
 	request = get_rndis_request(rdev, RNDIS_MSG_SET,
 		RNDIS_MESSAGE_SIZE(struct rndis_set_request) + extlen);
@@ -610,21 +604,13 @@ int rndis_filter_set_device_mac(struct hv_device *hdev, char *mac)
 	if (ret != 0)
 		goto cleanup;
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-	if (t == 0) {
-		netdev_err(ndev, "timeout before we got a set response...\n");
-		/*
-		 * can't put_rndis_request, since we may still receive a
-		 * send-completion.
-		 */
-		return -EBUSY;
-	} else {
-		set_complete = &request->response_msg.msg.set_complete;
-		if (set_complete->status != RNDIS_STATUS_SUCCESS) {
-			netdev_err(ndev, "Fail to set MAC on host side:0x%x\n",
-				   set_complete->status);
-			ret = -EINVAL;
-		}
+	wait_for_completion(&request->wait_event);
+
+	set_complete = &request->response_msg.msg.set_complete;
+	if (set_complete->status != RNDIS_STATUS_SUCCESS) {
+		netdev_err(ndev, "Fail to set MAC on host side:0x%x\n",
+			   set_complete->status);
+		ret = -EINVAL;
 	}
 
 cleanup:
@@ -645,7 +631,6 @@ rndis_filter_set_offload_params(struct hv_device *hdev,
 	struct rndis_set_complete *set_complete;
 	u32 extlen = sizeof(struct ndis_offload_params);
 	int ret;
-	unsigned long t;
 	u32 vsp_version = nvdev->nvsp_version;
 
 	if (vsp_version <= NVSP_PROTOCOL_VERSION_4) {
@@ -679,20 +664,13 @@ rndis_filter_set_offload_params(struct hv_device *hdev,
 	if (ret != 0)
 		goto cleanup;
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-	if (t == 0) {
-		netdev_err(ndev, "timeout before we got aOFFLOAD set response...\n");
-		/* can't put_rndis_request, since we may still receive a
-		 * send-completion.
-		 */
-		return -EBUSY;
-	} else {
-		set_complete = &request->response_msg.msg.set_complete;
-		if (set_complete->status != RNDIS_STATUS_SUCCESS) {
-			netdev_err(ndev, "Fail to set offload on host side:0x%x\n",
-				   set_complete->status);
-			ret = -EINVAL;
-		}
+	wait_for_completion(&request->wait_event);
+
+	set_complete = &request->response_msg.msg.set_complete;
+	if (set_complete->status != RNDIS_STATUS_SUCCESS) {
+		netdev_err(ndev, "Fail to set offload on host side:0x%x\n",
+			   set_complete->status);
+		ret = -EINVAL;
 	}
 
 cleanup:
@@ -720,7 +698,6 @@ static int rndis_filter_set_rss_param(struct rndis_device *rdev, int num_queue)
 	u32 *itab;
 	u8 *keyp;
 	int i, ret;
-	unsigned long t;
 
 	request = get_rndis_request(
 			rdev, RNDIS_MSG_SET,
@@ -763,20 +740,13 @@ static int rndis_filter_set_rss_param(struct rndis_device *rdev, int num_queue)
 	if (ret != 0)
 		goto cleanup;
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-	if (t == 0) {
-		netdev_err(ndev, "timeout before we got a set response...\n");
-		/* can't put_rndis_request, since we may still receive a
-		 * send-completion.
-		 */
-		return -ETIMEDOUT;
-	} else {
-		set_complete = &request->response_msg.msg.set_complete;
-		if (set_complete->status != RNDIS_STATUS_SUCCESS) {
-			netdev_err(ndev, "Fail to set RSS parameters:0x%x\n",
-				   set_complete->status);
-			ret = -EINVAL;
-		}
+	wait_for_completion(&request->wait_event);
+
+	set_complete = &request->response_msg.msg.set_complete;
+	if (set_complete->status != RNDIS_STATUS_SUCCESS) {
+		netdev_err(ndev, "Fail to set RSS parameters:0x%x\n",
+			   set_complete->status);
+		ret = -EINVAL;
 	}
 
 cleanup:
@@ -805,7 +775,6 @@ int rndis_filter_set_packet_filter(struct rndis_device *dev, u32 new_filter)
 	struct rndis_set_complete *set_complete;
 	u32 status;
 	int ret;
-	unsigned long t;
 	struct net_device *ndev;
 
 	ndev = dev->net_dev->ndev;
@@ -831,26 +800,14 @@ int rndis_filter_set_packet_filter(struct rndis_device *dev, u32 new_filter)
 	if (ret != 0)
 		goto cleanup;
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+	wait_for_completion(&request->wait_event);
 
-	if (t == 0) {
-		netdev_err(ndev,
-			"timeout before we got a set response...\n");
-		ret = -ETIMEDOUT;
-		/*
-		 * We can't deallocate the request since we may still receive a
-		 * send completion for it.
-		 */
-		goto exit;
-	} else {
-		set_complete = &request->response_msg.msg.set_complete;
-		status = set_complete->status;
-	}
+	set_complete = &request->response_msg.msg.set_complete;
+	status = set_complete->status;
 
 cleanup:
 	if (request)
 		put_rndis_request(dev, request);
-exit:
 	return ret;
 }
 
@@ -862,7 +819,6 @@ static int rndis_filter_init_device(struct rndis_device *dev)
 	struct rndis_initialize_complete *init_complete;
 	u32 status;
 	int ret;
-	unsigned long t;
 	struct netvsc_device *nvdev = dev->net_dev;
 
 	request = get_rndis_request(dev, RNDIS_MSG_INIT,
@@ -887,12 +843,7 @@ static int rndis_filter_init_device(struct rndis_device *dev)
 	}
 
 
-	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
-
-	if (t == 0) {
-		ret = -ETIMEDOUT;
-		goto cleanup;
-	}
+	wait_for_completion(&request->wait_event);
 
 	init_complete = &request->response_msg.msg.init_complete;
 	status = init_complete->status;
@@ -1166,11 +1117,8 @@ int rndis_filter_device_add(struct hv_device *dev,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
 	if (ret)
 		goto out;
-	t = wait_for_completion_timeout(&net_device->channel_init_wait, 5*HZ);
-	if (t == 0) {
-		ret = -ETIMEDOUT;
-		goto out;
-	}
+	wait_for_completion(&net_device->channel_init_wait);
+
 	if (init_packet->msg.v5_msg.subchn_comp.status !=
 	    NVSP_STAT_SUCCESS) {
 		ret = -ENODEV;
@@ -1190,9 +1138,9 @@ int rndis_filter_device_add(struct hv_device *dev,
 	spin_unlock_irqrestore(&net_device->sc_lock, flags);
 
 	while (net_device->num_sc_offered != 0) {
-		t = wait_for_completion_timeout(&net_device->channel_init_wait, 10*HZ);
+		t = wait_for_completion_timeout(&net_device->channel_init_wait, 60*HZ);
 		if (t == 0)
-			WARN(1, "Netvsc: Waiting for sub-channel processing");
+			WARN(1, "Netvsc: Waiting for sub-channel processing!");
 	}
 out:
 	if (ret) {
