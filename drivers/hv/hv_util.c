@@ -215,6 +215,8 @@ static struct {
 	spinlock_t			lock;
 } host_ts;
 
+extern struct clocksource *hyperv_cs;
+
 static struct timespec64 hv_get_adj_host_time(void)
 {
 	struct timespec64 ts;
