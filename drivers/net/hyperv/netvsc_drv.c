@@ -2219,6 +2219,7 @@ static int netvsc_probe(struct hv_device *dev,
 	else
 		net->max_mtu = ETH_DATA_LEN;
 
+	msleep(200);
 	rtnl_lock();
 	ret = register_netdevice(net);
 	if (ret != 0) {
