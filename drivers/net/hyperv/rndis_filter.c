@@ -1079,6 +1079,7 @@ void rndis_set_subchannel(struct work_struct *w)
 	ndev_ctx = netdev_priv(ndev);
 	hv_dev = ndev_ctx->device_ctx;
 
+	msleep(10);
 	memset(init_packet, 0, sizeof(struct nvsp_message));
 	init_packet->hdr.msg_type = NVSP_MSG5_TYPE_SUBCHANNEL;
 	init_packet->msg.v5_msg.subchn_req.op = NVSP_SUBCHANNEL_ALLOCATE;
