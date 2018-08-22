@@ -1098,9 +1098,46 @@ int rndis_set_subchannel(struct net_device *ndev, struct netvsc_device *nvdev)
 	nvdev->num_chn = 1 +
 		init_packet->msg.v5_msg.subchn_comp.num_subchannels;
 
+	/* drop the rtnl lock to avoid a tricky deadlock:
+	 *
+	 * If we hold the rtnl lock and wait for the subchannels to all be
+	 * present, netvsc_probe() may be blocked because it can't acquire
+	 * the rtnl lock.
+	 *
+	 * Before netvsc_probe() is called, the higher level device driver
+	 * code, like __driver_attach(), has acquired the hv_dev->device.mutex
+	 * mutex.
+	 *
+	 * At this time, the primary channel's "offer" handling may be still
+	 * running, and trying to load the a driver for the NIC device: this
+	 * needs to acquire the hv_dev->device.mutex in __device_attach(),
+	 * but since netvsc_probe() may be blocked with the mutex held,
+	 * vmbus_onoffer() -> ... -> vmbus_device_register() -> ... ->
+	 * __device_attach() can not finish.
+	 *
+	 * The VMBus "offer" handling is serialized, so all the subchannels
+	 * of the NIC can't be handled, meaning we can be blocked in the
+	 * below wait_event() in this function rndis_set_subchannel().
+	 *
+	 * Now we can meet a circular wait condition and hence hit deadlock.
+	 * We can avoid the deadlock by temperarily dropping the rtnl lock
+	 * and regaining it after the wait_event().
+	 *
+	 * Note: the deadlock can't reproduce every time, because there is
+	 * a race between netvsc_probe() and rndis_set_subchannel() which
+	 * runs in a workqueue. Usually netvsc_probe() can acquire the rtnl
+	 * lock first and finish quickly; later vmbus_onmessage() can acquire
+	 * hv_dev->device.mutex and finish; finally netvsc_subchan_work() ->
+	 * rndis_set_subchannel() can finish and we don't see the deadlock.
+	 */
+	rtnl_unlock();
+
 	/* wait for all sub channels to open */
 	wait_event(nvdev->subchan_open,
 		   atomic_read(&nvdev->open_chn) == nvdev->num_chn);
+
+	/* regain the lock */
+	rtnl_lock();
 
 	/* ignore failues from setting rss parameters, still have channels */
 	rndis_filter_set_rss_param(rdev, netvsc_hash_key);
