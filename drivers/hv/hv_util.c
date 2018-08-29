@@ -34,36 +34,68 @@
 #define SD_MINOR	0
 #define SD_VERSION	(SD_MAJOR << 16 | SD_MINOR)
 
-#define SD_WS2008_MAJOR		1
-#define SD_WS2008_VERSION	(SD_WS2008_MAJOR << 16 | SD_MINOR)
+#define SD_MAJOR_1	1
+#define SD_VERSION_1	(SD_MAJOR_1 << 16 | SD_MINOR)
 
-#define TS_MAJOR	3
+#define TS_MAJOR	4
 #define TS_MINOR	0
 #define TS_VERSION	(TS_MAJOR << 16 | TS_MINOR)
 
-#define TS_WS2008_MAJOR		1
-#define TS_WS2008_VERSION	(TS_WS2008_MAJOR << 16 | TS_MINOR)
+#define TS_MAJOR_1	1
+#define TS_VERSION_1	(TS_MAJOR_1 << 16 | TS_MINOR)
+
+#define TS_MAJOR_3	3
+#define TS_VERSION_3	(TS_MAJOR_3 << 16 | TS_MINOR)
 
 #define HB_MAJOR	3
-#define HB_MINOR 0
+#define HB_MINOR	0
 #define HB_VERSION	(HB_MAJOR << 16 | HB_MINOR)
 
-#define HB_WS2008_MAJOR	1
-#define HB_WS2008_VERSION	(HB_WS2008_MAJOR << 16 | HB_MINOR)
+#define HB_MAJOR_1	1
+#define HB_VERSION_1	(HB_MAJOR_1 << 16 | HB_MINOR)
 
 static int sd_srv_version;
 static int ts_srv_version;
 static int hb_srv_version;
-static int util_fw_version;
+
+#define SD_VER_COUNT 2
+static const int sd_versions[] = {
+	SD_VERSION,
+	SD_VERSION_1
+};
+
+#define TS_VER_COUNT 3
+static const int ts_versions[] = {
+	TS_VERSION,
+	TS_VERSION_3,
+	TS_VERSION_1
+};
+
+#define HB_VER_COUNT 2
+static const int hb_versions[] = {
+	HB_VERSION,
+	HB_VERSION_1
+};
+
+#define FW_VER_COUNT 2
+static const int fw_versions[] = {
+	UTIL_FW_VERSION,
+	UTIL_WS2K8_FW_VERSION
+};
 
 static void shutdown_onchannelcallback(void *context);
 static struct hv_util_service util_shutdown = {
 	.util_cb = shutdown_onchannelcallback,
 };
 
+static int hv_timesync_init(struct hv_util_service *srv);
+static void hv_timesync_deinit(void);
+
 static void timesync_onchannelcallback(void *context);
 static struct hv_util_service util_timesynch = {
 	.util_cb = timesync_onchannelcallback,
+	.util_init = hv_timesync_init,
+	.util_deinit = hv_timesync_deinit,
 };
 
 static void heartbeat_onchannelcallback(void *context);
@@ -110,7 +142,6 @@ static void shutdown_onchannelcallback(void *context)
 	struct shutdown_msg_data *shutdown_msg;
 
 	struct icmsg_hdr *icmsghdrp;
-	struct icmsg_negotiate *negop = NULL;
 
 	vmbus_recvpacket(channel, shut_txf_buf,
 			 PAGE_SIZE, &recvlen, &requestid);
@@ -120,9 +151,14 @@ static void shutdown_onchannelcallback(void *context)
 			sizeof(struct vmbuspipe_hdr)];
 
 		if (icmsghdrp->icmsgtype == ICMSGTYPE_NEGOTIATE) {
-			vmbus_prep_negotiate_resp(icmsghdrp, negop,
-					shut_txf_buf, util_fw_version,
-					sd_srv_version);
+			if (vmbus_prep_negotiate_resp(icmsghdrp, shut_txf_buf,
+					fw_versions, FW_VER_COUNT,
+					sd_versions, SD_VER_COUNT,
+					NULL, &sd_srv_version)) {
+				pr_info("Shutdown IC version %d.%d\n",
+					sd_srv_version >> 16,
+					sd_srv_version & 0xFFFF);
+			}
 		} else {
 			shutdown_msg =
 				(struct shutdown_msg_data *)&shut_txf_buf[
@@ -161,35 +197,43 @@ static void shutdown_onchannelcallback(void *context)
 }
 
 /*
- * Set guest time to host UTC time.
- */
-static inline void do_adj_guesttime(u64 hosttime)
-{
-	s64 host_tns;
-	struct timespec host_ts;
-
-	host_tns = (hosttime - WLTIMEDELTA) * 100;
-	host_ts = ns_to_timespec(host_tns);
-
-	do_settimeofday(&host_ts);
-}
-
-/*
  * Set the host time in a process context.
  */
 
 struct adj_time_work {
 	struct work_struct work;
 	u64	host_time;
+	u64	ref_time;
+	u8	flags;
 };
 
 static void hv_set_host_time(struct work_struct *work)
 {
 	struct adj_time_work	*wrk;
+	s64 host_tns;
+	u64 newtime;
+	struct timespec64 host_ts;
 
 	wrk = container_of(work, struct adj_time_work, work);
-	do_adj_guesttime(wrk->host_time);
-	kfree(wrk);
+
+	newtime = wrk->host_time;
+	if (ts_srv_version > TS_VERSION_3) {
+		/*
+		 * Some latency has been introduced since Hyper-V generated
+		 * its time sample. Take that latency into account before
+		 * using TSC reference time sample from Hyper-V.
+		 *
+		 * This sample is given by TimeSync v4 and above hosts.
+		 */
+		u64 current_tick;
+
+		rdmsrl(HV_X64_MSR_TIME_REF_COUNT, current_tick);
+		newtime += (current_tick - wrk->ref_time);
+	}
+	host_tns = (newtime - WLTIMEDELTA) * 100;
+	host_ts = ns_to_timespec64(host_tns);
+
+	do_settimeofday64(&host_ts);
 }
 
 /*
@@ -198,33 +242,31 @@ static void hv_set_host_time(struct work_struct *work)
  * ICTIMESYNCFLAG_SYNC flag bit indicates reboot, restore events of the VM.
  * After reboot the flag ICTIMESYNCFLAG_SYNC is included in the first time
  * message after the timesync channel is opened. Since the hv_utils module is
- * loaded after hv_vmbus, the first message is usually missed. The other
- * thing is, systime is automatically set to emulated hardware clock which may
- * not be UTC time or in the same time zone. So, to override these effects, we
- * use the first 50 time samples for initial system time setting.
+ * loaded after hv_vmbus, the first message is usually missed. This bit is
+ * considered a hard request to discipline the clock.
+ *
+ * ICTIMESYNCFLAG_SAMPLE bit indicates a time sample from host. This is
+ * typically used as a hint to the guest. The guest is under no obligation
+ * to discipline the clock.
  */
-static inline void adj_guesttime(u64 hosttime, u8 flags)
+static struct adj_time_work  wrk;
+static inline void adj_guesttime(u64 hosttime, u64 reftime, u8 flags)
 {
-	struct adj_time_work    *wrk;
-	static s32 scnt = 50;
 
-	wrk = kmalloc(sizeof(struct adj_time_work), GFP_ATOMIC);
-	if (wrk == NULL)
+	/*
+	 * This check is safe since we are executing in the
+	 * interrupt context and time synch messages are always
+	 * delivered on the same CPU.
+	 */
+	if (work_pending(&wrk.work))
 		return;
 
-	wrk->host_time = hosttime;
-	if ((flags & ICTIMESYNCFLAG_SYNC) != 0) {
-		INIT_WORK(&wrk->work, hv_set_host_time);
-		schedule_work(&wrk->work);
-		return;
+	wrk.host_time = hosttime;
+	wrk.ref_time = reftime;
+	wrk.flags = flags;
+	if ((flags & (ICTIMESYNCFLAG_SYNC | ICTIMESYNCFLAG_SAMPLE)) != 0) {
+		schedule_work(&wrk.work);
 	}
-
-	if ((flags & ICTIMESYNCFLAG_SAMPLE) != 0 && scnt > 0) {
-		scnt--;
-		INIT_WORK(&wrk->work, hv_set_host_time);
-		schedule_work(&wrk->work);
-	} else
-		kfree(wrk);
 }
 
 /*
@@ -237,8 +279,8 @@ static void timesync_onchannelcallback(void *context)
 	u64 requestid;
 	struct icmsg_hdr *icmsghdrp;
 	struct ictimesync_data *timedatap;
+	struct ictimesync_ref_data *refdata;
 	u8 *time_txf_buf = util_timesynch.recv_buffer;
-	struct icmsg_negotiate *negop = NULL;
 
 	vmbus_recvpacket(channel, time_txf_buf,
 			 PAGE_SIZE, &recvlen, &requestid);
@@ -248,15 +290,33 @@ static void timesync_onchannelcallback(void *context)
 				sizeof(struct vmbuspipe_hdr)];
 
 		if (icmsghdrp->icmsgtype == ICMSGTYPE_NEGOTIATE) {
-			vmbus_prep_negotiate_resp(icmsghdrp, negop,
-						time_txf_buf,
-						util_fw_version,
-						ts_srv_version);
+			if (vmbus_prep_negotiate_resp(icmsghdrp, time_txf_buf,
+						fw_versions, FW_VER_COUNT,
+						ts_versions, TS_VER_COUNT,
+						NULL, &ts_srv_version)) {
+				pr_info("TimeSync IC version %d.%d\n",
+					ts_srv_version >> 16,
+					ts_srv_version & 0xFFFF);
+			}
 		} else {
-			timedatap = (struct ictimesync_data *)&time_txf_buf[
-				sizeof(struct vmbuspipe_hdr) +
-				sizeof(struct icmsg_hdr)];
-			adj_guesttime(timedatap->parenttime, timedatap->flags);
+			if (ts_srv_version > TS_VERSION_3) {
+				refdata = (struct ictimesync_ref_data *)
+					&time_txf_buf[
+					sizeof(struct vmbuspipe_hdr) +
+					sizeof(struct icmsg_hdr)];
+
+				adj_guesttime(refdata->parenttime,
+						refdata->vmreferencetime,
+						refdata->flags);
+			} else {
+				timedatap = (struct ictimesync_data *)
+					&time_txf_buf[
+					sizeof(struct vmbuspipe_hdr) +
+					sizeof(struct icmsg_hdr)];
+				adj_guesttime(timedatap->parenttime,
+						0,
+						timedatap->flags);
+			}
 		}
 
 		icmsghdrp->icflags = ICMSGHDRFLAG_TRANSACTION
@@ -281,7 +341,6 @@ static void heartbeat_onchannelcallback(void *context)
 	struct icmsg_hdr *icmsghdrp;
 	struct heartbeat_msg_data *heartbeat_msg;
 	u8 *hbeat_txf_buf = util_heartbeat.recv_buffer;
-	struct icmsg_negotiate *negop = NULL;
 
 	while (1) {
 
@@ -295,9 +354,16 @@ static void heartbeat_onchannelcallback(void *context)
 				sizeof(struct vmbuspipe_hdr)];
 
 		if (icmsghdrp->icmsgtype == ICMSGTYPE_NEGOTIATE) {
-			vmbus_prep_negotiate_resp(icmsghdrp, negop,
-				hbeat_txf_buf, util_fw_version,
-				hb_srv_version);
+			if (vmbus_prep_negotiate_resp(icmsghdrp,
+					hbeat_txf_buf,
+					fw_versions, FW_VER_COUNT,
+					hb_versions, HB_VER_COUNT,
+					NULL, &hb_srv_version)) {
+
+				pr_info("Heartbeat IC version %d.%d\n",
+					hb_srv_version >> 16,
+					hb_srv_version & 0xFFFF);
+			}
 		} else {
 			heartbeat_msg =
 				(struct heartbeat_msg_data *)&hbeat_txf_buf[
@@ -326,6 +392,7 @@ static int util_probe(struct hv_device *dev,
 	srv->recv_buffer = kmalloc(PAGE_SIZE * 4, GFP_KERNEL);
 	if (!srv->recv_buffer)
 		return -ENOMEM;
+	srv->channel = dev->channel;
 	if (srv->util_init) {
 		ret = srv->util_init(srv);
 		if (ret) {
@@ -345,25 +412,6 @@ static int util_probe(struct hv_device *dev,
 	set_channel_read_state(dev->channel, false);
 
 	hv_set_drvdata(dev, srv);
-
-	/*
-	 * Based on the host; initialize the framework and
-	 * service version numbers we will negotiate.
-	 */
-	switch (vmbus_proto_version) {
-	case (VERSION_WS2008):
-		util_fw_version = UTIL_WS2K8_FW_VERSION;
-		sd_srv_version = SD_WS2008_VERSION;
-		ts_srv_version = TS_WS2008_VERSION;
-		hb_srv_version = HB_WS2008_VERSION;
-		break;
-
-	default:
-		util_fw_version = UTIL_FW_VERSION;
-		sd_srv_version = SD_VERSION;
-		ts_srv_version = TS_VERSION;
-		hb_srv_version = HB_VERSION;
-	}
 
 	ret = vmbus_open(dev->channel, 4 * PAGE_SIZE, 4 * PAGE_SIZE, NULL, 0,
 			srv->util_cb, dev->channel);
@@ -429,6 +477,17 @@ static  struct hv_driver util_drv = {
 	.probe =  util_probe,
 	.remove =  util_remove,
 };
+
+static int hv_timesync_init(struct hv_util_service *srv)
+{
+	INIT_WORK(&wrk.work, hv_set_host_time);
+	return 0;
+}
+
+static void hv_timesync_deinit(void)
+{
+	cancel_work_sync(&wrk.work);
+}
 
 static int __init init_hyperv_utils(void)
 {
