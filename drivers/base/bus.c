@@ -17,6 +17,7 @@
 #include <linux/string.h>
 #include <linux/mutex.h>
 #include <linux/sysfs.h>
+#include <linux/delay.h>
 #include "base.h"
 #include "power/power.h"
 
@@ -517,8 +518,12 @@ void bus_probe_device(struct device *dev)
 	if (!bus)
 		return;
 
-	if (bus->p->drivers_autoprobe)
+	if (bus->p->drivers_autoprobe) {
+		if (strcmp(bus->name, "vmbus") == 0)
+			ssleep(1); //sleep 1s, so udev can load hv_netvsc first.
+
 		device_initial_probe(dev);
+	}
 
 	mutex_lock(&bus->p->mutex);
 	list_for_each_entry(sif, &bus->p->interfaces, node)

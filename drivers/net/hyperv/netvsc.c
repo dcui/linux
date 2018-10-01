@@ -82,6 +82,10 @@ static void netvsc_subchan_work(struct work_struct *w)
 		return;
 	}
 
+	// sleep 3 seconds with the lock held.
+	// Let NIC-2's netvsc_probe() hang, and then we will hang here.
+	ssleep(3);
+
 	rdev = nvdev->extension;
 	if (rdev) {
 		ret = rndis_set_subchannel(rdev->ndev, nvdev);
