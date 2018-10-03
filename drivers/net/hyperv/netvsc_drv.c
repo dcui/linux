@@ -944,6 +944,9 @@ static int netvsc_set_channels(struct net_device *net,
 	struct netvsc_device_info device_info;
 	int ret;
 
+	if (net_device_ctx->initial_work_ongoing)
+		return -ERESTARTSYS;
+
 	/* We do not support separate count for rx, tx, or other */
 	if (count == 0 ||
 	    channels->rx_count || channels->tx_count || channels->other_count)
@@ -1046,6 +1049,9 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 	int orig_mtu = ndev->mtu;
 	struct netvsc_device_info device_info;
 	int ret = 0;
+
+	if (ndevctx->initial_work_ongoing)
+		return -ERESTARTSYS;
 
 	if (!nvdev || nvdev->destroy)
 		return -ENODEV;
@@ -1695,6 +1701,9 @@ static int netvsc_set_ringparam(struct net_device *ndev,
 	u32 new_tx, new_rx;
 	int ret = 0;
 
+	if (ndevctx->initial_work_ongoing)
+		return -ERESTARTSYS;
+
 	if (!nvdev || nvdev->destroy)
 		return -ENODEV;
 
@@ -2224,8 +2233,10 @@ static int netvsc_probe(struct hv_device *dev,
 	 */
 	rtnl_lock();
 
-	if (nvdev->num_chn > 1)
+	if (nvdev->num_chn > 1) {
+		net_device_ctx->initial_work_ongoing = true;
 		schedule_work(&nvdev->subchan_work);
+	}
 
 	/* hw_features computed in rndis_netdev_set_hwcaps() */
 	net->features = net->hw_features |
