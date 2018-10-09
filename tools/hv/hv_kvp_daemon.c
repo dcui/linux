@@ -247,7 +247,8 @@ static int kvp_file_init(void)
 	for (i = 0; i < KVP_POOL_COUNT; i++) {
 		fname = kvp_file_info[i].fname;
 		sprintf(fname, "%s/.kvp_pool_%d", KVP_CONFIG_LOC, i);
-		fd = open(fname, O_RDWR | O_CREAT | O_CLOEXEC, 0644 /* rw-r--r-- */);
+		fd = open(fname, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC,
+			  0644 /* rw-r--r-- */);
 
 		if (fd == -1)
 			return 1;
