@@ -1177,7 +1177,7 @@ static int kvp_set_ip_info(char *if_name, struct hv_kvp_ipaddr_value *new_val)
 	int error = 0;
 	char if_file[PATH_MAX];
 	FILE *file;
-	char cmd[PATH_MAX];
+	char cmd[PATH_MAX * 2];
 	char *mac_addr;
 
 	/*
