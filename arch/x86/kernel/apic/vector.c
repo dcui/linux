@@ -69,6 +69,14 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
 }
 EXPORT_SYMBOL_GPL(irqd_cfg);
 
+struct cpumask *irq_data_get_effective_affinity_mask(struct irq_data *d)
+{
+	struct apic_chip_data *data = apic_chip_data(d);
+
+	return data ? data->domain : NULL;
+}
+EXPORT_SYMBOL_GPL(irq_data_get_effective_affinity_mask);
+
 struct irq_cfg *irq_cfg(unsigned int irq)
 {
 	return irqd_cfg(irq_get_irq_data(irq));
