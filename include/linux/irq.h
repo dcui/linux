@@ -750,6 +750,8 @@ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
 	return d->common->affinity;
 }
 
+struct cpumask *irq_data_get_effective_affinity_mask(struct irq_data *d);
+
 static inline void irq_data_update_effective_affinity(struct irq_data *d,
 						      const struct cpumask *m)
 {
