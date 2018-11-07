@@ -638,17 +638,24 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
 	struct hv_device *device = new_sc->primary_channel->device_obj;
 	struct storvsc_device *stor_device;
 	struct vmstorage_channel_properties props;
+	static int reentry;
+	int ret;
 
 	stor_device = get_out_stor_device(device);
 	if (!stor_device)
 		return;
+
+	if (reentry == 0) {
+		++reentry;
+		ssleep(1); //wait for handle_multichannel_storage to set "stor_device->open_sub_channel = true";
+	}
 
 	if (stor_device->open_sub_channel == false)
 		return;
 
 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
 
-	vmbus_open(new_sc,
+	ret = vmbus_open(new_sc,
 		   storvsc_ringbuffer_size,
 		   storvsc_ringbuffer_size,
 		   (void *)&props,
@@ -726,6 +733,10 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
 	 * may trigger the callback.
 	 */
 	stor_device->open_sub_channel = true;
+	ssleep(2);
+	//let's run handle_sc_creation() again:
+	//vmbus_open() now will return -EINVAL due to the incorrect channel state,
+	//and then will vmbus_free_ring() the channel, causing panic...
 	vmbus_are_subchannels_present(device->channel);
 }
 
