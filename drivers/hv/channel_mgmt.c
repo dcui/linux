@@ -518,6 +518,8 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 		if (vmbus_add_channel_kobj(dev, newchannel))
 			goto err_free_chan;
 
+		//work around the storvsc sub-channel race
+		msleep(100);
 		if (channel->sc_creation_callback != NULL)
 			channel->sc_creation_callback(newchannel);
 		newchannel->probe_done = true;

@@ -163,6 +163,9 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 	/* Establish the gpadl for the ring buffer */
 	newchannel->ringbuffer_gpadlhandle = 0;
 
+       printk("cdx: vmbus_open: channel.id=%d, sz= %d KB (%d MB)\n", newchannel->offermsg.child_relid,
+               newchannel->ringbuffer_pagecount * 4,
+               newchannel->ringbuffer_pagecount * 4/1024);
 	err = vmbus_establish_gpadl(newchannel,
 				    page_address(newchannel->ringbuffer_page),
 				    (send_pages + recv_pages) << PAGE_SHIFT,
@@ -459,6 +462,9 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
 	u32 next_gpadl_handle;
 	unsigned long flags;
 	int ret = 0;
+       static unsigned long long total_gpadl_requested;
+       static unsigned long long total_gpadl_got;
+
 
 	next_gpadl_handle =
 		(atomic_inc_return(&vmbus_connection.next_gpadl_handle) - 1);
@@ -480,6 +486,7 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
 	list_add_tail(&msginfo->msglistentry,
 		      &vmbus_connection.chn_msg_list);
 
+	total_gpadl_requested += size;
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
 	if (channel->rescind) {
@@ -515,16 +522,38 @@ int vmbus_establish_gpadl(struct vmbus_channel *channel, void *kbuffer,
 
 	}
 	wait_for_completion(&msginfo->waitevent);
+       printk("cdx: vmbus_establish_gpadl:req:relid=%u, gpadl=%u; resp:relid=%d, gpadl=%d, status=0x%x\n",
+               channel->offermsg.child_relid, next_gpadl_handle,
+               msginfo->response.gpadl_created.child_relid,
+               msginfo->response.gpadl_created.gpadl,
+               msginfo->response.gpadl_created.creation_status
+               );
+
 
 	if (channel->rescind) {
 		ret = -ENODEV;
 		goto cleanup;
 	}
 
+       if (msginfo->response.gpadl_created.creation_status != 0) {
+             ret = -EDQUOT;
+             goto cleanup;
+       }
+
 	/* At this point, we received the gpadl created msg */
 	*gpadl_handle = gpadlmsg->gpadl;
 
+       spin_lock_irqsave(&vmbus_connection.channelmsg_lock, flags);
+       total_gpadl_got += size;
+       spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
+
 cleanup:
+       printk("cdx: total: want= %lld KB, %lld MB; got = %lld KB, %lld MB\n",
+               total_gpadl_requested/1024,
+               total_gpadl_requested/1024/1024,
+               total_gpadl_got/1024,
+               total_gpadl_got/1024/1024
+               );
 	spin_lock_irqsave(&vmbus_connection.channelmsg_lock, flags);
 	list_del(&msginfo->msglistentry);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
