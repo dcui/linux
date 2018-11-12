@@ -271,6 +271,7 @@ static int netvsc_init_buf(struct hv_device *device,
 	 * channel.  Note: This call uses the vmbus connection rather
 	 * than the channel to establish the gpadl handle.
 	 */
+	printk("cdx: netvsc_init_buf: 1: device=%p, recv_sz= %d KB\n", device, net_device->recv_buf_size/1024);
 	ret = vmbus_establish_gpadl(device->channel, net_device->recv_buf,
 				    net_device->recv_buf_size,
 				    &net_device->recv_buf_gpadl_handle);
@@ -353,6 +354,7 @@ static int netvsc_init_buf(struct hv_device *device,
 	 * channel.  Note: This call uses the vmbus connection rather
 	 * than the channel to establish the gpadl handle.
 	 */
+	printk("cdx: netvsc_init_buf: 2: device=%p, send_sz= %d KB\n", device, net_device->send_buf_size/1024);
 	ret = vmbus_establish_gpadl(device->channel, net_device->send_buf,
 				    net_device->send_buf_size,
 				    &net_device->send_buf_gpadl_handle);
