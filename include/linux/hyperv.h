@@ -973,19 +973,6 @@ void vmbus_set_chn_rescind_callback(struct vmbus_channel *channel,
  */
 struct vmbus_channel *vmbus_get_outgoing_channel(struct vmbus_channel *primary);
 
-/*
- * Check if sub-channels have already been offerred. This API will be useful
- * when the driver is unloaded after establishing sub-channels. In this case,
- * when the driver is re-loaded, the driver would have to check if the
- * subchannels have already been established before attempting to request
- * the creation of sub-channels.
- * This function returns TRUE to indicate that subchannels have already been
- * created.
- * This function should be invoked after setting the callback function for
- * sub-channel creation.
- */
-bool vmbus_are_subchannels_present(struct vmbus_channel *primary);
-
 /* The format must be the same as struct vmdata_gpa_direct */
 struct vmbus_channel_packet_page_buffer {
 	u16 type;
