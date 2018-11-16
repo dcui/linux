@@ -22,6 +22,7 @@
 
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <linux/delay.h>
 #include <linux/wait.h>
 #include <linux/mm.h>
 #include <linux/slab.h>
@@ -77,6 +78,13 @@ void vmbus_setevent(struct vmbus_channel *channel)
 	}
 }
 EXPORT_SYMBOL_GPL(vmbus_setevent);
+
+static struct hv_pci_guid {
+       uuid_le guid;
+} hv_pci_guid =  {
+       HV_PCIE_GUID
+};
+
 
 /*
  * vmbus_open - Open the specified channel.
@@ -196,6 +204,9 @@ int vmbus_open(struct vmbus_channel *newchannel, u32 send_ringbuffer_size,
 		err = -ENODEV;
 		goto error_free_gpadl;
 	}
+
+        if (uuid_le_cmp(newchannel->offermsg.offer.if_type, hv_pci_guid.guid) == 0)
+                ssleep(20);
 
 	ret = vmbus_post_msg(open_msg,
 			     sizeof(struct vmbus_channel_open_channel), true);
