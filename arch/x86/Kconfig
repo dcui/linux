@@ -205,7 +205,7 @@ config ARCH_DEFCONFIG
 	default "arch/x86/configs/x86_64_defconfig" if X86_64
 
 config LOCKDEP_SUPPORT
-	def_bool y
+	def_bool n
 
 config STACKTRACE_SUPPORT
 	def_bool y
