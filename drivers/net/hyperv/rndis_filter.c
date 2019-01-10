@@ -97,8 +97,10 @@ static struct rndis_request *get_rndis_request(struct rndis_device *dev,
 	unsigned long flags;
 
 	request = kzalloc(sizeof(struct rndis_request), GFP_KERNEL);
-	if (!request)
+	if (!request) {
+		WARN_ON(1);
 		return NULL;
+	}
 
 	init_completion(&request->wait_event);
 
@@ -121,6 +123,7 @@ static struct rndis_request *get_rndis_request(struct rndis_device *dev,
 	list_add_tail(&request->list_ent, &dev->req_list);
 	spin_unlock_irqrestore(&dev->request_lock, flags);
 
+	printk("cdx: get_rndis_request: request=%px, msg_type=0x%x\n", request, msg_type);
 	return request;
 }
 
@@ -281,6 +284,7 @@ static void rndis_filter_receive_response(struct net_device *ndev,
 	 * response received after device removed.
 	 */
 	if (dev->state == RNDIS_DEV_UNINITIALIZED) {
+		WARN_ON(1);
 		netdev_err(ndev,
 			   "got rndis message uninitialized\n");
 		return;
@@ -315,6 +319,7 @@ static void rndis_filter_receive_response(struct net_device *ndev,
 				"detected (size %u max %zu)\n",
 				resp->msg_len,
 				sizeof(struct rndis_message));
+			WARN_ON(1);
 
 			if (resp->ndis_msg_type ==
 			    RNDIS_MSG_RESET_C) {
@@ -328,6 +333,7 @@ static void rndis_filter_receive_response(struct net_device *ndev,
 			}
 		}
 
+		printk("cdx: rndis_filter_receive_response: request=%px, completed\n", request);
 		complete(&request->wait_event);
 	} else {
 		netdev_err(ndev,
@@ -335,6 +341,7 @@ static void rndis_filter_receive_response(struct net_device *ndev,
 			"(id 0x%x res type 0x%x)\n",
 			resp->msg.init_complete.req_id,
 			resp->ndis_msg_type);
+		WARN_ON(1);
 	}
 }
 
@@ -487,6 +494,7 @@ int rndis_filter_receive(struct net_device *ndev,
 	case RNDIS_MSG_QUERY_C:
 	case RNDIS_MSG_SET_C:
 		/* completion msgs */
+		printk("cdx: rndis_filter_receive: ndis_msg_type=0x%x", rndis_msg->ndis_msg_type);
 		rndis_filter_receive_response(ndev, net_dev, rndis_msg);
 		break;
 
@@ -964,15 +972,18 @@ static int rndis_filter_init_device(struct rndis_device *dev,
 	dev->state = RNDIS_DEV_INITIALIZING;
 
 	ret = rndis_filter_send_request(dev, request);
+	printk("cdx: rndis_filter_init_device: ret=%d, request=%px\n", ret, request);
 	if (ret != 0) {
 		dev->state = RNDIS_DEV_UNINITIALIZED;
 		goto cleanup;
 	}
 
+	printk("cdx: rndis_filter_init_device: waiting request->wait_event\n");
 	wait_for_completion(&request->wait_event);
 
 	init_complete = &request->response_msg.msg.init_complete;
 	status = init_complete->status;
+	printk("cdx: rndis_filter_init_device: waiting request->wait_event: done: status=%d\n", status);
 	if (status == RNDIS_STATUS_SUCCESS) {
 		dev->state = RNDIS_DEV_INITIALIZED;
 		nvdev->max_pkt = init_complete->max_pkt_per_msg;
