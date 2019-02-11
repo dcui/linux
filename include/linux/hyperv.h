@@ -1550,10 +1550,10 @@ hv_pkt_iter_next(struct vmbus_channel *channel,
  * VF driver should reread them.
  */
 #define CONFIG_BLOCK_SIZE_MAX 128
-int hv_read_config_block(struct pci_dev *dev, void *buf, int buf_len,
-			 int block_id, int *bytes_returned);
-int hv_write_config_block(struct pci_dev *dev, void *buf, int len,
-			  int block_id);
+int hv_read_config_block(struct pci_dev *dev, void *buf, unsigned int buf_len,
+			 unsigned int block_id, unsigned int *bytes_returned);
+int hv_write_config_block(struct pci_dev *dev, void *buf, unsigned int len,
+			  unsigned int block_id);
 int hv_register_block_invalidate(struct pci_dev *dev, void *context,
 				 void (*block_invalidate)(void *context,
 							  u64 block_mask));

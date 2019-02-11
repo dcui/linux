@@ -885,8 +885,8 @@ static struct pci_ops hv_pcifront_ops = {
 struct hv_read_config_compl {
 	struct hv_pci_compl comp_pkt;
 	void *buf;
-	int len;
-	int bytes_returned;
+	unsigned int len;
+	unsigned int bytes_returned;
 };
 
 /**
@@ -902,11 +902,16 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 	struct hv_read_config_compl *comp = context;
 	struct pci_read_block_response *read_resp =
 		(struct pci_read_block_response *)resp;
-	int data_len;
+	unsigned int data_len, hdr_len;
 
-	data_len = resp_packet_size -
-		   offsetof(struct pci_read_block_response, bytes);
+	hdr_len = offsetof(struct pci_read_block_response, bytes);
 
+	if (resp_packet_size < hdr_len) {
+		comp->comp_pkt.completion_status = -1;
+		goto out;
+	}
+
+	data_len = resp_packet_size - hdr_len;
 	if (data_len > 0 && read_resp->status == 0) {
 		comp->bytes_returned = min(comp->len, data_len);
 		memcpy(comp->buf, read_resp->bytes, comp->bytes_returned);
@@ -914,6 +919,8 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 		comp->bytes_returned = 0;
 	}
 
+	comp->comp_pkt.completion_status = read_resp->status;
+out:
 	complete(&comp->comp_pkt.host_event);
 }
 
@@ -932,8 +939,8 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
  *
  * Return: 0 on success, -errno on failure
  */
-int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
-			 int block_id, int *bytes_returned)
+int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int buf_len,
+			 unsigned int block_id, unsigned int *bytes_returned)
 {
 	struct hv_pcibus_device *hbus =
 		container_of(pdev->bus->sysdata, struct hv_pcibus_device,
@@ -946,7 +953,7 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 	struct pci_read_block *read_blk;
 	int ret;
 
-	if (buf_len > CONFIG_BLOCK_SIZE_MAX)
+	if (buf_len == 0 || buf_len > CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.comp_pkt.host_event);
@@ -966,12 +973,25 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 			       sizeof(*read_blk), (unsigned long)&pkt.pkt,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret) {
-		wait_for_completion(&comp_pkt.comp_pkt.host_event);
-		*bytes_returned = comp_pkt.bytes_returned;
+	if (ret)
+		return ret;
+
+	ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
+	if (ret)
+		return ret;
+
+	if (comp_pkt.comp_pkt.completion_status != 0 ||
+	    comp_pkt.bytes_returned == 0) {
+		dev_err(&hbus->hdev->device,
+			"Read Config Block failed: 0x%x, bytes_returned=%d\n",
+			comp_pkt.comp_pkt.completion_status,
+			comp_pkt.bytes_returned);
+		return -EIO;
 	}
 
-	return ret;
+	*bytes_returned = comp_pkt.bytes_returned;
+
+	return 0;
 }
 EXPORT_SYMBOL(hv_read_config_block);
 
@@ -987,12 +1007,8 @@ static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
 {
 	struct hv_pci_compl *comp_pkt = context;
 
-	/*
-	 * The host side code is carefully written to guarantees the Write
-	 * Block request from the VM can never fail, but let's add a check
-	 * just in case.
-	 */
-	WARN_ON(resp->status != 0);
+	comp_pkt->completion_status = resp->status;
+	printk("cdx: hv_pci_write_config_compl: addr=%px, val=%x\n", &comp_pkt->completion_status,  comp_pkt->completion_status);
 	complete(&comp_pkt->host_event);
 }
 
@@ -1010,8 +1026,8 @@ static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
  *
  * Return: 0 on success, -errno on failure
  */
-int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
-			  int block_id)
+int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+			  unsigned int block_id)
 {
 	struct hv_pcibus_device *hbus =
 		container_of(pdev->bus->sysdata, struct hv_pcibus_device,
@@ -1019,13 +1035,14 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	struct {
 		struct pci_packet pkt;
 		char buf[sizeof(struct pci_write_block)];
+		u32 padding;
 	} pkt;
 	struct hv_pci_compl comp_pkt;
 	struct pci_write_block *write_blk;
 	u32 pkt_size;
 	int ret;
 
-	if (len > CONFIG_BLOCK_SIZE_MAX)
+	if (len == 0 || len > CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.host_event);
@@ -1040,14 +1057,28 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	write_blk->byte_count = len;
 	memcpy(write_blk->bytes, buf, len);
 	pkt_size = offsetof(struct pci_write_block, bytes) + len;
+	//TODO:
+	pkt_size += 4;
 
 	ret = vmbus_sendpacket(hbus->hdev->channel, write_blk, pkt_size,
 			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret)
-		wait_for_completion(&comp_pkt.host_event);
+	if (ret)
+		return ret;
 
-	return ret;
+	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event);
+	if (ret)
+		return ret;
+
+	printk("cdx: wait: done: addr=%px, val=%x\n", &comp_pkt.completion_status, comp_pkt.completion_status);
+	if (comp_pkt.completion_status != 0) {
+		dev_err(&hbus->hdev->device,
+			"Write Config Block failed: 0x%x\n",
+			comp_pkt.completion_status);
+		return -EIO;
+	}
+
+	return 0;
 }
 EXPORT_SYMBOL(hv_write_config_block);
 
@@ -1333,6 +1364,7 @@ static u32 hv_compose_msi_req_v2(
  * response supplies a data value and address to which that data
  * should be written to trigger that interrupt.
  */
+struct pci_dev *cdx_pdev;
 static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 {
 	struct irq_cfg *cfg = irqd_cfg(data);
@@ -1356,6 +1388,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	int ret;
 
 	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
+	cdx_pdev = pdev;
 	dest = irq_data_get_effective_affinity_mask(data);
 	pbus = pdev->bus;
 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
@@ -1796,6 +1829,28 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
 	pci_bus_add_devices(hbus->pci_bus);
 	pci_unlock_rescan_remove();
 	hbus->state = hv_pcibus_installed;
+
+
+	printk("cdx: sleeping...\n");
+	ssleep(20);
+	printk("cdx: sleeping...: done\n");
+
+{
+		//int c_ret;
+		int c_ret, c_len = -1, i;
+
+		unsigned char c_buf[128];
+		c_ret = hv_read_config_block(cdx_pdev, c_buf, 128, 0, &c_len);
+		 for (i = 0; i < c_len; i++)
+                       if (c_buf[i])
+                               printk("cdx: buf[%d] = 0x%02x\n", i, c_buf[i]);
+
+		printk("cdx: -@@@@-------------------1, cdx_pdev=%px\n", cdx_pdev);
+		//memset(c_buf, 0, sizeof(c_buf));
+		c_ret = hv_write_config_block(cdx_pdev, c_buf, sizeof(c_buf), 0);
+		printk("cdx: -@@@@-------------------2, c_ret=%d\n", c_ret);
+}
+
 	return 0;
 }
 
