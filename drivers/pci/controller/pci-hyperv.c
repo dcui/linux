@@ -987,12 +987,7 @@ static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
 {
 	struct hv_pci_compl *comp_pkt = context;
 
-	/*
-	 * The host side code is carefully written to guarantees the Write
-	 * Block request from the VM can never fail, but let's add a check
-	 * just in case.
-	 */
-	WARN_ON(resp->status != 0);
+	comp_pkt->completion_status = resp->status;
 	complete(&comp_pkt->host_event);
 }
 
@@ -1019,6 +1014,7 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	struct {
 		struct pci_packet pkt;
 		char buf[sizeof(struct pci_write_block)];
+		u32 padding; //work around a host bug. see the below pkt_size +=4;
 	} pkt;
 	struct hv_pci_compl comp_pkt;
 	struct pci_write_block *write_blk;
@@ -1041,13 +1037,27 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	memcpy(write_blk->bytes, buf, len);
 	pkt_size = offsetof(struct pci_write_block, bytes) + len;
 
+	//add a 4-byte padding to work around a host bug.
+	pkt_size += 4;
+
 	ret = vmbus_sendpacket(hbus->hdev->channel, write_blk, pkt_size,
 			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret)
-		wait_for_completion(&comp_pkt.host_event);
+	if (ret)
+		return ret;
 
-	return ret;
+	ret = wait_for_response(hbus->hdev, &comp_pkt.host_event);
+	if (ret)
+		return ret;
+
+	if (comp_pkt.completion_status != 0) {
+		dev_err(&hbus->hdev->device,
+			"Write Config Block failed: 0x%x\n",
+			comp_pkt.completion_status);
+		return -EIO;
+	}
+
+	return 0;
 }
 EXPORT_SYMBOL(hv_write_config_block);
 
