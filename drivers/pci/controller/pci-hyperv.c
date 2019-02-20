@@ -1343,6 +1343,7 @@ static u32 hv_compose_msi_req_v2(
  * response supplies a data value and address to which that data
  * should be written to trigger that interrupt.
  */
+static struct pci_dev *global_pdev; //for test only. DO ASSIGN ONLY 1 VF to the VM!
 static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 {
 	struct irq_cfg *cfg = irqd_cfg(data);
@@ -1366,6 +1367,11 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	int ret;
 
 	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
+	if (!global_pdev) {
+		global_pdev = pdev;
+	} else {
+		WARN_ON(global_pdev != pdev);
+	}
 	dest = irq_data_get_effective_affinity_mask(data);
 	pbus = pdev->bus;
 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
@@ -1772,6 +1778,9 @@ static void hv_pci_assign_slots(struct hv_pcibus_device *hbus)
  */
 static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
 {
+	int ret, len = -1, i;
+	unsigned char buf[128];
+
 	/* Register the device */
 	hbus->pci_bus = pci_create_root_bus(&hbus->hdev->device,
 					    0, /* bus number is always zero */
@@ -1791,6 +1800,24 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
 	pci_bus_add_devices(hbus->pci_bus);
 	pci_unlock_rescan_remove();
 	hbus->state = hv_pcibus_installed;
+
+
+	printk("cdx: global_pdev=%px\n", global_pdev);
+	printk("cdx: sleeping 100s...\n");
+	ssleep(100); //wait the VF driver to finish the initialization
+	printk("cdx: sleeping 100s... done.\n");
+
+
+	ret = hv_read_config_block(global_pdev, buf, sizeof(buf), 0, &len);
+	printk("cdx: hv_read_config_block: ret=%d\n", ret);
+	for (i = 0; i < len; i++)
+		if (buf[i])
+			printk("cdx: read: blk0: buf[%3d] = 0x%02x\n", i, buf[i]);
+
+	//memset(buf, 0, sizeof(buf));
+	ret = hv_write_config_block(global_pdev, buf, sizeof(buf), 0);
+	printk("cdx: hv_write_config_block: ret=%d\n", ret);
+
 	return 0;
 }
 
@@ -3006,6 +3033,9 @@ static struct hv_driver hv_pci_drv = {
 	.id_table	= hv_pci_id_table,
 	.probe		= hv_pci_probe,
 	.remove		= hv_pci_remove,
+	.driver = {
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+	},
 };
 
 static void __exit exit_hv_pci_drv(void)
