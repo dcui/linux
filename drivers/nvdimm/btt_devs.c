@@ -273,8 +273,12 @@ int nd_btt_version(struct nd_btt *nd_btt, struct nd_namespace_common *ndns,
 		if (!nd_btt_arena_is_valid(nd_btt, btt_sb))
 			return -ENODEV;
 		if ((le16_to_cpu(btt_sb->version_major) != 2) ||
-				(le16_to_cpu(btt_sb->version_minor) != 0))
-			return -ENODEV;
+				(le16_to_cpu(btt_sb->version_minor) != 0)) {
+			printk("nd_btt_version: Got %d.%d. Use it by force!\n",
+				btt_sb->version_major, btt_sb->version_minor);
+			return 0;
+			//return -ENODEV;
+		}
 	} else {
 		/*
 		 * Probe/setup for BTT v1.1 (NVDIMM_CCLASS_NONE or

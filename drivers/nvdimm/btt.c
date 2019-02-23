@@ -555,14 +555,23 @@ static int btt_freelist_init(struct arena_info *arena)
 		if (old < 0)
 			return old;
 
+		printk("freelist_init: i=%x, log_old: lba=%x, old_map=%x, new_map=%x, seq=%x\n",
+			 i, log_old.lba, log_old.old_map, log_old.new_map, log_old.seq);
+
 		new = btt_log_read(arena, i, &log_new, LOG_NEW_ENT);
 		if (new < 0)
 			return new;
+
+		printk("freelist_init: i=%x, log_new: lba=%x, old_map=%x, new_map=%x, seq=%x\n",
+			 i, log_new.lba, log_new.old_map, log_new.new_map, log_new.seq);
 
 		/* sub points to the next one to be overwritten */
 		arena->freelist[i].sub = 1 - new;
 		arena->freelist[i].seq = nd_inc_seq(le32_to_cpu(log_new.seq));
 		arena->freelist[i].block = le32_to_cpu(log_new.old_map);
+		printk("freelist_init: i=%x, old=%x, new=%d, sub=%x, seq=%x, block=%x\n",
+			i, old, new, arena->freelist[i].sub, arena->freelist[i].seq,
+			arena->freelist[i].block);
 
 		/*
 		 * FIXME: if error clearing fails during init, we want to make
@@ -570,6 +579,7 @@ static int btt_freelist_init(struct arena_info *arena)
 		 */
 		if (ent_e_flag(log_new.old_map)) {
 			ret = arena_clear_freelist_error(arena, i);
+			printk("freelist_init: i=%x, err: ret=%d\n", i, ret);
 			if (ret)
 				dev_err_ratelimited(to_dev(arena),
 					"Unable to clear known errors\n");
@@ -582,6 +592,7 @@ static int btt_freelist_init(struct arena_info *arena)
 		/* Check if map recovery is needed */
 		ret = btt_map_read(arena, le32_to_cpu(log_new.lba), &map_entry,
 				NULL, NULL, 0);
+		printk("freelist_init: i=%x, btt_map_read: ret=%d\n", i, ret);
 		if (ret)
 			return ret;
 		if ((le32_to_cpu(log_new.new_map) != map_entry) &&
@@ -592,6 +603,7 @@ static int btt_freelist_init(struct arena_info *arena)
 			 */
 			ret = btt_map_write(arena, le32_to_cpu(log_new.lba),
 					le32_to_cpu(log_new.new_map), 0, 0, 0);
+			printk("freelist_init: i=%x, btt_map_write: ret=%d\n", i, ret);
 			if (ret)
 				return ret;
 		}
@@ -1358,6 +1370,10 @@ static int btt_write_pg(struct btt *btt, struct bio_integrity_payload *bip,
 
 		if (new_postmap >= arena->internal_nlba) {
 			ret = -EIO;
+
+			printk("btt_write_pg failed: lane=0x%x, new_postmap=0x%x, internal_nlba=0x%x\n",
+				lane, new_postmap, arena->internal_nlba);
+
 			goto out_lane;
 		}
 
