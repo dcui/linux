@@ -1,0 +1,1456 @@
+[    0.000000] Linux version 5.0.0-rc6+ (root@decui-gen2-u1904) (gcc version 8.2.0 (Ubuntu 8.2.0-12ubuntu1)) #1 SMP Fri Feb 22 17:31:21 PST 2019
+[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-5.0.0-rc6+ root=UUID=8386967d-d191-4d1b-9277-123c222c94fb ro ignore_loglevel sysrq_always_enabled unknown_nmi_panic "dyndbg=file drivers/acpi/nfit/* +p ; file drivers/acpi/* +p ; file drivers/nvdimm/* +p ; file drivers/dax/* +p" console=ttyS0 libnvdimm.noblk nfit.force_labels
+[    0.000000] KERNEL supported cpus:
+[    0.000000]   Intel GenuineIntel
+[    0.000000]   AMD AuthenticAMD
+[    0.000000]   Hygon HygonGenuine
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x004: 'AVX registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x008: 'MPX bounds registers'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x010: 'MPX CSR'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x020: 'AVX-512 opmask'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x040: 'AVX-512 Hi256'
+[    0.000000] x86/fpu: Supporting XSAVE feature 0x080: 'AVX-512 ZMM_Hi256'
+[    0.000000] x86/fpu: xstate_offset[2]:  576, xstate_sizes[2]:  256
+[    0.000000] x86/fpu: xstate_offset[3]:  832, xstate_sizes[3]:   64
+[    0.000000] x86/fpu: xstate_offset[4]:  896, xstate_sizes[4]:   64
+[    0.000000] x86/fpu: xstate_offset[5]:  960, xstate_sizes[5]:   64
+[    0.000000] x86/fpu: xstate_offset[6]: 1024, xstate_sizes[6]:  512
+[    0.000000] x86/fpu: xstate_offset[7]: 1536, xstate_sizes[7]: 1024
+[    0.000000] x86/fpu: Enabled xstate features 0xff, context size is 2560 bytes, using 'compacted' format.
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009ffff] usable
+[    0.000000] BIOS-e820: [mem 0x00000000000c0000-0x00000000000fffff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x00000000f6dd4fff] usable
+[    0.000000] BIOS-e820: [mem 0x00000000f6dd5000-0x00000000f6dd5fff] ACPI data
+[    0.000000] BIOS-e820: [mem 0x00000000f6dd6000-0x00000000f6de1fff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000f6de2000-0x00000000f6de2fff] ACPI data
+[    0.000000] BIOS-e820: [mem 0x00000000f6de3000-0x00000000f6ecbfff] usable
+[    0.000000] BIOS-e820: [mem 0x00000000f6ecc000-0x00000000f6ed2fff] type 20
+[    0.000000] BIOS-e820: [mem 0x00000000f6ed3000-0x00000000f6ef1fff] ACPI data
+[    0.000000] BIOS-e820: [mem 0x00000000f6ef2000-0x00000000f6f1afff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000f6f1b000-0x00000000f7f9afff] usable
+[    0.000000] BIOS-e820: [mem 0x00000000f7f9b000-0x00000000f7fcafff] type 20
+[    0.000000] BIOS-e820: [mem 0x00000000f7fcb000-0x00000000f7ff2fff] reserved
+[    0.000000] BIOS-e820: [mem 0x00000000f7ff3000-0x00000000f7ffafff] ACPI data
+[    0.000000] BIOS-e820: [mem 0x00000000f7ffb000-0x00000000f7ffefff] ACPI NVS
+[    0.000000] BIOS-e820: [mem 0x00000000f7fff000-0x00000000f7ffffff] usable
+[    0.000000] BIOS-e820: [mem 0x0000000100000000-0x0000000287ffffff] usable
+[    0.000000] BIOS-e820: [mem 0x0000001000000000-0x0000002fffffffff] persistent (type 7)
+[    0.000000] printk: debug: ignoring loglevel setting.
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] efi: EFI v2.70 by Microsoft
+[    0.000000] efi:  ACPI=0xf7ffa000  ACPI 2.0=0xf7ffa014  SMBIOS=0xf7fd7000  SMBIOS 3.0=0xf7fd5000  MEMATTR=0xf7a7e018 
+[    0.000000] SMBIOS 3.1.1 present.
+[    0.000000] DMI: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.0 01/29/2019
+[    0.000000] Hypervisor detected: Microsoft Hyper-V
+[    0.000000] Hyper-V: features 0x2e7f, hints 0x60e24
+[    0.000000] Hyper-V Host Build:18826-10.0-1-0.1044
+[    0.000000] Hyper-V: LAPIC Timer Frequency: 0xc3500
+[    0.000000] tsc: Marking TSC unstable due to running on Hyper-V
+[    0.000000] Hyper-V: Using hypercall for remote TLB flush
+[    0.000000] tsc: Detected 2294.609 MHz processor
+[    0.000008] e820: update [mem 0x00000000-0x00000fff] usable ==> reserved
+[    0.000010] e820: remove [mem 0x000a0000-0x000fffff] usable
+[    0.000015] last_pfn = 0x288000 max_arch_pfn = 0x400000000
+[    0.000031] MTRR default type: uncachable
+[    0.000032] MTRR fixed ranges enabled:
+[    0.000034]   00000-9FFFF write-back
+[    0.000035]   A0000-FFFFF uncachable
+[    0.000037] MTRR variable ranges enabled:
+[    0.000039]   0 base 000000000000 mask 3FFF00000000 write-back
+[    0.000040]   1 base 000100000000 mask 3FF000000000 write-back
+[    0.000042]   2 base 001000000000 mask 380000000000 write-back
+[    0.000043]   3 base 080000000000 mask 000000000000 write-back
+[    0.000045]   4 disabled
+[    0.000046]   5 disabled
+[    0.000047]   6 disabled
+[    0.000049]   7 disabled
+[    0.000055] x86/PAT: Configuration [0-7]: WB  WC  UC- UC  WB  WP  UC- WT  
+[    0.000072] last_pfn = 0xf8000 max_arch_pfn = 0x400000000
+[    0.005374] check: Scanning 1 areas for low memory corruption
+[    0.005376] Base memory trampoline at [(____ptrval____)] 99000 size 24576
+[    0.005383] BRK [0x20a601000, 0x20a601fff] PGTABLE
+[    0.005385] BRK [0x20a602000, 0x20a602fff] PGTABLE
+[    0.005386] BRK [0x20a603000, 0x20a603fff] PGTABLE
+[    0.005401] BRK [0x20a604000, 0x20a604fff] PGTABLE
+[    0.005404] BRK [0x20a605000, 0x20a605fff] PGTABLE
+[    0.005405] BRK [0x20a606000, 0x20a606fff] PGTABLE
+[    0.005432] BRK [0x20a607000, 0x20a607fff] PGTABLE
+[    0.005435] BRK [0x20a608000, 0x20a608fff] PGTABLE
+[    0.005438] BRK [0x20a609000, 0x20a609fff] PGTABLE
+[    0.005441] BRK [0x20a60a000, 0x20a60afff] PGTABLE
+[    0.005444] BRK [0x20a60b000, 0x20a60bfff] PGTABLE
+[    0.005447] BRK [0x20a60c000, 0x20a60cfff] PGTABLE
+[    0.016697] Secure boot could not be determined
+[    0.016700] RAMDISK: [mem 0x35839000-0x36c13fff]
+[    0.016708] ACPI: Early table checksum verification disabled
+[    0.016711] ACPI: RSDP 0x00000000F7FFA014 000024 (v02 VRTUAL)
+[    0.016714] ACPI: XSDT 0x00000000F7FF90E8 000064 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016718] ACPI: FACP 0x00000000F7FF8000 000114 (v06 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016722] ACPI: DSDT 0x00000000F6ED3000 01E0AA (v02 MSFTVM DSDT01   00000001 MSFT 05000000)
+[    0.016726] ACPI: FACS 0x00000000F7FFE000 000040
+[    0.016728] ACPI: APIC 0x00000000F7FF7000 000248 (v04 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016731] ACPI: OEM0 0x00000000F7FF6000 000064 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016734] ACPI: WAET 0x00000000F7FF5000 000028 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016736] ACPI: SRAT 0x00000000F7FF4000 0006B0 (v02 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016739] ACPI: NFIT 0x00000000F7FF3000 0000E0 (v01 MSFT   VM       00000001 HYPV 00000001)
+[    0.016742] ACPI: BGRT 0x00000000F6DE2000 000038 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016744] ACPI: FPDT 0x00000000F6DD5000 000034 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.016749] ACPI: Local APIC address 0xfee00000
+[    0.016797] SRAT: PXM 0 -> APIC 0x00 -> Node 0
+[    0.016799] SRAT: PXM 0 -> APIC 0x01 -> Node 0
+[    0.016800] SRAT: PXM 0 -> APIC 0x02 -> Node 0
+[    0.016802] SRAT: PXM 0 -> APIC 0x03 -> Node 0
+[    0.016803] SRAT: PXM 0 -> APIC 0x04 -> Node 0
+[    0.016804] SRAT: PXM 0 -> APIC 0x05 -> Node 0
+[    0.016806] SRAT: PXM 0 -> APIC 0x06 -> Node 0
+[    0.016807] SRAT: PXM 0 -> APIC 0x07 -> Node 0
+[    0.016808] SRAT: PXM 0 -> APIC 0x08 -> Node 0
+[    0.016810] SRAT: PXM 0 -> APIC 0x09 -> Node 0
+[    0.016811] SRAT: PXM 0 -> APIC 0x0a -> Node 0
+[    0.016813] SRAT: PXM 0 -> APIC 0x0b -> Node 0
+[    0.016814] SRAT: PXM 0 -> APIC 0x0c -> Node 0
+[    0.016815] SRAT: PXM 0 -> APIC 0x0d -> Node 0
+[    0.016817] SRAT: PXM 0 -> APIC 0x0e -> Node 0
+[    0.016818] SRAT: PXM 0 -> APIC 0x0f -> Node 0
+[    0.016819] SRAT: PXM 0 -> APIC 0x10 -> Node 0
+[    0.016821] SRAT: PXM 0 -> APIC 0x11 -> Node 0
+[    0.016822] SRAT: PXM 0 -> APIC 0x12 -> Node 0
+[    0.016823] SRAT: PXM 0 -> APIC 0x13 -> Node 0
+[    0.016825] SRAT: PXM 0 -> APIC 0x14 -> Node 0
+[    0.016826] SRAT: PXM 0 -> APIC 0x15 -> Node 0
+[    0.016827] SRAT: PXM 0 -> APIC 0x16 -> Node 0
+[    0.016829] SRAT: PXM 0 -> APIC 0x17 -> Node 0
+[    0.016830] SRAT: PXM 0 -> APIC 0x18 -> Node 0
+[    0.016832] SRAT: PXM 0 -> APIC 0x19 -> Node 0
+[    0.016833] SRAT: PXM 0 -> APIC 0x1a -> Node 0
+[    0.016834] SRAT: PXM 0 -> APIC 0x1b -> Node 0
+[    0.016836] SRAT: PXM 0 -> APIC 0x1c -> Node 0
+[    0.016837] SRAT: PXM 0 -> APIC 0x1d -> Node 0
+[    0.016838] SRAT: PXM 0 -> APIC 0x1e -> Node 0
+[    0.016840] SRAT: PXM 0 -> APIC 0x1f -> Node 0
+[    0.016841] SRAT: PXM 1 -> APIC 0x20 -> Node 1
+[    0.016842] SRAT: PXM 1 -> APIC 0x21 -> Node 1
+[    0.016844] SRAT: PXM 1 -> APIC 0x22 -> Node 1
+[    0.016845] SRAT: PXM 1 -> APIC 0x23 -> Node 1
+[    0.016846] SRAT: PXM 1 -> APIC 0x24 -> Node 1
+[    0.016848] SRAT: PXM 1 -> APIC 0x25 -> Node 1
+[    0.016849] SRAT: PXM 1 -> APIC 0x26 -> Node 1
+[    0.016850] SRAT: PXM 1 -> APIC 0x27 -> Node 1
+[    0.016852] SRAT: PXM 1 -> APIC 0x28 -> Node 1
+[    0.016853] SRAT: PXM 1 -> APIC 0x29 -> Node 1
+[    0.016854] SRAT: PXM 1 -> APIC 0x2a -> Node 1
+[    0.016856] SRAT: PXM 1 -> APIC 0x2b -> Node 1
+[    0.016857] SRAT: PXM 1 -> APIC 0x2c -> Node 1
+[    0.016859] SRAT: PXM 1 -> APIC 0x2d -> Node 1
+[    0.016860] SRAT: PXM 1 -> APIC 0x2e -> Node 1
+[    0.016861] SRAT: PXM 1 -> APIC 0x2f -> Node 1
+[    0.016863] SRAT: PXM 1 -> APIC 0x30 -> Node 1
+[    0.016864] SRAT: PXM 1 -> APIC 0x31 -> Node 1
+[    0.016865] SRAT: PXM 1 -> APIC 0x32 -> Node 1
+[    0.016867] SRAT: PXM 1 -> APIC 0x33 -> Node 1
+[    0.016868] SRAT: PXM 1 -> APIC 0x34 -> Node 1
+[    0.016869] SRAT: PXM 1 -> APIC 0x35 -> Node 1
+[    0.016871] SRAT: PXM 1 -> APIC 0x36 -> Node 1
+[    0.016872] SRAT: PXM 1 -> APIC 0x37 -> Node 1
+[    0.016873] SRAT: PXM 1 -> APIC 0x38 -> Node 1
+[    0.016875] SRAT: PXM 1 -> APIC 0x39 -> Node 1
+[    0.016876] SRAT: PXM 1 -> APIC 0x3a -> Node 1
+[    0.016877] SRAT: PXM 1 -> APIC 0x3b -> Node 1
+[    0.016879] SRAT: PXM 1 -> APIC 0x3c -> Node 1
+[    0.016880] SRAT: PXM 1 -> APIC 0x3d -> Node 1
+[    0.016881] SRAT: PXM 1 -> APIC 0x3e -> Node 1
+[    0.016883] SRAT: PXM 1 -> APIC 0x3f -> Node 1
+[    0.016885] ACPI: SRAT: Node 0 PXM 0 [mem 0x00000000-0xf7ffffff] hotplug
+[    0.016887] ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0x147ffffff] hotplug
+[    0.016889] ACPI: SRAT: Node 1 PXM 1 [mem 0x148000000-0x287ffffff] hotplug
+[    0.016890] ACPI: SRAT: Node 1 PXM 1 [mem 0x1000000000-0x2fffffffff] hotplug non-volatile
+[    0.016892] ACPI: SRAT: Node 0 PXM 0 [mem 0x288000000-0x933ffffff] hotplug
+[    0.016894] ACPI: SRAT: Node 0 PXM 0 [mem 0x3000000000-0x97ffffffff] hotplug
+[    0.016895] ACPI: SRAT: Node 0 PXM 0 [mem 0x10000000000-0x17fffffffff] hotplug
+[    0.016897] ACPI: SRAT: Node 0 PXM 0 [mem 0x20000000000-0x2ffffffffff] hotplug
+[    0.016898] ACPI: SRAT: Node 0 PXM 0 [mem 0x40000000000-0x5ffffffffff] hotplug
+[    0.016900] ACPI: SRAT: Node 0 PXM 0 [mem 0x80000000000-0xbffffffffff] hotplug
+[    0.016901] ACPI: SRAT: Node 1 PXM 1 [mem 0x934000000-0xfdfffffff] hotplug
+[    0.016903] ACPI: SRAT: Node 1 PXM 1 [mem 0x9800000000-0xffffffffff] hotplug
+[    0.016904] ACPI: SRAT: Node 1 PXM 1 [mem 0x18000000000-0x1ffffffffff] hotplug
+[    0.016906] ACPI: SRAT: Node 1 PXM 1 [mem 0x30000000000-0x3ffffffffff] hotplug
+[    0.016907] ACPI: SRAT: Node 1 PXM 1 [mem 0x60000000000-0x7ffffffffff] hotplug
+[    0.016909] ACPI: SRAT: Node 1 PXM 1 [mem 0xc0000000000-0xfffffffffff] hotplug
+[    0.016911] NUMA: Node 0 [mem 0x00000000-0xf7ffffff] + [mem 0x100000000-0x147ffffff] -> [mem 0x00000000-0x147ffffff]
+[    0.016915] NODE_DATA(0) allocated [mem 0x147ffb000-0x147ffffff]
+[    0.016921] NODE_DATA(1) allocated [mem 0x286bfa000-0x286bfefff]
+[    0.016952] Zone ranges:
+[    0.016954]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.016956]   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+[    0.016957]   Normal   [mem 0x0000000100000000-0x0000000287ffffff]
+[    0.016959]   Device   empty
+[    0.016961] Movable zone start for each node
+[    0.016962] Early memory node ranges
+[    0.016964]   node   0: [mem 0x0000000000001000-0x000000000009ffff]
+[    0.016965]   node   0: [mem 0x0000000000100000-0x00000000f6dd4fff]
+[    0.016967]   node   0: [mem 0x00000000f6de3000-0x00000000f6ecbfff]
+[    0.016968]   node   0: [mem 0x00000000f6f1b000-0x00000000f7f9afff]
+[    0.016969]   node   0: [mem 0x00000000f7fff000-0x00000000f7ffffff]
+[    0.016971]   node   0: [mem 0x0000000100000000-0x0000000147ffffff]
+[    0.016972]   node   1: [mem 0x0000000148000000-0x0000000287ffffff]
+[    0.016977] Zeroed struct page in unavailable ranges: 290 pages
+[    0.016978] Initmem setup node 0 [mem 0x0000000000001000-0x0000000147ffffff]
+[    0.016981] On node 0 totalpages: 1310430
+[    0.016983]   DMA zone: 64 pages used for memmap
+[    0.016984]   DMA zone: 1345 pages reserved
+[    0.016985]   DMA zone: 3999 pages, LIFO batch:0
+[    0.017057]   DMA32 zone: 16320 pages used for memmap
+[    0.017058]   DMA32 zone: 1011519 pages, LIFO batch:63
+[    0.034203]   Normal zone: 4608 pages used for memmap
+[    0.034206]   Normal zone: 294912 pages, LIFO batch:63
+[    0.038962] Initmem setup node 1 [mem 0x0000000148000000-0x0000000287ffffff]
+[    0.038965] On node 1 totalpages: 1310720
+[    0.038967]   Normal zone: 20480 pages used for memmap
+[    0.038968]   Normal zone: 1310720 pages, LIFO batch:63
+[    0.060678] ACPI: PM-Timer IO Port: 0x408
+[    0.060682] ACPI: Local APIC address 0xfee00000
+[    0.060690] ACPI: LAPIC_NMI (acpi_id[0x01] dfl dfl lint[0x1])
+[    0.061415] IOAPIC[0]: apic_id 64, version 17, address 0xfec00000, GSI 0-23
+[    0.061434] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+[    0.061445] ACPI: IRQ9 used by override.
+[    0.061455] Using ACPI (MADT) for SMP configuration information
+[    0.061470] smpboot: Allowing 64 CPUs, 0 hotplug CPUs
+[    0.061591] PM: Registered nosave memory: [mem 0x00000000-0x00000fff]
+[    0.061609] PM: Registered nosave memory: [mem 0x000a0000-0x000bffff]
+[    0.061621] PM: Registered nosave memory: [mem 0x000c0000-0x000fffff]
+[    0.061638] PM: Registered nosave memory: [mem 0xf6dd5000-0xf6dd5fff]
+[    0.061650] PM: Registered nosave memory: [mem 0xf6dd6000-0xf6de1fff]
+[    0.061662] PM: Registered nosave memory: [mem 0xf6de2000-0xf6de2fff]
+[    0.061679] PM: Registered nosave memory: [mem 0xf6ecc000-0xf6ed2fff]
+[    0.061691] PM: Registered nosave memory: [mem 0xf6ed3000-0xf6ef1fff]
+[    0.061703] PM: Registered nosave memory: [mem 0xf6ef2000-0xf6f1afff]
+[    0.061720] PM: Registered nosave memory: [mem 0xf7f9b000-0xf7fcafff]
+[    0.061732] PM: Registered nosave memory: [mem 0xf7fcb000-0xf7ff2fff]
+[    0.061744] PM: Registered nosave memory: [mem 0xf7ff3000-0xf7ffafff]
+[    0.061756] PM: Registered nosave memory: [mem 0xf7ffb000-0xf7ffefff]
+[    0.061774] PM: Registered nosave memory: [mem 0xf8000000-0xffffffff]
+[    0.061805] [mem 0xf8000000-0xffffffff] available for PCI devices
+[    0.061807] Booting paravirtualized kernel on bare hardware
+[    0.061810] clocksource: refined-jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645519600211568 ns
+[    0.125633] random: get_random_bytes called from start_kernel+0x94/0x4b3 with crng_init=0
+[    0.125642] setup_percpu: NR_CPUS:256 nr_cpumask_bits:256 nr_cpu_ids:64 nr_node_ids:2
+[    0.129100] percpu: Embedded 61 pages/cpu @(____ptrval____) s209608 r8192 d32056 u262144
+[    0.129109] pcpu-alloc: s209608 r8192 d32056 u262144 alloc=1*2097152
+[    0.129110] pcpu-alloc: [0] 00 01 02 03 04 05 06 07 [0] 08 09 10 11 12 13 14 15 
+[    0.129116] pcpu-alloc: [0] 16 17 18 19 20 21 22 23 [0] 24 25 26 27 28 29 30 31 
+[    0.129120] pcpu-alloc: [1] 32 33 34 35 36 37 38 39 [1] 40 41 42 43 44 45 46 47 
+[    0.129125] pcpu-alloc: [1] 48 49 50 51 52 53 54 55 [1] 56 57 58 59 60 61 62 63 
+[    0.129155] Built 2 zonelists, mobility grouping on.  Total pages: 2578333
+[    0.129157] Policy zone: Normal
+[    0.129163] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.0.0-rc6+ root=UUID=8386967d-d191-4d1b-9277-123c222c94fb ro ignore_loglevel sysrq_always_enabled unknown_nmi_panic "dyndbg=file drivers/acpi/nfit/* +p ; file drivers/acpi/* +p ; file drivers/nvdimm/* +p ; file drivers/dax/* +p" console=ttyS0 libnvdimm.noblk nfit.force_labels
+[    0.129207] sysrq: sysrq always enabled.
+[    0.129235] printk: log_buf_len individual max cpu contribution: 4096 bytes
+[    0.129236] printk: log_buf_len total cpu_extra contributions: 258048 bytes
+[    0.129238] printk: log_buf_len min size: 262144 bytes
+[    0.129341] printk: log_buf_len: 524288 bytes
+[    0.129342] printk: early log buf free: 245072(93%)
+[    0.204081] Memory: 10148384K/10484600K available (12292K kernel code, 1534K rwdata, 3416K rodata, 1512K init, 14208K bss, 336216K reserved, 0K cma-reserved)
+[    0.204753] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=64, Nodes=2
+[    0.204805] ftrace: allocating 31310 entries in 123 pages
+[    0.213845] Running RCU self tests
+[    0.213848] rcu: Hierarchical RCU implementation.
+[    0.213849] rcu: 	RCU event tracing is enabled.
+[    0.213850] rcu: 	RCU dyntick-idle grace-period acceleration is enabled.
+[    0.213852] rcu: 	RCU lockdep checking is enabled.
+[    0.213853] rcu: 	RCU restricting CPUs from NR_CPUS=256 to nr_cpu_ids=64.
+[    0.213855] rcu: 	RCU debug extended QS entry/exit.
+[    0.213857] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.213858] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=64
+[    0.216235] Using NULL legacy PIC
+[    0.216242] NR_IRQS: 16640, nr_irqs: 936, preallocated irqs: 0
+[    0.216267] rcu: 	Offload RCU callbacks from CPUs: (none).
+[    0.216916] Console: colour dummy device 80x25
+[    1.575905] printk: console [ttyS0] enabled
+[    1.579767] Lock dependency validator: Copyright (c) 2006 Red Hat, Inc., Ingo Molnar
+[    1.586084] ... MAX_LOCKDEP_SUBCLASSES:  8
+[    1.589470] ... MAX_LOCK_DEPTH:          48
+[    1.592499] ... MAX_LOCKDEP_KEYS:        8191
+[    1.595801] ... CLASSHASH_SIZE:          4096
+[    1.599153] ... MAX_LOCKDEP_ENTRIES:     32768
+[    1.602552] ... MAX_LOCKDEP_CHAINS:      65536
+[    1.605904] ... CHAINHASH_SIZE:          32768
+[    1.609077]  memory used by lock dependency info: 7263 kB
+[    1.612787]  per task-struct memory footprint: 1920 bytes
+[    1.616777] mempolicy: Enabling automatic NUMA balancing. Configure with numa_balancing= or the kernel.numa_balancing sysctl
+[    1.624146] ACPI: Core revision 20181213
+[    1.627259] Failed to register legacy timer interrupt
+[    1.630624] APIC: Switch to symmetric I/O mode setup
+[    1.634144] Switched APIC routing to physical flat.
+[    1.637929] Hyper-V: Using IPI hypercalls
+[    1.640956] clocksource: hyperv_clocksource_tsc_page: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710, max_idle_ns: 440795202120 ns
+[    1.649832] Calibrating delay loop (skipped), value calculated using timer frequency.. 4589.21 BogoMIPS (lpj=9178436)
+[    1.653820] pid_max: default: 65536 minimum: 512
+[    1.653820] Dentry cache hash table entries: 2097152 (order: 12, 16777216 bytes)
+[    1.653820] Inode-cache hash table entries: 1048576 (order: 11, 8388608 bytes)
+[    1.653820] Mount-cache hash table entries: 32768 (order: 6, 262144 bytes)
+[    1.653820] Mountpoint-cache hash table entries: 32768 (order: 6, 262144 bytes)
+[    1.653820] mce: CPU supports 1 MCE banks
+[    1.653820] Last level iTLB entries: 4KB 64, 2MB 8, 4MB 8
+[    1.653820] Last level dTLB entries: 4KB 64, 2MB 0, 4MB 0, 1GB 4
+[    1.653820] Spectre V2 : Mitigation: Enhanced IBRS
+[    1.653820] Spectre V2 : Spectre v2 / SpectreRSB mitigation: Filling RSB on context switch
+[    1.653820] Spectre V2 : mitigation: Enabling conditional Indirect Branch Prediction Barrier
+[    1.653820] Speculative Store Bypass: Mitigation: Speculative Store Bypass disabled via prctl and seccomp
+[    1.653820] debug: unmapping init [mem 0xffffffffac818000-0xffffffffac81efff]
+[    1.653820] smpboot: CPU0: Genuine Intel(R) CPU 0000%@ (family: 0x6, model: 0x55, stepping: 0x6)
+[    1.654378] Performance Events: unsupported p6 CPU model 85 no PMU driver, software events only.
+[    1.658024] rcu: Hierarchical SRCU implementation.
+[    1.666064] NMI watchdog: Perf NMI watchdog permanently disabled
+[    1.671674] smp: Bringing up secondary CPUs ...
+[    1.674205] x86: Booting SMP configuration:
+[    1.677851] .... node  #0, CPUs:        #1  #2  #3  #4  #5  #6  #7  #8  #9 #10 #11 #12 #13 #14 #15 #16 #17 #18 #19 #20 #21 #22 #23 #24 #25 #26 #27 #28 #29 #30 #31
+[    1.733827] .... node  #1, CPUs:   #32 #33 #34 #35 #36 #37 #38 #39 #40 #41 #42 #43 #44 #45 #46 #47 #48 #49 #50 #51 #52 #53 #54 #55 #56 #57 #58 #59 #60 #61 #62 #63
+[    1.846640] smp: Brought up 2 nodes, 64 CPUs
+[    1.853825] smpboot: Max logical packages: 2
+[    1.857826] smpboot: Total of 64 processors activated (293761.74 BogoMIPS)
+[    1.870078] devtmpfs: initialized
+[    1.874062] x86/mm: Memory block size: 128MB
+[    1.884166] PM: Registering ACPI NVS region [mem 0xf7ffb000-0xf7ffefff] (16384 bytes)
+[    1.886663] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    1.890337] futex hash table entries: 16384 (order: 9, 2097152 bytes)
+[    1.898981] pinctrl core: initialized pinctrl subsystem
+[    1.923837] RTC time: 01:34:27, date: 2019-02-23
+[    1.926141] NET: Registered protocol family 16
+[    1.926141] audit: initializing netlink subsys (disabled)
+[    1.929872] audit: type=2000 audit(1550885665.280:1): state=initialized audit_enabled=0 res=1
+[    1.941842] cpuidle: using governor ladder
+[    1.945912] cpuidle: using governor menu
+[    1.949920] ACPI: bus type PCI registered
+[    1.961879] HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages
+[    1.969823] HugeTLB registered 2.00 MiB page size, pre-allocated 0 pages
+[    1.982685] ACPI: Added _OSI(Module Device)
+[    1.985886] ACPI: Added _OSI(Processor Device)
+[    1.989827] ACPI: Added _OSI(3.0 _SCP Extensions)
+[    1.989834] ACPI: Added _OSI(Processor Aggregator Device)
+[    1.993882] ACPI: Added _OSI(Linux-Dell-Video)
+[    1.997837] ACPI: Added _OSI(Linux-Lenovo-NV-HDMI-Audio)
+[    2.001882] ACPI: Added _OSI(Linux-HPI-Hybrid-Graphics)
+[    2.046202] ACPI: 1 ACPI AML tables successfully acquired and loaded
+[    2.059285] ACPI: Interpreter enabled
+[    2.061868] ACPI: (supports S0 S5)
+[    2.064786] ACPI: Using IOAPIC for interrupt routing
+[    2.069864] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+[    2.075576] ACPI: Enabled 2 GPEs in block 00 to 0F
+[    2.090222] acpi PNP0003:00: created platform device PNP0003:00
+[    2.093900] acpi VMBUS:00: created platform device VMBUS:00
+[    2.097882] acpi HYPER_V_GEN_COUN:00: created platform device HYPER_V_GEN_COUN:00
+[    2.101875] acpi ACPI0012:00: created platform device ACPI0012:00
+[    2.109924] vgaarb: loaded
+[    2.110152] SCSI subsystem initialized
+[    2.114106] libata version 3.00 loaded.
+[    2.116803] pps_core: LinuxPPS API ver. 1 registered
+[    2.121828] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    2.125835] PTP clock support registered
+[    2.128400] EDAC MC: Ver: 3.0.0
+[    2.129917] Registered efivars operations
+[    2.146153] hv_vmbus: Vmbus version:5.0
+[    2.149932] PCI: Using ACPI for IRQ routing
+[    2.153832] PCI: System does not support PCI
+[    2.158587] clocksource: Switched to clocksource hyperv_clocksource_tsc_page
+[    2.214936] VFS: Disk quotas dquot_6.6.0
+[    2.217757] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    2.222364] pnp: PnP ACPI init
+[    2.224510] pnp 00:00: Plug and Play ACPI device, IDs PNP0501 (active)
+[    2.228854] pnp 00:01: Plug and Play ACPI device, IDs PNP0501 (active)
+[    2.233145] pnp 00:02: Plug and Play ACPI device, IDs PNP0b00 (active)
+[    2.237657] pnp: PnP ACPI: found 3 devices
+[    2.249525] clocksource: acpi_pm: mask: 0xffffff max_cycles: 0xffffff, max_idle_ns: 2085701024 ns
+[    2.255146] NET: Registered protocol family 2
+[    2.258293] tcp_listen_portaddr_hash hash table entries: 8192 (order: 7, 589824 bytes)
+[    2.263768] TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
+[    2.268380] TCP bind hash table entries: 65536 (order: 10, 4194304 bytes)
+[    2.273415] TCP: Hash tables configured (established 131072 bind 65536)
+[    2.277412] UDP hash table entries: 8192 (order: 8, 1310720 bytes)
+[    2.281459] UDP-Lite hash table entries: 8192 (order: 8, 1310720 bytes)
+[    2.285634] NET: Registered protocol family 1
+[    2.287907] PCI: CLS 0 bytes, default 64
+[    2.290182] Trying to unpack rootfs image as initramfs...
+[    2.536245] debug: unmapping init [mem 0xffffa06535839000-0xffffa06536c13fff]
+[    2.541127] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+[    2.545101] software IO TLB: mapped [mem 0xf2dd5000-0xf6dd5000] (64MB)
+[    2.555278] RAPL PMU: API unit is 2^-32 Joules, 3 fixed counters, 10737418240 ms ovfl timer
+[    2.561982] RAPL PMU: hw unit of domain pp0-core 2^-0 Joules
+[    2.565177] RAPL PMU: hw unit of domain package 2^-0 Joules
+[    2.569078] RAPL PMU: hw unit of domain dram 2^-16 Joules
+[    2.573666] check: Scanning for low memory corruption every 60 seconds
+[    2.587422] workingset: timestamp_bits=40 max_order=22 bucket_order=0
+[    2.598444] zbud: loaded
+[    2.602784] fuse init (API version 7.28)
+[    2.607747] SGI XFS with security attributes, no debug enabled
+[    2.783318] Key type asymmetric registered
+[    2.789741] Asymmetric key parser 'x509' registered
+[    2.796982] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)
+[    2.805742] io scheduler mq-deadline registered
+[    2.810388] io scheduler kyber registered
+[    2.819109] efifb: probing for efifb
+[    2.822444] efifb: framebuffer at 0xf8000000, using 3072k, total 3072k
+[    2.828990] efifb: mode is 1024x768x32, linelength=4096, pages=1
+[    2.834078] efifb: scrolling: redraw
+[    2.837099] efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
+[    2.845165] Console: switching to colour frame buffer device 128x48
+[    2.851352] fb0: EFI VGA frame buffer device
+[    2.854946] intel_idle: Please enable MWAIT in BIOS SETUP
+[    2.859238] acpi ACPI0007:00: registered as cooling_device0
+[    2.863546] acpi ACPI0007:01: registered as cooling_device1
+[    2.867718] acpi ACPI0007:02: registered as cooling_device2
+[    2.871751] acpi ACPI0007:03: registered as cooling_device3
+[    2.875523] acpi ACPI0007:04: registered as cooling_device4
+[    2.879207] acpi ACPI0007:05: registered as cooling_device5
+[    2.882860] acpi ACPI0007:06: registered as cooling_device6
+[    2.886304] acpi ACPI0007:07: registered as cooling_device7
+[    2.889854] acpi ACPI0007:08: registered as cooling_device8
+[    2.893147] acpi ACPI0007:09: registered as cooling_device9
+[    2.896554] acpi ACPI0007:0a: registered as cooling_device10
+[    2.902559] acpi ACPI0007:0b: registered as cooling_device11
+[    2.905807] acpi ACPI0007:0c: registered as cooling_device12
+[    2.908797] acpi ACPI0007:0d: registered as cooling_device13
+[    2.911989] acpi ACPI0007:0e: registered as cooling_device14
+[    2.915013] acpi ACPI0007:0f: registered as cooling_device15
+[    2.918410] acpi ACPI0007:10: registered as cooling_device16
+[    2.921819] acpi ACPI0007:11: registered as cooling_device17
+[    2.924969] acpi ACPI0007:12: registered as cooling_device18
+[    2.928266] acpi ACPI0007:13: registered as cooling_device19
+[    2.931464] acpi ACPI0007:14: registered as cooling_device20
+[    2.934472] acpi ACPI0007:15: registered as cooling_device21
+[    2.937689] acpi ACPI0007:16: registered as cooling_device22
+[    2.940777] acpi ACPI0007:17: registered as cooling_device23
+[    2.944017] acpi ACPI0007:18: registered as cooling_device24
+[    2.946894] acpi ACPI0007:19: registered as cooling_device25
+[    2.950336] acpi ACPI0007:1a: registered as cooling_device26
+[    2.954135] acpi ACPI0007:1b: registered as cooling_device27
+[    2.958142] acpi ACPI0007:1c: registered as cooling_device28
+[    2.962673] acpi ACPI0007:1d: registered as cooling_device29
+[    2.966943] acpi ACPI0007:1e: registered as cooling_device30
+[    2.970504] acpi ACPI0007:1f: registered as cooling_device31
+[    2.974114] acpi ACPI0007:20: registered as cooling_device32
+[    2.978609] acpi ACPI0007:21: registered as cooling_device33
+[    2.982685] acpi ACPI0007:22: registered as cooling_device34
+[    2.986584] acpi ACPI0007:23: registered as cooling_device35
+[    2.990589] acpi ACPI0007:24: registered as cooling_device36
+[    2.995285] acpi ACPI0007:25: registered as cooling_device37
+[    3.000194] acpi ACPI0007:26: registered as cooling_device38
+[    3.006292] acpi ACPI0007:27: registered as cooling_device39
+[    3.010832] acpi ACPI0007:28: registered as cooling_device40
+[    3.015405] acpi ACPI0007:29: registered as cooling_device41
+[    3.020075] acpi ACPI0007:2a: registered as cooling_device42
+[    3.024759] acpi ACPI0007:2b: registered as cooling_device43
+[    3.029393] acpi ACPI0007:2c: registered as cooling_device44
+[    3.033708] acpi ACPI0007:2d: registered as cooling_device45
+[    3.038730] acpi ACPI0007:2e: registered as cooling_device46
+[    3.043282] acpi ACPI0007:2f: registered as cooling_device47
+[    3.048054] acpi ACPI0007:30: registered as cooling_device48
+[    3.052464] acpi ACPI0007:31: registered as cooling_device49
+[    3.056900] acpi ACPI0007:32: registered as cooling_device50
+[    3.061170] acpi ACPI0007:33: registered as cooling_device51
+[    3.065006] acpi ACPI0007:34: registered as cooling_device52
+[    3.069077] acpi ACPI0007:35: registered as cooling_device53
+[    3.073695] acpi ACPI0007:36: registered as cooling_device54
+[    3.077977] random: fast init done
+[    3.078643] acpi ACPI0007:37: registered as cooling_device55
+[    3.088649] acpi ACPI0007:38: registered as cooling_device56
+[    3.092603] acpi ACPI0007:39: registered as cooling_device57
+[    3.096250] acpi ACPI0007:3a: registered as cooling_device58
+[    3.100290] acpi ACPI0007:3b: registered as cooling_device59
+[    3.104979] acpi ACPI0007:3c: registered as cooling_device60
+[    3.109805] acpi ACPI0007:3d: registered as cooling_device61
+[    3.114291] acpi ACPI0007:3e: registered as cooling_device62
+[    3.118617] acpi ACPI0007:3f: registered as cooling_device63
+[    3.125745] nd_bus ndbus0: START: nd_bus.probe(ndbus0)
+[    3.129464] nd_bus ndbus0: END: nd_bus.probe(ndbus0) = 0
+[    3.134116] nfit ACPI0012:00: spa index: 1 type: pmem
+[    3.138020] nfit ACPI0012:00: memdev handle: 0x0 spa: 1 dcr: 1 flags: 0x20
+[    3.143250] nfit ACPI0012:00: dcr index: 1 windows: 0
+[    3.148514] nfit ACPI0012:00: device:00: has _LSR
+[    3.151978] nfit ACPI0012:00: device:00: Force enable labels
+[    3.156368] nd_bus ndbus0: START: nvdimm.probe(nmem0)
+[    3.160978] nvdimm nmem0: failed to unlock dimm: -5
+[    3.168969] nfit ACPI0012:00: nmem0 cmd: 4: func: 0 input length: 0
+[    3.179362] nfit ACPI0012:00: nmem0 cmd: get_size output length: 12
+[    3.186563] get_size00000000: 00000000 00000400 00000ffc           ............
+[    3.191673] nfit ACPI0012:00: nmem0 cmd: 5: func: 0 input length: 8
+[    3.196751] nvdimm in  00000000: 00000000 00000400                    ........
+[    3.204793] nfit ACPI0012:00: nmem0 cmd: get_data output length: 1028
+[    3.211455] get_data00000000: 00000000 454d414e 43415053 4e495f45  ....NAMESPACE_IN
+[    3.219140] get_data00000010: 00584544 01000000 00000001 00000000  DEX.............
+[    3.227590] get_data00000020: 00000000 00000100 00000000 00000100  ................
+[    3.236525] get_data00000030: 00000000 00000200 00000000 00000002  ................
+[    3.243157] get_data00000040: 00020001 d8323a30 27938303 00000002  ....0:2....'....
+[    3.249427] get_data00000050: 00000000 00000000 00000000 00000000  ................
+[    3.255143] get_data00000060: 00000000 00000000 00000000 00000000  ................
+[    3.262173] get_data00000070: 00000000 00000000 00000000 00000000  ................
+[    3.269346] nvdimm nmem0: nsindex0 labelsize 1 invalid
+[    3.273871] nvdimm nmem0: nsindex1 labelsize 1 invalid
+[    3.278451] nvdimm nmem0: len: 1024 rc: 0
+[    3.281147] nvdimm nmem0: config data size: 1024
+[    3.284032] nvdimm nmem0: : pmem-d9edaf70: 0x2000000000 @ 0x0 reserve
+[    3.289092] nd_bus ndbus0: END: nvdimm.probe(nmem0) = 0
+[    3.293799] nd_bus ndbus0: count: 1
+[    3.300242] nfit ACPI0012:00: bus cmd: 1: func: 1 input length: 16
+[    3.310037] nvdimm in  00000000: 00000000 00000010 00000000 00000020  ............ ...
+[    3.320491] nfit ACPI0012:00: bus cmd: ars_cap output length: 16
+[    3.327390] ars_cap00000000: 00020000 00000ffc 00000000 00000001  ................
+[    3.334617] nfit ACPI0012:00: bus cmd: 3: func: 3 input length: 0
+[    3.339979] nfit ACPI0012:00: bus cmd: ars_status output length: 48
+[    3.345263] ars_status00000000: 00000000 00000030 00000000 00000010  ....0...........
+[    3.354508] ars_status00000010: 00000000 00000020 00000000 00000000  .... ...........
+[    3.360470] ars_status00000020: 00000000 00000000 00000002 00000000  ................
+[    3.366964] nfit ACPI0012:00: bus cmd: 2: func: 2 input length: 24
+[    3.373852] nvdimm in  00000000: 00000000 00000010 00000000 00000020  ............ ...
+[    3.382209] nvdimm in  00000010: 00020002 00000000                    ........
+[    3.390583] nfit ACPI0012:00: bus cmd: ars_start output length: 8
+[    3.397633] ars_start00000000: 00000000 00000000                    ........
+[    3.405710] nfit ACPI0012:00: bus cmd: 3: func: 3 input length: 0
+[    3.413458] nfit ACPI0012:00: bus cmd: ars_status output length: 48
+[    3.420186] ars_status00000000: 00000000 00000030 00000000 00000010  ....0...........
+[    3.429719] ars_status00000010: 00000000 00000020 00000000 00000000  .... ...........
+[    3.439999] ars_status00000020: 00000000 00000000 00000002 00000000  ................
+[    3.450003] nfit ACPI0012:00: ARS: range 1 complete
+[    3.455877] nd_bus ndbus0: START: nd_region.probe(region0)
+[    3.455886] nvdimm nmem0: count: 1
+[    3.455907] nfit ACPI0012:00: bus cmd: 3: func: 3 input length: 0
+[    3.455915] nd_region region0: discovered 1 pmem namespace
+[    3.456058] nd_bus ndbus0: END: nd_region.probe(region0) = 0
+[    3.456541] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    3.457701] nfit ACPI0012:00: bus cmd: ars_status output length: 48
+[    3.457708] ars_status00000000: 00000000 00000030 00000000 00000010  ....0...........
+[    3.457713] ars_status00000010: 00000000 00000020 00000000 00000000  .... ...........
+[    3.457717] ars_status00000020: 00000000 00000000 00000002 00000000  ................
+[    3.457724] nfit ACPI0012:00: bus cmd: 2: func: 2 input length: 24
+[    3.457729] nvdimm in  00000000: 00000000 00000010 00000000 00000020  ............ ...
+[    3.457732] nvdimm in  00000010: 00000002 00000000                    ........
+[    3.459380] nfit ACPI0012:00: bus cmd: ars_start output length: 8
+[    3.459385] ars_start00000000: 00000000 00000001                    ........
+[    3.459390] nd_region region0: ARS: range 1 ARS start long (0)
+[    3.497092] 00:00: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    3.627142] 00:01: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+[    3.638833] Linux agpgart interface v0.103
+[    3.691365] brd: module loaded
+[    3.695531] nd_bus ndbus0: START: nd_pmem.probe(namespace0.0)
+[    3.705076] nd_btt_version: Got 1.1. Use it by force!
+[    3.708735] nd_pmem namespace0.0: btt: btt0.1
+[    3.708998] nd_bus ndbus0: START: nd_pmem.probe(btt0.1)
+[    3.712598] nd_bus ndbus0: END: nd_pmem.probe(namespace0.0) = -6
+[    3.724575] nd_bus ndbus0: START: nd_pmem.probe(btt0.0)
+[    3.724648] nd_btt_version: Got 1.1. Use it by force!
+[    3.730376] nd_bus ndbus0: END: nd_pmem.probe(btt0.0) = -19
+[    3.730389] nd_bus ndbus0: START: nd_pmem.probe(pfn0.0)
+[    3.736192] nd_pmem btt0.1: log_index_0 = 0
+[    3.741924] nd_bus ndbus0: END: nd_pmem.probe(pfn0.0) = -19
+[    3.747580] nd_pmem btt0.1: log_index_1 = 1
+[    3.756239] freelist_init: i=0, log_old: lba=bcc01, old_map=c00bcc30, new_map=c00bcc02, seq=2
+[    3.765583] freelist_init: i=0, log_new: lba=bcc00, old_map=c0001b7b, new_map=c00bcc30, seq=3
+[    3.774047] freelist_init: i=0, old=0, new=1, sub=0, seq=1, block=c0001b7b
+[    3.780557] freelist_init: i=0, err: ret=0
+[    3.783800] freelist_init: i=0, btt_map_read: ret=0
+[    3.787232] freelist_init: i=1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.794995] freelist_init: i=1, log_new: lba=0, old_map=81ff7f19, new_map=81ff7f19, seq=1
+[    3.803771] freelist_init: i=1, old=1, new=0, sub=1, seq=2, block=81ff7f19
+[    3.810667] freelist_init: i=2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.817179] freelist_init: i=2, log_new: lba=0, old_map=81ff7f1a, new_map=81ff7f1a, seq=1
+[    3.825913] freelist_init: i=2, old=1, new=0, sub=1, seq=2, block=81ff7f1a
+[    3.833890] freelist_init: i=3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.841316] freelist_init: i=3, log_new: lba=0, old_map=81ff7f1b, new_map=81ff7f1b, seq=1
+[    3.848027] freelist_init: i=3, old=1, new=0, sub=1, seq=2, block=81ff7f1b
+[    3.856057] freelist_init: i=4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.864473] freelist_init: i=4, log_new: lba=0, old_map=81ff7f1c, new_map=81ff7f1c, seq=1
+[    3.873541] freelist_init: i=4, old=1, new=0, sub=1, seq=2, block=81ff7f1c
+[    3.880510] freelist_init: i=5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.888942] freelist_init: i=5, log_new: lba=0, old_map=81ff7f1d, new_map=81ff7f1d, seq=1
+[    3.898794] freelist_init: i=5, old=1, new=0, sub=1, seq=2, block=81ff7f1d
+[    3.905659] freelist_init: i=6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.911014] freelist_init: i=6, log_new: lba=0, old_map=81ff7f1e, new_map=81ff7f1e, seq=1
+[    3.920447] freelist_init: i=6, old=1, new=0, sub=1, seq=2, block=81ff7f1e
+[    3.928637] freelist_init: i=7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.936017] freelist_init: i=7, log_new: lba=0, old_map=81ff7f1f, new_map=81ff7f1f, seq=1
+[    3.942070] freelist_init: i=7, old=1, new=0, sub=1, seq=2, block=81ff7f1f
+[    3.949725] freelist_init: i=8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.960225] freelist_init: i=8, log_new: lba=0, old_map=81ff7f20, new_map=81ff7f20, seq=1
+[    3.981458] freelist_init: i=8, old=1, new=0, sub=1, seq=2, block=81ff7f20
+[    3.987353] freelist_init: i=9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    3.993782] freelist_init: i=9, log_new: lba=0, old_map=81ff7f21, new_map=81ff7f21, seq=1
+[    4.001674] freelist_init: i=9, old=1, new=0, sub=1, seq=2, block=81ff7f21
+[    4.008911] freelist_init: i=a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.017222] freelist_init: i=a, log_new: lba=0, old_map=81ff7f22, new_map=81ff7f22, seq=1
+[    4.027286] freelist_init: i=a, old=1, new=0, sub=1, seq=2, block=81ff7f22
+[    4.033950] freelist_init: i=b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.042057] freelist_init: i=b, log_new: lba=0, old_map=81ff7f23, new_map=81ff7f23, seq=1
+[    4.052344] freelist_init: i=b, old=1, new=0, sub=1, seq=2, block=81ff7f23
+[    4.060681] freelist_init: i=c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.067263] freelist_init: i=c, log_new: lba=0, old_map=81ff7f24, new_map=81ff7f24, seq=1
+[    4.076912] freelist_init: i=c, old=1, new=0, sub=1, seq=2, block=81ff7f24
+[    4.085549] freelist_init: i=d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.092969] freelist_init: i=d, log_new: lba=0, old_map=81ff7f25, new_map=81ff7f25, seq=1
+[    4.099042] freelist_init: i=d, old=1, new=0, sub=1, seq=2, block=81ff7f25
+[    4.107614] freelist_init: i=e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.116806] freelist_init: i=e, log_new: lba=0, old_map=81ff7f26, new_map=81ff7f26, seq=1
+[    4.125186] freelist_init: i=e, old=1, new=0, sub=1, seq=2, block=81ff7f26
+[    4.130283] freelist_init: i=f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.139231] freelist_init: i=f, log_new: lba=0, old_map=81ff7f27, new_map=81ff7f27, seq=1
+[    4.150051] freelist_init: i=f, old=1, new=0, sub=1, seq=2, block=81ff7f27
+[    4.157933] freelist_init: i=10, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.165595] freelist_init: i=10, log_new: lba=0, old_map=81ff7f28, new_map=81ff7f28, seq=1
+[    4.177403] freelist_init: i=10, old=1, new=0, sub=1, seq=2, block=81ff7f28
+[    4.186114] freelist_init: i=11, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.192178] freelist_init: i=11, log_new: lba=0, old_map=81ff7f29, new_map=81ff7f29, seq=1
+[    4.203686] freelist_init: i=11, old=1, new=0, sub=1, seq=2, block=81ff7f29
+[    4.213236] freelist_init: i=12, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.221316] freelist_init: i=12, log_new: lba=0, old_map=81ff7f2a, new_map=81ff7f2a, seq=1
+[    4.230568] freelist_init: i=12, old=1, new=0, sub=1, seq=2, block=81ff7f2a
+[    4.240765] freelist_init: i=13, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.249226] freelist_init: i=13, log_new: lba=0, old_map=81ff7f2b, new_map=81ff7f2b, seq=1
+[    4.255684] freelist_init: i=13, old=1, new=0, sub=1, seq=2, block=81ff7f2b
+[    4.265216] freelist_init: i=14, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.275096] freelist_init: i=14, log_new: lba=0, old_map=81ff7f2c, new_map=81ff7f2c, seq=1
+[    4.285197] freelist_init: i=14, old=1, new=0, sub=1, seq=2, block=81ff7f2c
+[    4.294501] freelist_init: i=15, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.304595] freelist_init: i=15, log_new: lba=0, old_map=81ff7f2d, new_map=81ff7f2d, seq=1
+[    4.313637] freelist_init: i=15, old=1, new=0, sub=1, seq=2, block=81ff7f2d
+[    4.319610] freelist_init: i=16, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.329672] freelist_init: i=16, log_new: lba=0, old_map=81ff7f2e, new_map=81ff7f2e, seq=1
+[    4.341286] freelist_init: i=16, old=1, new=0, sub=1, seq=2, block=81ff7f2e
+[    4.348272] freelist_init: i=17, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.357002] freelist_init: i=17, log_new: lba=0, old_map=81ff7f2f, new_map=81ff7f2f, seq=1
+[    4.370476] freelist_init: i=17, old=1, new=0, sub=1, seq=2, block=81ff7f2f
+[    4.396764] freelist_init: i=18, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.404705] freelist_init: i=18, log_new: lba=0, old_map=81ff7f30, new_map=81ff7f30, seq=1
+[    4.409792] freelist_init: i=18, old=1, new=0, sub=1, seq=2, block=81ff7f30
+[    4.417665] freelist_init: i=19, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.427035] freelist_init: i=19, log_new: lba=0, old_map=81ff7f31, new_map=81ff7f31, seq=1
+[    4.437571] freelist_init: i=19, old=1, new=0, sub=1, seq=2, block=81ff7f31
+[    4.446187] freelist_init: i=1a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.455970] freelist_init: i=1a, log_new: lba=0, old_map=81ff7f32, new_map=81ff7f32, seq=1
+[    4.461940] nfit ACPI0012:00: bus cmd: 3: func: 3 input length: 0
+[    4.466805] freelist_init: i=1a, old=1, new=0, sub=1, seq=2, block=81ff7f32
+[    4.466807] freelist_init: i=1b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466809] freelist_init: i=1b, log_new: lba=0, old_map=81ff7f33, new_map=81ff7f33, seq=1
+[    4.466810] freelist_init: i=1b, old=1, new=0, sub=1, seq=2, block=81ff7f33
+[    4.466812] freelist_init: i=1c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466813] freelist_init: i=1c, log_new: lba=0, old_map=81ff7f34, new_map=81ff7f34, seq=1
+[    4.466815] freelist_init: i=1c, old=1, new=0, sub=1, seq=2, block=81ff7f34
+[    4.466816] freelist_init: i=1d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466818] freelist_init: i=1d, log_new: lba=0, old_map=81ff7f35, new_map=81ff7f35, seq=1
+[    4.466819] freelist_init: i=1d, old=1, new=0, sub=1, seq=2, block=81ff7f35
+[    4.466820] freelist_init: i=1e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466822] freelist_init: i=1e, log_new: lba=0, old_map=81ff7f36, new_map=81ff7f36, seq=1
+[    4.466823] freelist_init: i=1e, old=1, new=0, sub=1, seq=2, block=81ff7f36
+[    4.466825] freelist_init: i=1f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466826] freelist_init: i=1f, log_new: lba=0, old_map=81ff7f37, new_map=81ff7f37, seq=1
+[    4.466828] freelist_init: i=1f, old=1, new=0, sub=1, seq=2, block=81ff7f37
+[    4.466829] freelist_init: i=20, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466831] freelist_init: i=20, log_new: lba=0, old_map=81ff7f38, new_map=81ff7f38, seq=1
+[    4.466832] freelist_init: i=20, old=1, new=0, sub=1, seq=2, block=81ff7f38
+[    4.466834] freelist_init: i=21, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466835] freelist_init: i=21, log_new: lba=0, old_map=81ff7f39, new_map=81ff7f39, seq=1
+[    4.466837] freelist_init: i=21, old=1, new=0, sub=1, seq=2, block=81ff7f39
+[    4.466841] freelist_init: i=22, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.466843] freelist_init: i=22, log_new: lba=0, old_map=81ff7f3a, new_map=81ff7f3a, seq=1
+[    4.476169] nfit ACPI0012:00: bus cmd: ars_status output length: 48
+[    4.484512] freelist_init: i=22, old=1, new=0, sub=1, seq=2, block=81ff7f3a
+[    4.494216] ars_status00000000: 00000000 00000030 00000000 00000010  ....0...........
+[    4.501813] freelist_init: i=23, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.501815] freelist_init: i=23, log_new: lba=0, old_map=81ff7f3b, new_map=81ff7f3b, seq=1
+[    4.501816] freelist_init: i=23, old=1, new=0, sub=1, seq=2, block=81ff7f3b
+[    4.501818] freelist_init: i=24, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.505994] ars_status00000010: 00000000 00000020 00000000 00000000  .... ...........
+[    4.515829] freelist_init: i=24, log_new: lba=0, old_map=81ff7f3c, new_map=81ff7f3c, seq=1
+[    4.515830] freelist_init: i=24, old=1, new=0, sub=1, seq=2, block=81ff7f3c
+[    4.515832] freelist_init: i=25, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.527354] ars_status00000020: 00000000 00000000 00000002 00000000  ................
+[    4.527425] nd_region region0: ARS: range 1 complete
+[    4.535081] freelist_init: i=25, log_new: lba=0, old_map=81ff7f3d, new_map=81ff7f3d, seq=1
+[    4.813597] freelist_init: i=25, old=1, new=0, sub=1, seq=2, block=81ff7f3d
+[    4.821185] freelist_init: i=26, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.830647] freelist_init: i=26, log_new: lba=0, old_map=81ff7f3e, new_map=81ff7f3e, seq=1
+[    4.841322] freelist_init: i=26, old=1, new=0, sub=1, seq=2, block=81ff7f3e
+[    4.846886] freelist_init: i=27, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.856959] freelist_init: i=27, log_new: lba=0, old_map=81ff7f3f, new_map=81ff7f3f, seq=1
+[    4.869802] freelist_init: i=27, old=1, new=0, sub=1, seq=2, block=81ff7f3f
+[    4.880164] freelist_init: i=28, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.904577] freelist_init: i=28, log_new: lba=0, old_map=81ff7f40, new_map=81ff7f40, seq=1
+[    4.909296] freelist_init: i=28, old=1, new=0, sub=1, seq=2, block=81ff7f40
+[    4.914429] freelist_init: i=29, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.926714] freelist_init: i=29, log_new: lba=0, old_map=81ff7f41, new_map=81ff7f41, seq=1
+[    4.938453] freelist_init: i=29, old=1, new=0, sub=1, seq=2, block=81ff7f41
+[    4.948339] freelist_init: i=2a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.961121] freelist_init: i=2a, log_new: lba=0, old_map=81ff7f42, new_map=81ff7f42, seq=1
+[    4.970623] freelist_init: i=2a, old=1, new=0, sub=1, seq=2, block=81ff7f42
+[    4.980022] freelist_init: i=2b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    4.992460] freelist_init: i=2b, log_new: lba=0, old_map=81ff7f43, new_map=81ff7f43, seq=1
+[    5.002601] freelist_init: i=2b, old=1, new=0, sub=1, seq=2, block=81ff7f43
+[    5.010468] freelist_init: i=2c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.022761] freelist_init: i=2c, log_new: lba=0, old_map=81ff7f44, new_map=81ff7f44, seq=1
+[    5.033255] freelist_init: i=2c, old=1, new=0, sub=1, seq=2, block=81ff7f44
+[    5.041996] freelist_init: i=2d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.053618] freelist_init: i=2d, log_new: lba=0, old_map=81ff7f45, new_map=81ff7f45, seq=1
+[    5.064077] freelist_init: i=2d, old=1, new=0, sub=1, seq=2, block=81ff7f45
+[    5.071908] freelist_init: i=2e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.082125] freelist_init: i=2e, log_new: lba=0, old_map=81ff7f46, new_map=81ff7f46, seq=1
+[    5.095002] freelist_init: i=2e, old=1, new=0, sub=1, seq=2, block=81ff7f46
+[    5.101879] freelist_init: i=2f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.108898] freelist_init: i=2f, log_new: lba=0, old_map=81ff7f47, new_map=81ff7f47, seq=1
+[    5.122820] freelist_init: i=2f, old=1, new=0, sub=1, seq=2, block=81ff7f47
+[    5.127141] freelist_init: i=30, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.137753] freelist_init: i=30, log_new: lba=0, old_map=81ff7f48, new_map=81ff7f48, seq=1
+[    5.151805] freelist_init: i=30, old=1, new=0, sub=1, seq=2, block=81ff7f48
+[    5.158492] freelist_init: i=31, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.167891] freelist_init: i=31, log_new: lba=0, old_map=81ff7f49, new_map=81ff7f49, seq=1
+[    5.181596] freelist_init: i=31, old=1, new=0, sub=1, seq=2, block=81ff7f49
+[    5.190201] freelist_init: i=32, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.200509] freelist_init: i=32, log_new: lba=0, old_map=81ff7f4a, new_map=81ff7f4a, seq=1
+[    5.214140] freelist_init: i=32, old=1, new=0, sub=1, seq=2, block=81ff7f4a
+[    5.220281] freelist_init: i=33, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.229314] freelist_init: i=33, log_new: lba=0, old_map=81ff7f4b, new_map=81ff7f4b, seq=1
+[    5.244496] freelist_init: i=33, old=1, new=0, sub=1, seq=2, block=81ff7f4b
+[    5.252463] freelist_init: i=34, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.263011] freelist_init: i=34, log_new: lba=0, old_map=81ff7f4c, new_map=81ff7f4c, seq=1
+[    5.278923] freelist_init: i=34, old=1, new=0, sub=1, seq=2, block=81ff7f4c
+[    5.286651] freelist_init: i=35, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.300436] freelist_init: i=35, log_new: lba=0, old_map=81ff7f4d, new_map=81ff7f4d, seq=1
+[    5.313022] freelist_init: i=35, old=1, new=0, sub=1, seq=2, block=81ff7f4d
+[    5.321012] freelist_init: i=36, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.334985] freelist_init: i=36, log_new: lba=0, old_map=81ff7f4e, new_map=81ff7f4e, seq=1
+[    5.345630] freelist_init: i=36, old=1, new=0, sub=1, seq=2, block=81ff7f4e
+[    5.358055] freelist_init: i=37, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.374159] freelist_init: i=37, log_new: lba=0, old_map=81ff7f4f, new_map=81ff7f4f, seq=1
+[    5.378990] freelist_init: i=37, old=1, new=0, sub=1, seq=2, block=81ff7f4f
+[    5.386780] freelist_init: i=38, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.399509] freelist_init: i=38, log_new: lba=0, old_map=81ff7f50, new_map=81ff7f50, seq=1
+[    5.410066] freelist_init: i=38, old=1, new=0, sub=1, seq=2, block=81ff7f50
+[    5.419914] freelist_init: i=39, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.431808] freelist_init: i=39, log_new: lba=0, old_map=81ff7f51, new_map=81ff7f51, seq=1
+[    5.440699] freelist_init: i=39, old=1, new=0, sub=1, seq=2, block=81ff7f51
+[    5.448980] freelist_init: i=3a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.460223] freelist_init: i=3a, log_new: lba=0, old_map=81ff7f52, new_map=81ff7f52, seq=1
+[    5.469441] freelist_init: i=3a, old=1, new=0, sub=1, seq=2, block=81ff7f52
+[    5.475561] freelist_init: i=3b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.486566] freelist_init: i=3b, log_new: lba=0, old_map=81ff7f53, new_map=81ff7f53, seq=1
+[    5.498431] freelist_init: i=3b, old=1, new=0, sub=1, seq=2, block=81ff7f53
+[    5.506385] freelist_init: i=3c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.515861] freelist_init: i=3c, log_new: lba=0, old_map=81ff7f54, new_map=81ff7f54, seq=1
+[    5.527910] freelist_init: i=3c, old=1, new=0, sub=1, seq=2, block=81ff7f54
+[    5.546644] freelist_init: i=3d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.557368] freelist_init: i=3d, log_new: lba=0, old_map=81ff7f55, new_map=81ff7f55, seq=1
+[    5.576970] freelist_init: i=3d, old=1, new=0, sub=1, seq=2, block=81ff7f55
+[    5.589147] freelist_init: i=3e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.610418] freelist_init: i=3e, log_new: lba=0, old_map=81ff7f56, new_map=81ff7f56, seq=1
+[    5.638983] freelist_init: i=3e, old=1, new=0, sub=1, seq=2, block=81ff7f56
+[    5.652111] freelist_init: i=3f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.667905] freelist_init: i=3f, log_new: lba=0, old_map=81ff7f57, new_map=81ff7f57, seq=1
+[    5.683071] freelist_init: i=3f, old=1, new=0, sub=1, seq=2, block=81ff7f57
+[    5.703293] freelist_init: i=40, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.715473] freelist_init: i=40, log_new: lba=0, old_map=81ff7f58, new_map=81ff7f58, seq=1
+[    5.737366] freelist_init: i=40, old=1, new=0, sub=1, seq=2, block=81ff7f58
+[    5.747053] freelist_init: i=41, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.765683] freelist_init: i=41, log_new: lba=0, old_map=81ff7f59, new_map=81ff7f59, seq=1
+[    5.777024] freelist_init: i=41, old=1, new=0, sub=1, seq=2, block=81ff7f59
+[    5.794712] freelist_init: i=42, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.803532] freelist_init: i=42, log_new: lba=0, old_map=81ff7f5a, new_map=81ff7f5a, seq=1
+[    5.822366] freelist_init: i=42, old=1, new=0, sub=1, seq=2, block=81ff7f5a
+[    5.831180] freelist_init: i=43, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.839734] freelist_init: i=43, log_new: lba=0, old_map=81ff7f5b, new_map=81ff7f5b, seq=1
+[    5.857549] freelist_init: i=43, old=1, new=0, sub=1, seq=2, block=81ff7f5b
+[    5.866694] freelist_init: i=44, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.883609] freelist_init: i=44, log_new: lba=0, old_map=81ff7f5c, new_map=81ff7f5c, seq=1
+[    5.894840] freelist_init: i=44, old=1, new=0, sub=1, seq=2, block=81ff7f5c
+[    5.903427] freelist_init: i=45, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.921814] freelist_init: i=45, log_new: lba=0, old_map=81ff7f5d, new_map=81ff7f5d, seq=1
+[    5.934552] freelist_init: i=45, old=1, new=0, sub=1, seq=2, block=81ff7f5d
+[    5.953716] freelist_init: i=46, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    5.964021] freelist_init: i=46, log_new: lba=0, old_map=81ff7f5e, new_map=81ff7f5e, seq=1
+[    5.984944] freelist_init: i=46, old=1, new=0, sub=1, seq=2, block=81ff7f5e
+[    5.995699] freelist_init: i=47, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.017745] freelist_init: i=47, log_new: lba=0, old_map=81ff7f5f, new_map=81ff7f5f, seq=1
+[    6.036848] freelist_init: i=47, old=1, new=0, sub=1, seq=2, block=81ff7f5f
+[    6.045921] freelist_init: i=48, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.056332] freelist_init: i=48, log_new: lba=0, old_map=81ff7f60, new_map=81ff7f60, seq=1
+[    6.076353] freelist_init: i=48, old=1, new=0, sub=1, seq=2, block=81ff7f60
+[    6.086626] freelist_init: i=49, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.103706] freelist_init: i=49, log_new: lba=0, old_map=81ff7f61, new_map=81ff7f61, seq=1
+[    6.115060] freelist_init: i=49, old=1, new=0, sub=1, seq=2, block=81ff7f61
+[    6.138060] freelist_init: i=4a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.149608] freelist_init: i=4a, log_new: lba=0, old_map=81ff7f62, new_map=81ff7f62, seq=1
+[    6.172818] freelist_init: i=4a, old=1, new=0, sub=1, seq=2, block=81ff7f62
+[    6.182841] freelist_init: i=4b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.200917] freelist_init: i=4b, log_new: lba=0, old_map=81ff7f63, new_map=81ff7f63, seq=1
+[    6.212011] freelist_init: i=4b, old=1, new=0, sub=1, seq=2, block=81ff7f63
+[    6.227829] freelist_init: i=4c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.237217] freelist_init: i=4c, log_new: lba=0, old_map=81ff7f64, new_map=81ff7f64, seq=1
+[    6.247470] freelist_init: i=4c, old=1, new=0, sub=1, seq=2, block=81ff7f64
+[    6.265379] freelist_init: i=4d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.274014] freelist_init: i=4d, log_new: lba=0, old_map=81ff7f65, new_map=81ff7f65, seq=1
+[    6.292646] freelist_init: i=4d, old=1, new=0, sub=1, seq=2, block=81ff7f65
+[    6.302343] freelist_init: i=4e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.319348] freelist_init: i=4e, log_new: lba=0, old_map=81ff7f66, new_map=81ff7f66, seq=1
+[    6.330415] freelist_init: i=4e, old=1, new=0, sub=1, seq=2, block=81ff7f66
+[    6.338178] freelist_init: i=4f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.355048] freelist_init: i=4f, log_new: lba=0, old_map=81ff7f67, new_map=81ff7f67, seq=1
+[    6.365602] freelist_init: i=4f, old=1, new=0, sub=1, seq=2, block=81ff7f67
+[    6.382042] freelist_init: i=50, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.389726] freelist_init: i=50, log_new: lba=0, old_map=81ff7f68, new_map=81ff7f68, seq=1
+[    6.399247] freelist_init: i=50, old=1, new=0, sub=1, seq=2, block=81ff7f68
+[    6.416003] freelist_init: i=51, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.423775] freelist_init: i=51, log_new: lba=0, old_map=81ff7f69, new_map=81ff7f69, seq=1
+[    6.432735] freelist_init: i=51, old=1, new=0, sub=1, seq=2, block=81ff7f69
+[    6.448021] freelist_init: i=52, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.455851] freelist_init: i=52, log_new: lba=0, old_map=81ff7f6a, new_map=81ff7f6a, seq=1
+[    6.464741] freelist_init: i=52, old=1, new=0, sub=1, seq=2, block=81ff7f6a
+[    6.479702] freelist_init: i=53, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.487365] freelist_init: i=53, log_new: lba=0, old_map=81ff7f6b, new_map=81ff7f6b, seq=1
+[    6.495770] freelist_init: i=53, old=1, new=0, sub=1, seq=2, block=81ff7f6b
+[    6.510479] freelist_init: i=54, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.517469] freelist_init: i=54, log_new: lba=0, old_map=81ff7f6c, new_map=81ff7f6c, seq=1
+[    6.525436] freelist_init: i=54, old=1, new=0, sub=1, seq=2, block=81ff7f6c
+[    6.540634] freelist_init: i=55, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.547446] freelist_init: i=55, log_new: lba=0, old_map=81ff7f6d, new_map=81ff7f6d, seq=1
+[    6.555488] freelist_init: i=55, old=1, new=0, sub=1, seq=2, block=81ff7f6d
+[    6.570911] freelist_init: i=56, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.577969] freelist_init: i=56, log_new: lba=0, old_map=81ff7f6e, new_map=81ff7f6e, seq=1
+[    6.585400] freelist_init: i=56, old=1, new=0, sub=1, seq=2, block=81ff7f6e
+[    6.591894] freelist_init: i=57, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.605830] freelist_init: i=57, log_new: lba=0, old_map=81ff7f6f, new_map=81ff7f6f, seq=1
+[    6.613527] freelist_init: i=57, old=1, new=0, sub=1, seq=2, block=81ff7f6f
+[    6.619252] freelist_init: i=58, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.632562] freelist_init: i=58, log_new: lba=0, old_map=81ff7f70, new_map=81ff7f70, seq=1
+[    6.639734] freelist_init: i=58, old=1, new=0, sub=1, seq=2, block=81ff7f70
+[    6.645509] freelist_init: i=59, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.651063] freelist_init: i=59, log_new: lba=0, old_map=81ff7f71, new_map=81ff7f71, seq=1
+[    6.663215] freelist_init: i=59, old=1, new=0, sub=1, seq=2, block=81ff7f71
+[    6.668351] freelist_init: i=5a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.673745] freelist_init: i=5a, log_new: lba=0, old_map=81ff7f72, new_map=81ff7f72, seq=1
+[    6.679596] freelist_init: i=5a, old=1, new=0, sub=1, seq=2, block=81ff7f72
+[    6.683839] freelist_init: i=5b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.694161] freelist_init: i=5b, log_new: lba=0, old_map=81ff7f73, new_map=81ff7f73, seq=1
+[    6.699565] freelist_init: i=5b, old=1, new=0, sub=1, seq=2, block=81ff7f73
+[    6.704287] freelist_init: i=5c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.708354] freelist_init: i=5c, log_new: lba=0, old_map=81ff7f74, new_map=81ff7f74, seq=1
+[    6.713283] freelist_init: i=5c, old=1, new=0, sub=1, seq=2, block=81ff7f74
+[    6.722691] freelist_init: i=5d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.726852] freelist_init: i=5d, log_new: lba=0, old_map=81ff7f75, new_map=81ff7f75, seq=1
+[    6.731682] freelist_init: i=5d, old=1, new=0, sub=1, seq=2, block=81ff7f75
+[    6.735949] freelist_init: i=5e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.740134] freelist_init: i=5e, log_new: lba=0, old_map=81ff7f76, new_map=81ff7f76, seq=1
+[    6.744544] freelist_init: i=5e, old=1, new=0, sub=1, seq=2, block=81ff7f76
+[    6.753367] freelist_init: i=5f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.756945] freelist_init: i=5f, log_new: lba=0, old_map=81ff7f77, new_map=81ff7f77, seq=1
+[    6.761111] freelist_init: i=5f, old=1, new=0, sub=1, seq=2, block=81ff7f77
+[    6.765198] freelist_init: i=60, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.768901] freelist_init: i=60, log_new: lba=0, old_map=81ff7f78, new_map=81ff7f78, seq=1
+[    6.773181] freelist_init: i=60, old=1, new=0, sub=1, seq=2, block=81ff7f78
+[    6.776748] freelist_init: i=61, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.785155] freelist_init: i=61, log_new: lba=0, old_map=81ff7f79, new_map=81ff7f79, seq=1
+[    6.789139] freelist_init: i=61, old=1, new=0, sub=1, seq=2, block=81ff7f79
+[    6.792636] freelist_init: i=62, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.796412] freelist_init: i=62, log_new: lba=0, old_map=81ff7f7a, new_map=81ff7f7a, seq=1
+[    6.800754] freelist_init: i=62, old=1, new=0, sub=1, seq=2, block=81ff7f7a
+[    6.804079] freelist_init: i=63, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.807503] freelist_init: i=63, log_new: lba=0, old_map=81ff7f7b, new_map=81ff7f7b, seq=1
+[    6.815558] freelist_init: i=63, old=1, new=0, sub=1, seq=2, block=81ff7f7b
+[    6.818678] freelist_init: i=64, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.822288] freelist_init: i=64, log_new: lba=0, old_map=81ff7f7c, new_map=81ff7f7c, seq=1
+[    6.826631] freelist_init: i=64, old=1, new=0, sub=1, seq=2, block=81ff7f7c
+[    6.830225] freelist_init: i=65, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.833564] freelist_init: i=65, log_new: lba=0, old_map=81ff7f7d, new_map=81ff7f7d, seq=1
+[    6.837274] freelist_init: i=65, old=1, new=0, sub=1, seq=2, block=81ff7f7d
+[    6.840461] freelist_init: i=66, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.847864] freelist_init: i=66, log_new: lba=0, old_map=81ff7f7e, new_map=81ff7f7e, seq=1
+[    6.851922] freelist_init: i=66, old=1, new=0, sub=1, seq=2, block=81ff7f7e
+[    6.856108] freelist_init: i=67, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.860308] freelist_init: i=67, log_new: lba=0, old_map=81ff7f7f, new_map=81ff7f7f, seq=1
+[    6.865072] freelist_init: i=67, old=1, new=0, sub=1, seq=2, block=81ff7f7f
+[    6.868887] freelist_init: i=68, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.872915] freelist_init: i=68, log_new: lba=0, old_map=81ff7f80, new_map=81ff7f80, seq=1
+[    6.878644] freelist_init: i=68, old=1, new=0, sub=1, seq=2, block=81ff7f80
+[    6.881808] freelist_init: i=69, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.885561] freelist_init: i=69, log_new: lba=0, old_map=81ff7f81, new_map=81ff7f81, seq=1
+[    6.890059] freelist_init: i=69, old=1, new=0, sub=1, seq=2, block=81ff7f81
+[    6.893848] freelist_init: i=6a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.897320] freelist_init: i=6a, log_new: lba=0, old_map=81ff7f82, new_map=81ff7f82, seq=1
+[    6.901420] freelist_init: i=6a, old=1, new=0, sub=1, seq=2, block=81ff7f82
+[    6.909660] freelist_init: i=6b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.913197] freelist_init: i=6b, log_new: lba=0, old_map=81ff7f83, new_map=81ff7f83, seq=1
+[    6.917525] freelist_init: i=6b, old=1, new=0, sub=1, seq=2, block=81ff7f83
+[    6.921498] freelist_init: i=6c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.925754] freelist_init: i=6c, log_new: lba=0, old_map=81ff7f84, new_map=81ff7f84, seq=1
+[    6.930438] freelist_init: i=6c, old=1, new=0, sub=1, seq=2, block=81ff7f84
+[    6.934386] freelist_init: i=6d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.940338] freelist_init: i=6d, log_new: lba=0, old_map=81ff7f85, new_map=81ff7f85, seq=1
+[    6.944297] freelist_init: i=6d, old=1, new=0, sub=1, seq=2, block=81ff7f85
+[    6.947960] freelist_init: i=6e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.951839] freelist_init: i=6e, log_new: lba=0, old_map=81ff7f86, new_map=81ff7f86, seq=1
+[    6.956284] freelist_init: i=6e, old=1, new=0, sub=1, seq=2, block=81ff7f86
+[    6.959928] freelist_init: i=6f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.963537] freelist_init: i=6f, log_new: lba=0, old_map=81ff7f87, new_map=81ff7f87, seq=1
+[    6.971894] freelist_init: i=6f, old=1, new=0, sub=1, seq=2, block=81ff7f87
+[    6.975419] freelist_init: i=70, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.979097] freelist_init: i=70, log_new: lba=0, old_map=81ff7f88, new_map=81ff7f88, seq=1
+[    6.983588] freelist_init: i=70, old=1, new=0, sub=1, seq=2, block=81ff7f88
+[    6.987130] freelist_init: i=71, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    6.990650] freelist_init: i=71, log_new: lba=0, old_map=81ff7f89, new_map=81ff7f89, seq=1
+[    6.994722] freelist_init: i=71, old=1, new=0, sub=1, seq=2, block=81ff7f89
+[    6.998250] freelist_init: i=72, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.008178] freelist_init: i=72, log_new: lba=0, old_map=81ff7f8a, new_map=81ff7f8a, seq=1
+[    7.012598] freelist_init: i=72, old=1, new=0, sub=1, seq=2, block=81ff7f8a
+[    7.016344] freelist_init: i=73, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.020211] freelist_init: i=73, log_new: lba=0, old_map=81ff7f8b, new_map=81ff7f8b, seq=1
+[    7.024561] freelist_init: i=73, old=1, new=0, sub=1, seq=2, block=81ff7f8b
+[    7.028399] freelist_init: i=74, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.036527] freelist_init: i=74, log_new: lba=0, old_map=81ff7f8c, new_map=81ff7f8c, seq=1
+[    7.041057] freelist_init: i=74, old=1, new=0, sub=1, seq=2, block=81ff7f8c
+[    7.045106] freelist_init: i=75, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.048869] freelist_init: i=75, log_new: lba=0, old_map=81ff7f8d, new_map=81ff7f8d, seq=1
+[    7.053328] freelist_init: i=75, old=1, new=0, sub=1, seq=2, block=81ff7f8d
+[    7.057002] freelist_init: i=76, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.060846] freelist_init: i=76, log_new: lba=0, old_map=81ff7f8e, new_map=81ff7f8e, seq=1
+[    7.069993] freelist_init: i=76, old=1, new=0, sub=1, seq=2, block=81ff7f8e
+[    7.073916] freelist_init: i=77, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.078010] freelist_init: i=77, log_new: lba=0, old_map=81ff7f8f, new_map=81ff7f8f, seq=1
+[    7.083255] freelist_init: i=77, old=1, new=0, sub=1, seq=2, block=81ff7f8f
+[    7.088113] freelist_init: i=78, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.092884] freelist_init: i=78, log_new: lba=0, old_map=81ff7f90, new_map=81ff7f90, seq=1
+[    7.099904] freelist_init: i=78, old=1, new=0, sub=1, seq=2, block=81ff7f90
+[    7.103989] freelist_init: i=79, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.108130] freelist_init: i=79, log_new: lba=0, old_map=81ff7f91, new_map=81ff7f91, seq=1
+[    7.113517] freelist_init: i=79, old=1, new=0, sub=1, seq=2, block=81ff7f91
+[    7.117057] freelist_init: i=7a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.120851] freelist_init: i=7a, log_new: lba=0, old_map=81ff7f92, new_map=81ff7f92, seq=1
+[    7.130492] freelist_init: i=7a, old=1, new=0, sub=1, seq=2, block=81ff7f92
+[    7.134513] freelist_init: i=7b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.138815] freelist_init: i=7b, log_new: lba=0, old_map=81ff7f93, new_map=81ff7f93, seq=1
+[    7.143909] freelist_init: i=7b, old=1, new=0, sub=1, seq=2, block=81ff7f93
+[    7.148076] freelist_init: i=7c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.152108] freelist_init: i=7c, log_new: lba=0, old_map=81ff7f94, new_map=81ff7f94, seq=1
+[    7.161896] freelist_init: i=7c, old=1, new=0, sub=1, seq=2, block=81ff7f94
+[    7.165921] freelist_init: i=7d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.173677] freelist_init: i=7d, log_new: lba=0, old_map=81ff7f95, new_map=81ff7f95, seq=1
+[    7.182502] freelist_init: i=7d, old=1, new=0, sub=1, seq=2, block=81ff7f95
+[    7.197463] freelist_init: i=7e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.205155] freelist_init: i=7e, log_new: lba=0, old_map=81ff7f96, new_map=81ff7f96, seq=1
+[    7.214161] freelist_init: i=7e, old=1, new=0, sub=1, seq=2, block=81ff7f96
+[    7.226505] freelist_init: i=7f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.232329] freelist_init: i=7f, log_new: lba=0, old_map=81ff7f97, new_map=81ff7f97, seq=1
+[    7.238678] freelist_init: i=7f, old=1, new=0, sub=1, seq=2, block=81ff7f97
+[    7.244030] freelist_init: i=80, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.256569] freelist_init: i=80, log_new: lba=0, old_map=81ff7f98, new_map=81ff7f98, seq=1
+[    7.263479] freelist_init: i=80, old=1, new=0, sub=1, seq=2, block=81ff7f98
+[    7.268812] freelist_init: i=81, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.274153] freelist_init: i=81, log_new: lba=0, old_map=81ff7f99, new_map=81ff7f99, seq=1
+[    7.287106] freelist_init: i=81, old=1, new=0, sub=1, seq=2, block=81ff7f99
+[    7.292725] freelist_init: i=82, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.298126] freelist_init: i=82, log_new: lba=0, old_map=81ff7f9a, new_map=81ff7f9a, seq=1
+[    7.304633] freelist_init: i=82, old=1, new=0, sub=1, seq=2, block=81ff7f9a
+[    7.310086] freelist_init: i=83, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.322831] freelist_init: i=83, log_new: lba=0, old_map=81ff7f9b, new_map=81ff7f9b, seq=1
+[    7.329681] freelist_init: i=83, old=1, new=0, sub=1, seq=2, block=81ff7f9b
+[    7.334592] freelist_init: i=84, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.339914] freelist_init: i=84, log_new: lba=0, old_map=81ff7f9c, new_map=81ff7f9c, seq=1
+[    7.353101] freelist_init: i=84, old=1, new=0, sub=1, seq=2, block=81ff7f9c
+[    7.358819] freelist_init: i=85, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.363984] freelist_init: i=85, log_new: lba=0, old_map=81ff7f9d, new_map=81ff7f9d, seq=1
+[    7.370066] freelist_init: i=85, old=1, new=0, sub=1, seq=2, block=81ff7f9d
+[    7.381658] freelist_init: i=86, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.387314] freelist_init: i=86, log_new: lba=0, old_map=81ff7f9e, new_map=81ff7f9e, seq=1
+[    7.393615] freelist_init: i=86, old=1, new=0, sub=1, seq=2, block=81ff7f9e
+[    7.399180] freelist_init: i=87, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.411013] freelist_init: i=87, log_new: lba=0, old_map=81ff7f9f, new_map=81ff7f9f, seq=1
+[    7.417261] freelist_init: i=87, old=1, new=0, sub=1, seq=2, block=81ff7f9f
+[    7.422419] freelist_init: i=88, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.427860] freelist_init: i=88, log_new: lba=0, old_map=81ff7fa0, new_map=81ff7fa0, seq=1
+[    7.433618] freelist_init: i=88, old=1, new=0, sub=1, seq=2, block=81ff7fa0
+[    7.444458] freelist_init: i=89, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.449329] freelist_init: i=89, log_new: lba=0, old_map=81ff7fa1, new_map=81ff7fa1, seq=1
+[    7.455318] freelist_init: i=89, old=1, new=0, sub=1, seq=2, block=81ff7fa1
+[    7.460351] freelist_init: i=8a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.465137] freelist_init: i=8a, log_new: lba=0, old_map=81ff7fa2, new_map=81ff7fa2, seq=1
+[    7.476417] freelist_init: i=8a, old=1, new=0, sub=1, seq=2, block=81ff7fa2
+[    7.481103] freelist_init: i=8b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.486008] freelist_init: i=8b, log_new: lba=0, old_map=81ff7fa3, new_map=81ff7fa3, seq=1
+[    7.491603] freelist_init: i=8b, old=1, new=0, sub=1, seq=2, block=81ff7fa3
+[    7.496189] freelist_init: i=8c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.506259] freelist_init: i=8c, log_new: lba=0, old_map=81ff7fa4, new_map=81ff7fa4, seq=1
+[    7.511757] freelist_init: i=8c, old=1, new=0, sub=1, seq=2, block=81ff7fa4
+[    7.516714] freelist_init: i=8d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.521293] freelist_init: i=8d, log_new: lba=0, old_map=81ff7fa5, new_map=81ff7fa5, seq=1
+[    7.526047] freelist_init: i=8d, old=1, new=0, sub=1, seq=2, block=81ff7fa5
+[    7.535853] freelist_init: i=8e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.539921] freelist_init: i=8e, log_new: lba=0, old_map=81ff7fa6, new_map=81ff7fa6, seq=1
+[    7.545175] freelist_init: i=8e, old=1, new=0, sub=1, seq=2, block=81ff7fa6
+[    7.549278] freelist_init: i=8f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.553513] freelist_init: i=8f, log_new: lba=0, old_map=81ff7fa7, new_map=81ff7fa7, seq=1
+[    7.558224] freelist_init: i=8f, old=1, new=0, sub=1, seq=2, block=81ff7fa7
+[    7.567657] freelist_init: i=90, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.571910] freelist_init: i=90, log_new: lba=0, old_map=81ff7fa8, new_map=81ff7fa8, seq=1
+[    7.577135] freelist_init: i=90, old=1, new=0, sub=1, seq=2, block=81ff7fa8
+[    7.581967] freelist_init: i=91, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.586353] freelist_init: i=91, log_new: lba=0, old_map=81ff7fa9, new_map=81ff7fa9, seq=1
+[    7.591416] freelist_init: i=91, old=1, new=0, sub=1, seq=2, block=81ff7fa9
+[    7.598025] freelist_init: i=92, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.601836] freelist_init: i=92, log_new: lba=0, old_map=81ff7faa, new_map=81ff7faa, seq=1
+[    7.606776] freelist_init: i=92, old=1, new=0, sub=1, seq=2, block=81ff7faa
+[    7.610940] freelist_init: i=93, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.614949] freelist_init: i=93, log_new: lba=0, old_map=81ff7fab, new_map=81ff7fab, seq=1
+[    7.619417] freelist_init: i=93, old=1, new=0, sub=1, seq=2, block=81ff7fab
+[    7.628604] freelist_init: i=94, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.632370] freelist_init: i=94, log_new: lba=0, old_map=81ff7fac, new_map=81ff7fac, seq=1
+[    7.637182] freelist_init: i=94, old=1, new=0, sub=1, seq=2, block=81ff7fac
+[    7.641150] freelist_init: i=95, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.644969] freelist_init: i=95, log_new: lba=0, old_map=81ff7fad, new_map=81ff7fad, seq=1
+[    7.649359] freelist_init: i=95, old=1, new=0, sub=1, seq=2, block=81ff7fad
+[    7.653012] freelist_init: i=96, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.661464] freelist_init: i=96, log_new: lba=0, old_map=81ff7fae, new_map=81ff7fae, seq=1
+[    7.665964] freelist_init: i=96, old=1, new=0, sub=1, seq=2, block=81ff7fae
+[    7.670122] freelist_init: i=97, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.674154] freelist_init: i=97, log_new: lba=0, old_map=81ff7faf, new_map=81ff7faf, seq=1
+[    7.678686] freelist_init: i=97, old=1, new=0, sub=1, seq=2, block=81ff7faf
+[    7.682367] freelist_init: i=98, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.690884] freelist_init: i=98, log_new: lba=0, old_map=81ff7fb0, new_map=81ff7fb0, seq=1
+[    7.695083] freelist_init: i=98, old=1, new=0, sub=1, seq=2, block=81ff7fb0
+[    7.698861] freelist_init: i=99, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.702768] freelist_init: i=99, log_new: lba=0, old_map=81ff7fb1, new_map=81ff7fb1, seq=1
+[    7.707020] freelist_init: i=99, old=1, new=0, sub=1, seq=2, block=81ff7fb1
+[    7.710461] freelist_init: i=9a, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.713857] freelist_init: i=9a, log_new: lba=0, old_map=81ff7fb2, new_map=81ff7fb2, seq=1
+[    7.732248] freelist_init: i=9a, old=1, new=0, sub=1, seq=2, block=81ff7fb2
+[    7.737732] freelist_init: i=9b, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.742930] freelist_init: i=9b, log_new: lba=0, old_map=81ff7fb3, new_map=81ff7fb3, seq=1
+[    7.748843] freelist_init: i=9b, old=1, new=0, sub=1, seq=2, block=81ff7fb3
+[    7.753600] freelist_init: i=9c, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.758563] freelist_init: i=9c, log_new: lba=0, old_map=81ff7fb4, new_map=81ff7fb4, seq=1
+[    7.764401] freelist_init: i=9c, old=1, new=0, sub=1, seq=2, block=81ff7fb4
+[    7.769677] freelist_init: i=9d, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.774618] freelist_init: i=9d, log_new: lba=0, old_map=81ff7fb5, new_map=81ff7fb5, seq=1
+[    7.780239] freelist_init: i=9d, old=1, new=0, sub=1, seq=2, block=81ff7fb5
+[    7.784670] freelist_init: i=9e, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.789219] freelist_init: i=9e, log_new: lba=0, old_map=81ff7fb6, new_map=81ff7fb6, seq=1
+[    7.794620] freelist_init: i=9e, old=1, new=0, sub=1, seq=2, block=81ff7fb6
+[    7.799277] freelist_init: i=9f, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.803986] freelist_init: i=9f, log_new: lba=0, old_map=81ff7fb7, new_map=81ff7fb7, seq=1
+[    7.809311] freelist_init: i=9f, old=1, new=0, sub=1, seq=2, block=81ff7fb7
+[    7.813497] freelist_init: i=a0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.818198] freelist_init: i=a0, log_new: lba=0, old_map=81ff7fb8, new_map=81ff7fb8, seq=1
+[    7.825976] freelist_init: i=a0, old=1, new=0, sub=1, seq=2, block=81ff7fb8
+[    7.832233] freelist_init: i=a1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.837766] freelist_init: i=a1, log_new: lba=0, old_map=81ff7fb9, new_map=81ff7fb9, seq=1
+[    7.844866] freelist_init: i=a1, old=1, new=0, sub=1, seq=2, block=81ff7fb9
+[    7.849690] freelist_init: i=a2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.855763] freelist_init: i=a2, log_new: lba=0, old_map=81ff7fba, new_map=81ff7fba, seq=1
+[    7.863921] freelist_init: i=a2, old=1, new=0, sub=1, seq=2, block=81ff7fba
+[    7.870444] freelist_init: i=a3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.877335] freelist_init: i=a3, log_new: lba=0, old_map=81ff7fbb, new_map=81ff7fbb, seq=1
+[    7.887575] freelist_init: i=a3, old=1, new=0, sub=1, seq=2, block=81ff7fbb
+[    7.894715] freelist_init: i=a4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.901723] freelist_init: i=a4, log_new: lba=0, old_map=81ff7fbc, new_map=81ff7fbc, seq=1
+[    7.909786] freelist_init: i=a4, old=1, new=0, sub=1, seq=2, block=81ff7fbc
+[    7.918608] freelist_init: i=a5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.925914] freelist_init: i=a5, log_new: lba=0, old_map=81ff7fbd, new_map=81ff7fbd, seq=1
+[    7.933571] freelist_init: i=a5, old=1, new=0, sub=1, seq=2, block=81ff7fbd
+[    7.948503] freelist_init: i=a6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.955653] freelist_init: i=a6, log_new: lba=0, old_map=81ff7fbe, new_map=81ff7fbe, seq=1
+[    7.963661] freelist_init: i=a6, old=1, new=0, sub=1, seq=2, block=81ff7fbe
+[    7.978108] freelist_init: i=a7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    7.985193] freelist_init: i=a7, log_new: lba=0, old_map=81ff7fbf, new_map=81ff7fbf, seq=1
+[    7.993429] freelist_init: i=a7, old=1, new=0, sub=1, seq=2, block=81ff7fbf
+[    8.011119] freelist_init: i=a8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.019286] freelist_init: i=a8, log_new: lba=0, old_map=81ff7fc0, new_map=81ff7fc0, seq=1
+[    8.032672] freelist_init: i=a8, old=1, new=0, sub=1, seq=2, block=81ff7fc0
+[    8.043405] freelist_init: i=a9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.051818] freelist_init: i=a9, log_new: lba=0, old_map=81ff7fc1, new_map=81ff7fc1, seq=1
+[    8.069396] freelist_init: i=a9, old=1, new=0, sub=1, seq=2, block=81ff7fc1
+[    8.078456] freelist_init: i=aa, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.086167] freelist_init: i=aa, log_new: lba=0, old_map=81ff7fc2, new_map=81ff7fc2, seq=1
+[    8.103615] freelist_init: i=aa, old=1, new=0, sub=1, seq=2, block=81ff7fc2
+[    8.112215] freelist_init: i=ab, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.120311] freelist_init: i=ab, log_new: lba=0, old_map=81ff7fc3, new_map=81ff7fc3, seq=1
+[    8.138205] freelist_init: i=ab, old=1, new=0, sub=1, seq=2, block=81ff7fc3
+[    8.145515] freelist_init: i=ac, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.153673] freelist_init: i=ac, log_new: lba=0, old_map=81ff7fc4, new_map=81ff7fc4, seq=1
+[    8.172165] freelist_init: i=ac, old=1, new=0, sub=1, seq=2, block=81ff7fc4
+[    8.180293] freelist_init: i=ad, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.196020] freelist_init: i=ad, log_new: lba=0, old_map=81ff7fc5, new_map=81ff7fc5, seq=1
+[    8.205512] freelist_init: i=ad, old=1, new=0, sub=1, seq=2, block=81ff7fc5
+[    8.213307] freelist_init: i=ae, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.232593] freelist_init: i=ae, log_new: lba=0, old_map=81ff7fc6, new_map=81ff7fc6, seq=1
+[    8.243419] freelist_init: i=ae, old=1, new=0, sub=1, seq=2, block=81ff7fc6
+[    8.265372] freelist_init: i=af, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.275653] freelist_init: i=af, log_new: lba=0, old_map=81ff7fc7, new_map=81ff7fc7, seq=1
+[    8.292943] freelist_init: i=af, old=1, new=0, sub=1, seq=2, block=81ff7fc7
+[    8.300346] freelist_init: i=b0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.308073] freelist_init: i=b0, log_new: lba=0, old_map=81ff7fc8, new_map=81ff7fc8, seq=1
+[    8.325822] freelist_init: i=b0, old=1, new=0, sub=1, seq=2, block=81ff7fc8
+[    8.333612] freelist_init: i=b1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.340177] freelist_init: i=b1, log_new: lba=0, old_map=81ff7fc9, new_map=81ff7fc9, seq=1
+[    8.357936] freelist_init: i=b1, old=1, new=0, sub=1, seq=2, block=81ff7fc9
+[    8.365987] freelist_init: i=b2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.381499] freelist_init: i=b2, log_new: lba=0, old_map=81ff7fca, new_map=81ff7fca, seq=1
+[    8.390869] freelist_init: i=b2, old=1, new=0, sub=1, seq=2, block=81ff7fca
+[    8.398000] freelist_init: i=b3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.413531] freelist_init: i=b3, log_new: lba=0, old_map=81ff7fcb, new_map=81ff7fcb, seq=1
+[    8.426715] freelist_init: i=b3, old=1, new=0, sub=1, seq=2, block=81ff7fcb
+[    8.434436] freelist_init: i=b4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.446513] freelist_init: i=b4, log_new: lba=0, old_map=81ff7fcc, new_map=81ff7fcc, seq=1
+[    8.456329] freelist_init: i=b4, old=1, new=0, sub=1, seq=2, block=81ff7fcc
+[    8.463559] freelist_init: i=b5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.479815] freelist_init: i=b5, log_new: lba=0, old_map=81ff7fcd, new_map=81ff7fcd, seq=1
+[    8.489734] freelist_init: i=b5, old=1, new=0, sub=1, seq=2, block=81ff7fcd
+[    8.497313] freelist_init: i=b6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.513416] freelist_init: i=b6, log_new: lba=0, old_map=81ff7fce, new_map=81ff7fce, seq=1
+[    8.522488] freelist_init: i=b6, old=1, new=0, sub=1, seq=2, block=81ff7fce
+[    8.538303] freelist_init: i=b7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.546093] freelist_init: i=b7, log_new: lba=0, old_map=81ff7fcf, new_map=81ff7fcf, seq=1
+[    8.554916] freelist_init: i=b7, old=1, new=0, sub=1, seq=2, block=81ff7fcf
+[    8.571102] freelist_init: i=b8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.578009] freelist_init: i=b8, log_new: lba=0, old_map=81ff7fd0, new_map=81ff7fd0, seq=1
+[    8.586287] freelist_init: i=b8, old=1, new=0, sub=1, seq=2, block=81ff7fd0
+[    8.601233] freelist_init: i=b9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.607591] freelist_init: i=b9, log_new: lba=0, old_map=81ff7fd1, new_map=81ff7fd1, seq=1
+[    8.615896] freelist_init: i=b9, old=1, new=0, sub=1, seq=2, block=81ff7fd1
+[    8.622865] freelist_init: i=ba, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.637884] freelist_init: i=ba, log_new: lba=0, old_map=81ff7fd2, new_map=81ff7fd2, seq=1
+[    8.645895] freelist_init: i=ba, old=1, new=0, sub=1, seq=2, block=81ff7fd2
+[    8.651727] freelist_init: i=bb, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.668019] freelist_init: i=bb, log_new: lba=0, old_map=81ff7fd3, new_map=81ff7fd3, seq=1
+[    8.676466] freelist_init: i=bb, old=1, new=0, sub=1, seq=2, block=81ff7fd3
+[    8.683679] freelist_init: i=bc, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.698533] freelist_init: i=bc, log_new: lba=0, old_map=81ff7fd4, new_map=81ff7fd4, seq=1
+[    8.707044] freelist_init: i=bc, old=1, new=0, sub=1, seq=2, block=81ff7fd4
+[    8.713962] freelist_init: i=bd, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.734111] freelist_init: i=bd, log_new: lba=0, old_map=81ff7fd5, new_map=81ff7fd5, seq=1
+[    8.743565] freelist_init: i=bd, old=1, new=0, sub=1, seq=2, block=81ff7fd5
+[    8.760902] freelist_init: i=be, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.770023] freelist_init: i=be, log_new: lba=0, old_map=81ff7fd6, new_map=81ff7fd6, seq=1
+[    8.778019] freelist_init: i=be, old=1, new=0, sub=1, seq=2, block=81ff7fd6
+[    8.791337] freelist_init: i=bf, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.797813] freelist_init: i=bf, log_new: lba=0, old_map=81ff7fd7, new_map=81ff7fd7, seq=1
+[    8.805177] freelist_init: i=bf, old=1, new=0, sub=1, seq=2, block=81ff7fd7
+[    8.817800] freelist_init: i=c0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.823451] freelist_init: i=c0, log_new: lba=0, old_map=81ff7fd8, new_map=81ff7fd8, seq=1
+[    8.830571] freelist_init: i=c0, old=1, new=0, sub=1, seq=2, block=81ff7fd8
+[    8.836311] freelist_init: i=c1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.849082] freelist_init: i=c1, log_new: lba=0, old_map=81ff7fd9, new_map=81ff7fd9, seq=1
+[    8.855895] freelist_init: i=c1, old=1, new=0, sub=1, seq=2, block=81ff7fd9
+[    8.861160] freelist_init: i=c2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.866649] freelist_init: i=c2, log_new: lba=0, old_map=81ff7fda, new_map=81ff7fda, seq=1
+[    8.872673] freelist_init: i=c2, old=1, new=0, sub=1, seq=2, block=81ff7fda
+[    8.883572] freelist_init: i=c3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.888375] freelist_init: i=c3, log_new: lba=0, old_map=81ff7fdb, new_map=81ff7fdb, seq=1
+[    8.894001] freelist_init: i=c3, old=1, new=0, sub=1, seq=2, block=81ff7fdb
+[    8.898478] freelist_init: i=c4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.902879] freelist_init: i=c4, log_new: lba=0, old_map=81ff7fdc, new_map=81ff7fdc, seq=1
+[    8.913078] freelist_init: i=c4, old=1, new=0, sub=1, seq=2, block=81ff7fdc
+[    8.917058] freelist_init: i=c5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.921476] freelist_init: i=c5, log_new: lba=0, old_map=81ff7fdd, new_map=81ff7fdd, seq=1
+[    8.926492] freelist_init: i=c5, old=1, new=0, sub=1, seq=2, block=81ff7fdd
+[    8.930227] freelist_init: i=c6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.934156] freelist_init: i=c6, log_new: lba=0, old_map=81ff7fde, new_map=81ff7fde, seq=1
+[    8.942702] freelist_init: i=c6, old=1, new=0, sub=1, seq=2, block=81ff7fde
+[    8.946302] freelist_init: i=c7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.950246] freelist_init: i=c7, log_new: lba=0, old_map=81ff7fdf, new_map=81ff7fdf, seq=1
+[    8.955297] freelist_init: i=c7, old=1, new=0, sub=1, seq=2, block=81ff7fdf
+[    8.959020] freelist_init: i=c8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.962737] freelist_init: i=c8, log_new: lba=0, old_map=81ff7fe0, new_map=81ff7fe0, seq=1
+[    8.972236] freelist_init: i=c8, old=1, new=0, sub=1, seq=2, block=81ff7fe0
+[    8.975950] freelist_init: i=c9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.979750] freelist_init: i=c9, log_new: lba=0, old_map=81ff7fe1, new_map=81ff7fe1, seq=1
+[    8.984283] freelist_init: i=c9, old=1, new=0, sub=1, seq=2, block=81ff7fe1
+[    8.987980] freelist_init: i=ca, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    8.991504] freelist_init: i=ca, log_new: lba=0, old_map=81ff7fe2, new_map=81ff7fe2, seq=1
+[    8.995681] freelist_init: i=ca, old=1, new=0, sub=1, seq=2, block=81ff7fe2
+[    9.004645] freelist_init: i=cb, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.008471] freelist_init: i=cb, log_new: lba=0, old_map=81ff7fe3, new_map=81ff7fe3, seq=1
+[    9.014386] freelist_init: i=cb, old=1, new=0, sub=1, seq=2, block=81ff7fe3
+[    9.019519] freelist_init: i=cc, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.024468] freelist_init: i=cc, log_new: lba=0, old_map=81ff7fe4, new_map=81ff7fe4, seq=1
+[    9.030041] freelist_init: i=cc, old=1, new=0, sub=1, seq=2, block=81ff7fe4
+[    9.034629] freelist_init: i=cd, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.039201] freelist_init: i=cd, log_new: lba=0, old_map=81ff7fe5, new_map=81ff7fe5, seq=1
+[    9.044395] freelist_init: i=cd, old=1, new=0, sub=1, seq=2, block=81ff7fe5
+[    9.048961] freelist_init: i=ce, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.053522] freelist_init: i=ce, log_new: lba=0, old_map=81ff7fe6, new_map=81ff7fe6, seq=1
+[    9.058572] freelist_init: i=ce, old=1, new=0, sub=1, seq=2, block=81ff7fe6
+[    9.062816] freelist_init: i=cf, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.069133] freelist_init: i=cf, log_new: lba=0, old_map=81ff7fe7, new_map=81ff7fe7, seq=1
+[    9.074435] freelist_init: i=cf, old=1, new=0, sub=1, seq=2, block=81ff7fe7
+[    9.079216] freelist_init: i=d0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.083349] freelist_init: i=d0, log_new: lba=0, old_map=81ff7fe8, new_map=81ff7fe8, seq=1
+[    9.088536] freelist_init: i=d0, old=1, new=0, sub=1, seq=2, block=81ff7fe8
+[    9.098510] freelist_init: i=d1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.103282] freelist_init: i=d1, log_new: lba=0, old_map=81ff7fe9, new_map=81ff7fe9, seq=1
+[    9.108865] freelist_init: i=d1, old=1, new=0, sub=1, seq=2, block=81ff7fe9
+[    9.113267] freelist_init: i=d2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.117648] freelist_init: i=d2, log_new: lba=0, old_map=81ff7fea, new_map=81ff7fea, seq=1
+[    9.122635] freelist_init: i=d2, old=1, new=0, sub=1, seq=2, block=81ff7fea
+[    9.132599] freelist_init: i=d3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.137487] freelist_init: i=d3, log_new: lba=0, old_map=81ff7feb, new_map=81ff7feb, seq=1
+[    9.143139] freelist_init: i=d3, old=1, new=0, sub=1, seq=2, block=81ff7feb
+[    9.147698] freelist_init: i=d4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.151981] freelist_init: i=d4, log_new: lba=0, old_map=81ff7fec, new_map=81ff7fec, seq=1
+[    9.162476] freelist_init: i=d4, old=1, new=0, sub=1, seq=2, block=81ff7fec
+[    9.166982] freelist_init: i=d5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.183002] freelist_init: i=d5, log_new: lba=0, old_map=81ff7fed, new_map=81ff7fed, seq=1
+[    9.189007] freelist_init: i=d5, old=1, new=0, sub=1, seq=2, block=81ff7fed
+[    9.193802] freelist_init: i=d6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.199356] freelist_init: i=d6, log_new: lba=0, old_map=81ff7fee, new_map=81ff7fee, seq=1
+[    9.205834] freelist_init: i=d6, old=1, new=0, sub=1, seq=2, block=81ff7fee
+[    9.211137] freelist_init: i=d7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.216304] freelist_init: i=d7, log_new: lba=0, old_map=81ff7fef, new_map=81ff7fef, seq=1
+[    9.222595] freelist_init: i=d7, old=1, new=0, sub=1, seq=2, block=81ff7fef
+[    9.228004] freelist_init: i=d8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.234476] freelist_init: i=d8, log_new: lba=0, old_map=81ff7ff0, new_map=81ff7ff0, seq=1
+[    9.242067] freelist_init: i=d8, old=1, new=0, sub=1, seq=2, block=81ff7ff0
+[    9.248532] freelist_init: i=d9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.257274] freelist_init: i=d9, log_new: lba=0, old_map=81ff7ff1, new_map=81ff7ff1, seq=1
+[    9.264323] freelist_init: i=d9, old=1, new=0, sub=1, seq=2, block=81ff7ff1
+[    9.270740] freelist_init: i=da, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.277444] freelist_init: i=da, log_new: lba=0, old_map=81ff7ff2, new_map=81ff7ff2, seq=1
+[    9.299960] freelist_init: i=da, old=1, new=0, sub=1, seq=2, block=81ff7ff2
+[    9.308279] freelist_init: i=db, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.326297] freelist_init: i=db, log_new: lba=0, old_map=81ff7ff3, new_map=81ff7ff3, seq=1
+[    9.334784] freelist_init: i=db, old=1, new=0, sub=1, seq=2, block=81ff7ff3
+[    9.342174] freelist_init: i=dc, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.355970] freelist_init: i=dc, log_new: lba=0, old_map=81ff7ff4, new_map=81ff7ff4, seq=1
+[    9.364008] freelist_init: i=dc, old=1, new=0, sub=1, seq=2, block=81ff7ff4
+[    9.370618] freelist_init: i=dd, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.385866] freelist_init: i=dd, log_new: lba=0, old_map=81ff7ff5, new_map=81ff7ff5, seq=1
+[    9.394246] freelist_init: i=dd, old=1, new=0, sub=1, seq=2, block=81ff7ff5
+[    9.400725] freelist_init: i=de, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.416664] freelist_init: i=de, log_new: lba=0, old_map=81ff7ff6, new_map=81ff7ff6, seq=1
+[    9.424856] freelist_init: i=de, old=1, new=0, sub=1, seq=2, block=81ff7ff6
+[    9.431965] freelist_init: i=df, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.447282] freelist_init: i=df, log_new: lba=0, old_map=81ff7ff7, new_map=81ff7ff7, seq=1
+[    9.456023] freelist_init: i=df, old=1, new=0, sub=1, seq=2, block=81ff7ff7
+[    9.463527] freelist_init: i=e0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.478393] freelist_init: i=e0, log_new: lba=0, old_map=81ff7ff8, new_map=81ff7ff8, seq=1
+[    9.487132] freelist_init: i=e0, old=1, new=0, sub=1, seq=2, block=81ff7ff8
+[    9.494400] freelist_init: i=e1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.509196] freelist_init: i=e1, log_new: lba=0, old_map=81ff7ff9, new_map=81ff7ff9, seq=1
+[    9.517832] freelist_init: i=e1, old=1, new=0, sub=1, seq=2, block=81ff7ff9
+[    9.524286] freelist_init: i=e2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.538841] freelist_init: i=e2, log_new: lba=0, old_map=81ff7ffa, new_map=81ff7ffa, seq=1
+[    9.552334] freelist_init: i=e2, old=1, new=0, sub=1, seq=2, block=81ff7ffa
+[    9.559291] freelist_init: i=e3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.570074] freelist_init: i=e3, log_new: lba=0, old_map=81ff7ffb, new_map=81ff7ffb, seq=1
+[    9.578366] freelist_init: i=e3, old=1, new=0, sub=1, seq=2, block=81ff7ffb
+[    9.585747] freelist_init: i=e4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.592632] freelist_init: i=e4, log_new: lba=0, old_map=81ff7ffc, new_map=81ff7ffc, seq=1
+[    9.609339] freelist_init: i=e4, old=1, new=0, sub=1, seq=2, block=81ff7ffc
+[    9.616197] freelist_init: i=e5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.622834] freelist_init: i=e5, log_new: lba=0, old_map=81ff7ffd, new_map=81ff7ffd, seq=1
+[    9.639378] freelist_init: i=e5, old=1, new=0, sub=1, seq=2, block=81ff7ffd
+[    9.646514] freelist_init: i=e6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.653498] freelist_init: i=e6, log_new: lba=0, old_map=81ff7ffe, new_map=81ff7ffe, seq=1
+[    9.669760] freelist_init: i=e6, old=1, new=0, sub=1, seq=2, block=81ff7ffe
+[    9.677071] freelist_init: i=e7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.683998] freelist_init: i=e7, log_new: lba=0, old_map=81ff7fff, new_map=81ff7fff, seq=1
+[    9.700831] freelist_init: i=e7, old=1, new=0, sub=1, seq=2, block=81ff7fff
+[    9.707216] freelist_init: i=e8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.709953] random: crng init done
+[    9.714345] freelist_init: i=e8, log_new: lba=0, old_map=81ff8000, new_map=81ff8000, seq=1
+[    9.734775] freelist_init: i=e8, old=1, new=0, sub=1, seq=2, block=81ff8000
+[    9.741748] freelist_init: i=e9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.756982] freelist_init: i=e9, log_new: lba=0, old_map=81ff8001, new_map=81ff8001, seq=1
+[    9.765596] freelist_init: i=e9, old=1, new=0, sub=1, seq=2, block=81ff8001
+[    9.772983] freelist_init: i=ea, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.788149] freelist_init: i=ea, log_new: lba=0, old_map=81ff8002, new_map=81ff8002, seq=1
+[    9.796964] freelist_init: i=ea, old=1, new=0, sub=1, seq=2, block=81ff8002
+[    9.804092] freelist_init: i=eb, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.810879] freelist_init: i=eb, log_new: lba=0, old_map=81ff8003, new_map=81ff8003, seq=1
+[    9.828346] freelist_init: i=eb, old=1, new=0, sub=1, seq=2, block=81ff8003
+[    9.838437] freelist_init: i=ec, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.850526] freelist_init: i=ec, log_new: lba=0, old_map=81ff8004, new_map=81ff8004, seq=1
+[    9.859265] freelist_init: i=ec, old=1, new=0, sub=1, seq=2, block=81ff8004
+[    9.866503] freelist_init: i=ed, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.874267] freelist_init: i=ed, log_new: lba=0, old_map=81ff8005, new_map=81ff8005, seq=1
+[    9.888577] freelist_init: i=ed, old=1, new=0, sub=1, seq=2, block=81ff8005
+[    9.895994] freelist_init: i=ee, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.905543] freelist_init: i=ee, log_new: lba=0, old_map=81ff8006, new_map=81ff8006, seq=1
+[    9.917689] freelist_init: i=ee, old=1, new=0, sub=1, seq=2, block=81ff8006
+[    9.926978] freelist_init: i=ef, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.936781] freelist_init: i=ef, log_new: lba=0, old_map=81ff8007, new_map=81ff8007, seq=1
+[    9.946163] freelist_init: i=ef, old=1, new=0, sub=1, seq=2, block=81ff8007
+[    9.953260] freelist_init: i=f0, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.960444] freelist_init: i=f0, log_new: lba=0, old_map=81ff8008, new_map=81ff8008, seq=1
+[    9.975286] freelist_init: i=f0, old=1, new=0, sub=1, seq=2, block=81ff8008
+[    9.983124] freelist_init: i=f1, log_old: lba=0, old_map=0, new_map=0, seq=0
+[    9.992437] freelist_init: i=f1, log_new: lba=0, old_map=81ff8009, new_map=81ff8009, seq=1
+[   10.003116] freelist_init: i=f1, old=1, new=0, sub=1, seq=2, block=81ff8009
+[   10.015809] freelist_init: i=f2, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.023712] freelist_init: i=f2, log_new: lba=0, old_map=81ff800a, new_map=81ff800a, seq=1
+[   10.041234] freelist_init: i=f2, old=1, new=0, sub=1, seq=2, block=81ff800a
+[   10.049047] freelist_init: i=f3, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.056438] freelist_init: i=f3, log_new: lba=0, old_map=81ff800b, new_map=81ff800b, seq=1
+[   10.073633] freelist_init: i=f3, old=1, new=0, sub=1, seq=2, block=81ff800b
+[   10.080890] freelist_init: i=f4, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.088658] freelist_init: i=f4, log_new: lba=0, old_map=81ff800c, new_map=81ff800c, seq=1
+[   10.105118] freelist_init: i=f4, old=1, new=0, sub=1, seq=2, block=81ff800c
+[   10.113647] freelist_init: i=f5, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.124391] freelist_init: i=f5, log_new: lba=0, old_map=81ff800d, new_map=81ff800d, seq=1
+[   10.137072] freelist_init: i=f5, old=1, new=0, sub=1, seq=2, block=81ff800d
+[   10.145168] freelist_init: i=f6, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.152404] freelist_init: i=f6, log_new: lba=0, old_map=81ff800e, new_map=81ff800e, seq=1
+[   10.168124] freelist_init: i=f6, old=1, new=0, sub=1, seq=2, block=81ff800e
+[   10.175151] freelist_init: i=f7, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.182055] freelist_init: i=f7, log_new: lba=0, old_map=81ff800f, new_map=81ff800f, seq=1
+[   10.197147] freelist_init: i=f7, old=1, new=0, sub=1, seq=2, block=81ff800f
+[   10.204428] freelist_init: i=f8, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.210376] freelist_init: i=f8, log_new: lba=0, old_map=81ff8010, new_map=81ff8010, seq=1
+[   10.224432] freelist_init: i=f8, old=1, new=0, sub=1, seq=2, block=81ff8010
+[   10.230336] freelist_init: i=f9, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.236631] freelist_init: i=f9, log_new: lba=0, old_map=81ff8011, new_map=81ff8011, seq=1
+[   10.243049] freelist_init: i=f9, old=1, new=0, sub=1, seq=2, block=81ff8011
+[   10.255278] freelist_init: i=fa, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.260864] freelist_init: i=fa, log_new: lba=0, old_map=81ff8012, new_map=81ff8012, seq=1
+[   10.267955] freelist_init: i=fa, old=1, new=0, sub=1, seq=2, block=81ff8012
+[   10.273139] freelist_init: i=fb, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.278625] freelist_init: i=fb, log_new: lba=0, old_map=81ff8013, new_map=81ff8013, seq=1
+[   10.291997] freelist_init: i=fb, old=1, new=0, sub=1, seq=2, block=81ff8013
+[   10.297464] freelist_init: i=fc, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.303009] freelist_init: i=fc, log_new: lba=0, old_map=81ff8014, new_map=81ff8014, seq=1
+[   10.308640] freelist_init: i=fc, old=1, new=0, sub=1, seq=2, block=81ff8014
+[   10.319785] freelist_init: i=fd, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.324883] freelist_init: i=fd, log_new: lba=0, old_map=81ff8015, new_map=81ff8015, seq=1
+[   10.331436] freelist_init: i=fd, old=1, new=0, sub=1, seq=2, block=81ff8015
+[   10.335972] freelist_init: i=fe, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.340987] freelist_init: i=fe, log_new: lba=0, old_map=81ff8016, new_map=81ff8016, seq=1
+[   10.354494] freelist_init: i=fe, old=1, new=0, sub=1, seq=2, block=81ff8016
+[   10.362962] freelist_init: i=ff, log_old: lba=0, old_map=0, new_map=0, seq=0
+[   10.370783] freelist_init: i=ff, log_new: lba=0, old_map=81ff8017, new_map=81ff8017, seq=1
+[   10.394106] freelist_init: i=ff, old=1, new=0, sub=1, seq=2, block=81ff8017
+[   10.403401]  pmem0s: pmem0s1 pmem0s2
+[   10.413022] pmem0s: detected capacity change from 0 to 137303785472
+[   10.419117] nd_bus ndbus0: END: nd_pmem.probe(btt0.1) = 0
+[   10.419280] nd_bus ndbus0: START: nd_pmem.probe(namespace0.1)
+[   10.432730] nd_pmem namespace0.1: 0x0000000000000000, too small must be at least 0x1000
+[   10.443050] nd_bus ndbus0: END: nd_pmem.probe(namespace0.1) = -19
+[   10.450503] nd_bus ndbus0: START: nd_pmem.probe(namespace0.1)
+[   10.455461] nd_pmem namespace0.1: 0x0000000000000000, too small must be at least 0x1000
+[   10.462246] nd_bus ndbus0: END: nd_pmem.probe(namespace0.1) = -19
+[   10.467810] i8042: PNP: No PS/2 controller found.
+[   10.471676] hv_vmbus: registering driver hyperv_keyboard
+[   10.476401] rtc_cmos 00:02: RTC can wake from S4
+[   10.501580] rtc_cmos 00:02: registered as rtc0
+[   10.504019] rtc_cmos 00:02: alarms up to one month, 114 bytes nvram
+[   10.509671] IR NEC protocol handler initialized
+[   10.514093] IR RC5(x/sz) protocol handler initialized
+[   10.518864] IR RC6 protocol handler initialized
+[   10.523156] IR JVC protocol handler initialized
+[   10.527357] IR Sony protocol handler initialized
+[   10.531095] IR SANYO protocol handler initialized
+[   10.534454] IR Sharp protocol handler initialized
+[   10.539624] IR MCE Keyboard/mouse protocol handler initialized
+[   10.545723] IR XMP protocol handler initialized
+[   10.556159] ledtrig-cpu: registered to indicate activity on CPUs
+[   10.562172] EFI Variables Facility v0.08 2004-May-17
+[   10.578702] NET: Registered protocol family 10
+[   10.585356] Segment Routing with IPv6
+[   10.590110] NET: Registered protocol family 17
+[   10.595109] Key type dns_resolver registered
+[   10.599363] start plist test
+[   10.605055] end plist test
+[   10.622267] registered taskstats version 1
+[   10.627660] zswap: loaded using pool lzo/zbud
+[   10.652204] Key type encrypted registered
+[   10.658594]   Magic number: 7:834:559
+[   10.663311] tty ttyS31: hash matches
+[   10.668940] rtc_cmos 00:02: setting system clock to 2019-02-23T01:34:35 UTC (1550885675)
+[   10.679087] Unstable clock detected, switching default tracing clock to "global"
+               If you want to keep using the local clock, then add:
+                 "trace_clock=local"
+               on the kernel command line
+[   10.720800] debug: unmapping init [mem 0xffffffffac69e000-0xffffffffac817fff]
+[   10.782100] Write protecting the kernel read-only data: 18432k
+[   10.790636] debug: unmapping init [mem 0xffffffffabc08000-0xffffffffabdfffff]
+[   10.800686] debug: unmapping init [mem 0xffffffffac156000-0xffffffffac1fffff]
+[   10.830583] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[   10.839272] Run /init as init process
+[   11.061512] hv_utils: Registering HyperV Utility Driver
+[   11.067270] hv_vmbus: registering driver hv_utils
+[   11.077313] hv_utils: Heartbeat IC version 3.0
+[   11.083092] hv_utils: Shutdown IC version 3.0
+[   11.092378] hv_utils: TimeSync IC version 4.0
+[   11.095466] hv_utils: VSS IC version 5.0
+[   11.110040] input: AT Translated Set 2 keyboard as /devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/VMBUS:00/d34b2567-b9b6-42b9-8778-0a4ec0b955bf/serio0/input/input0
+[   11.127302] hidraw: raw HID events driver (C) Jiri Kosina
+[   11.127346] hv_vmbus: registering driver hv_netvsc
+[   11.136136] hv_vmbus: registering driver hv_storvsc
+[   11.143648] hv_vmbus: registering driver hid_hyperv
+[   11.146166] scsi host0: storvsc_host_t
+[   11.154984] input: Microsoft Vmbus HID-compliant Mouse as /devices/0006:045E:0621.0001/input/input1
+[   11.155387] blk-mq: reduced tag depth to 10240
+[   11.161198] hid 0006:045E:0621.0001: input: <UNKNOWN> HID v0.01 Mouse [Microsoft Vmbus HID-compliant Mouse] on 
+[   11.422838] scsi 0:0:0:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[   11.432140] scsi 0:0:0:1: CD-ROM            Msft     Virtual DVD-ROM  1.0  PQ: 0 ANSI: 0
+[   11.440884] scsi 0:0:0:2: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[   11.467399] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[   11.478884] sd 0:0:0:0: [sda] 125829120 512-byte logical blocks: (64.4 GB/60.0 GiB)
+[   11.480387] sr 0:0:0:1: [sr0] scsi-1 drive
+[   11.490536] sd 0:0:0:0: [sda] 4096-byte physical blocks
+[   11.497573] cdrom: Uniform CD-ROM driver Revision: 3.20
+[   11.513728] sd 0:0:0:0: [sda] Write Protect is off
+[   11.519329] sr 0:0:0:1: Attached scsi CD-ROM sr0
+[   11.519582] sd 0:0:0:0: [sda] Mode Sense: 0f 00 00 00
+[   11.526339] sr 0:0:0:1: Attached scsi generic sg1 type 5
+[   11.534534] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   11.544864] sd 0:0:0:2: Attached scsi generic sg2 type 0
+[   11.545676] sd 0:0:0:2: [sdb] 104857600 512-byte logical blocks: (53.7 GB/50.0 GiB)
+[   11.545682] sd 0:0:0:2: [sdb] 4096-byte physical blocks
+[   11.545911] sd 0:0:0:2: [sdb] Write Protect is off
+[   11.545915] sd 0:0:0:2: [sdb] Mode Sense: 0f 00 00 00
+[   11.546121] sd 0:0:0:2: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   11.549455]  sdb: sdb1
+[   11.557422]  sda: sda1 sda2
+[   11.565458] sd 0:0:0:2: [sdb] Attached SCSI disk
+[   11.585747] sd 0:0:0:0: [sda] Attached SCSI disk
+[   12.969016] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: (null)
+[   13.170234] systemd[1]: systemd 239 running in system mode. (+PAM +AUDIT +SELINUX +IMA +APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD -IDN2 +IDN -PCRE2 default-hierarchy=hybrid)
+[   13.193920] systemd[1]: Detected virtualization microsoft.
+[   13.201226] systemd[1]: Detected architecture x86-64.
+[   13.236960] systemd[1]: Set hostname to <decui-gen2-u1904>.
+[   13.337231] systemd[1]: File /lib/systemd/system/systemd-journald.service:36 configures an IP firewall (IPAddressDeny=any), but the local system does not support BPF/cgroup based firewalling.
+[   13.354579] systemd[1]: Proceeding WITHOUT firewalling in effect! (This warning is only shown for the first loaded unit using IP firewalling.)
+[   13.412980] systemd[1]: Reached target Remote File Systems.
+[   13.421177] systemd[1]: Listening on udev Kernel Socket.
+[   13.441203] systemd[1]: Created slice system-serial\x2dgetty.slice.
+[   13.448646] systemd[1]: Listening on Syslog Socket.
+[   13.979628] EXT4-fs (sda2): re-mounted. Opts: errors=remount-ro
+[   14.048513] systemd-journald[678]: Received request to flush runtime journal from PID 1
+[   14.240942] Adding 2097148k swap on /swapfile.  Priority:-2 extents:6 across:2260988k FS
+[   14.560009] hv_vmbus: registering driver hyperv_fb
+[   14.570129] checking generic (f8000000 300000) vs hw (f8000000 300000)
+[   14.574732] fb0: switching to hyperv_fb from EFI VGA
+[   14.592407] Console: switching to colour dummy device 80x25
+[   14.603140] hyperv_fb: Screen resolution: 1152x864, Color depth: 32
+[   14.611704] Console: switching to colour frame buffer device 144x54
+[   14.615347] hv_vmbus: registering driver hv_balloon
+[   14.616909] hv_balloon: Using Dynamic Memory protocol version 2.0
+[   14.619728] nd_bus ndbus0: START: dax_pmem.probe(dax0.0)
+[   14.619733] nd_bus ndbus0: END: dax_pmem.probe(dax0.0) = -19
+[   14.624111] cryptd: max_cpu_qlen set to 1000
+[   14.646757] AVX2 version of gcm_enc/dec engaged.
+[   14.646758] AES CTR mode by8 optimization enabled
+[   17.832186] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   62.711219] hv_balloon: Max. dynamic memory size: 10240 MB
+[   64.640812] btt_write_pg failed: lane=0x29, new_postmap=0x81ff7f41, internal_nlba=0x1ff8018
+[   64.655044] nd_pmem btt0.1: io error in WRITE sector 33056, len 4096,
+[   64.663612] Buffer I/O error on dev pmem0s2, logical block 36, lost async page write
+[   64.669596] btt_write_pg failed: lane=0x29, new_postmap=0x81ff7f41, internal_nlba=0x1ff8018
+[   64.677176] nd_pmem btt0.1: io error in WRITE sector 6324216, len 4096,
+[   64.682166] Buffer I/O error on dev pmem0s2, logical block 786431, lost async page write
+[   64.687536] btt_write_pg failed: lane=0x29, new_postmap=0x81ff7f41, internal_nlba=0x1ff8018
+[   64.692838] nd_pmem btt0.1: io error in WRITE sector 6324232, len 4096,
+[   64.696577] Buffer I/O error on dev pmem0s2, logical block 786433, lost async page write
+[   64.701194] btt_write_pg failed: lane=0x29, new_postmap=0x81ff7f41, internal_nlba=0x1ff8018
+[   64.705853] nd_pmem btt0.1: io error in WRITE sector 6324352, len 4096,
+[   64.709445] Buffer I/O error on dev pmem0s2, logical block 786448, lost async page write
+[   83.587011] btt_write_pg failed: lane=0x26, new_postmap=0x81ff7f3e, internal_nlba=0x1ff8018
+[   83.604129] nd_pmem btt0.1: io error in WRITE sector 33056, len 4096,
+[   83.607838] Buffer I/O error on dev pmem0s2, logical block 36, lost async page write
+[   83.618295] btt_write_pg failed: lane=0x26, new_postmap=0x81ff7f3e, internal_nlba=0x1ff8018
+[   83.626697] nd_pmem btt0.1: io error in WRITE sector 6324232, len 4096,
+[   83.632985] Buffer I/O error on dev pmem0s2, logical block 786433, lost async page write
