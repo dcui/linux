@@ -860,11 +860,11 @@ static struct pci_ops hv_pcifront_ops = {
 /*
  * Paravirtual backchannel
  *
- * Windows SR-IOV provides a backchannel mechanism in software for communication
- * between a VF driver and a PF driver.  These "configuration blocks" are
- * similar in concept to PCI configuration space, but instead of doing reads and
- * writes in 32-bit chunks through a very slow path, packets of up to 128 bytes
- * can be sent or received asynchronously.
+ * Hyper-V SR-IOV provides a backchannel mechanism in software for
+ * communication between a VF driver and a PF driver.  These
+ * "configuration blocks" are similar in concept to PCI configuration space,
+ * but instead of doing reads and writes in 32-bit chunks through a very slow
+ * path, packets of up to 128 bytes can be sent or received asynchronously.
  *
  * Nearly every SR-IOV device contains just such a communications channel in
  * hardware, so using this one in software is usually optional.  Using the
@@ -885,8 +885,8 @@ static struct pci_ops hv_pcifront_ops = {
 struct hv_read_config_compl {
 	struct hv_pci_compl comp_pkt;
 	void *buf;
-	int len;
-	int bytes_returned;
+	unsigned int len;
+	unsigned int bytes_returned;
 };
 
 /**
@@ -902,11 +902,15 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 	struct hv_read_config_compl *comp = context;
 	struct pci_read_block_response *read_resp =
 		(struct pci_read_block_response *)resp;
-	int data_len;
+	unsigned int data_len, hdr_len;
 
-	data_len = resp_packet_size -
-		   offsetof(struct pci_read_block_response, bytes);
+	hdr_len = offsetof(struct pci_read_block_response, bytes);
+	if (resp_packet_size < hdr_len) {
+		comp->comp_pkt.completion_status = -1;
+		goto out;
+	}
 
+	data_len = resp_packet_size - hdr_len;
 	if (data_len > 0 && read_resp->status == 0) {
 		comp->bytes_returned = min(comp->len, data_len);
 		memcpy(comp->buf, read_resp->bytes, comp->bytes_returned);
@@ -914,26 +918,24 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
 		comp->bytes_returned = 0;
 	}
 
+	comp->comp_pkt.completion_status = read_resp->status;
+out:
 	complete(&comp->comp_pkt.host_event);
 }
 
 /**
  * hv_read_config_block() - Sends a read config block request to
  * the back-end driver running in the Hyper-V parent partition.
- * @pdev:		The PCI driver's representation for this
- *			device.
- * @buf:		Buffer into which the config block will
- *			be copied.
- * @buf_len:		Size in bytes of buf
- * @block_id:		Identifies the config block which has
- *			been requested.
- * @bytes_returned:	Size which came back from the back-end
- *			driver.
+ * @pdev:		The PCI driver's representation for this device.
+ * @buf:		Buffer into which the config block will be copied.
+ * @len:		Size in bytes of buf.
+ * @block_id:		Identifies the config block which has been requested.
+ * @bytes_returned:	Size which came back from the back-end driver.
  *
  * Return: 0 on success, -errno on failure
  */
-int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
-			 int block_id, int *bytes_returned)
+int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+			 unsigned int block_id, unsigned int *bytes_returned)
 {
 	struct hv_pcibus_device *hbus =
 		container_of(pdev->bus->sysdata, struct hv_pcibus_device,
@@ -946,12 +948,12 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 	struct pci_read_block *read_blk;
 	int ret;
 
-	if (buf_len > CONFIG_BLOCK_SIZE_MAX)
+	if (len == 0 || len > CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.comp_pkt.host_event);
 	comp_pkt.buf = buf;
-	comp_pkt.len = buf_len;
+	comp_pkt.len = len;
 
 	memset(&pkt, 0, sizeof(pkt));
 	pkt.pkt.completion_func = hv_pci_read_config_compl;
@@ -960,24 +962,36 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, int buf_len,
 	read_blk->message_type.type = PCI_READ_BLOCK;
 	read_blk->wslot.slot = devfn_to_wslot(pdev->devfn);
 	read_blk->block_id = block_id;
-	read_blk->bytes_requested = buf_len;
+	read_blk->bytes_requested = len;
 
 	ret = vmbus_sendpacket(hbus->hdev->channel, read_blk,
 			       sizeof(*read_blk), (unsigned long)&pkt.pkt,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret) {
-		wait_for_completion(&comp_pkt.comp_pkt.host_event);
-		*bytes_returned = comp_pkt.bytes_returned;
+	if (ret)
+		return ret;
+
+	ret = wait_for_response(hbus->hdev, &comp_pkt.comp_pkt.host_event);
+	if (ret)
+		return ret;
+
+	if (comp_pkt.comp_pkt.completion_status != 0 ||
+	    comp_pkt.bytes_returned == 0) {
+		dev_err(&hbus->hdev->device,
+			"Read Config Block failed: 0x%x, bytes_returned=%d\n",
+			comp_pkt.comp_pkt.completion_status,
+			comp_pkt.bytes_returned);
+		return -EIO;
 	}
 
-	return ret;
+	*bytes_returned = comp_pkt.bytes_returned;
+	return 0;
 }
 EXPORT_SYMBOL(hv_read_config_block);
 
 /**
- * hv_pci_write_config_compl() - Invoked when a response packet
- * for a write config block operation arrives.
+ * hv_pci_write_config_compl() - Invoked when a response packet for a write
+ * config block operation arrives.
  * @context:		Identifies the write config operation
  * @resp:		The response packet itself
  * @resp_packet_size:	Size in bytes of the response packet
@@ -992,21 +1006,17 @@ static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
 }
 
 /**
- * hv_write_config_block() - Sends a write config block request
- * to the back-end driver running in the Hyper-V parent
- * partition.
- * @pdev:		The PCI driver's representation for this
- *			device.
- * @buf:		Buffer from which the config block will
- *			be copied.
- * @buf_len:		Size in bytes of buf
- * @block_id:		Identifies the config block which is
- *			being written.
+ * hv_write_config_block() - Sends a write config block request to the
+ * back-end driver running in the Hyper-V parent partition.
+ * @pdev:		The PCI driver's representation for this device.
+ * @buf:		Buffer from which the config block will	be copied.
+ * @len:		Size in bytes of buf.
+ * @block_id:		Identifies the config block which is being written.
  *
  * Return: 0 on success, -errno on failure
  */
-int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
-			  int block_id)
+int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+			  unsigned int block_id)
 {
 	struct hv_pcibus_device *hbus =
 		container_of(pdev->bus->sysdata, struct hv_pcibus_device,
@@ -1014,14 +1024,14 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	struct {
 		struct pci_packet pkt;
 		char buf[sizeof(struct pci_write_block)];
-		u32 padding; //work around a host bug. see the below pkt_size +=4;
+		u32 reserved;
 	} pkt;
 	struct hv_pci_compl comp_pkt;
 	struct pci_write_block *write_blk;
 	u32 pkt_size;
 	int ret;
 
-	if (len > CONFIG_BLOCK_SIZE_MAX)
+	if (len == 0 || len > CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.host_event);
@@ -1036,9 +1046,14 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 	write_blk->byte_count = len;
 	memcpy(write_blk->bytes, buf, len);
 	pkt_size = offsetof(struct pci_write_block, bytes) + len;
-
-	//add a 4-byte padding to work around a host bug.
-	pkt_size += 4;
+	/*
+	 * This quirk is required on some hosts shipped around 2018, because
+	 * these hosts don't check the pkt_size correctly (new hosts have been
+	 * fixed since early 2019). The quirk is also safe on very old hosts
+	 * and new hosts, because, on them, what really matters is the length
+	 * specified in write_blk->byte_count.
+	 */
+	pkt_size += sizeof(pkt.reserved);
 
 	ret = vmbus_sendpacket(hbus->hdev->channel, write_blk, pkt_size,
 			       (unsigned long)&pkt.pkt, VM_PKT_DATA_INBAND,
@@ -1062,13 +1077,11 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, int len,
 EXPORT_SYMBOL(hv_write_config_block);
 
 /**
- * hv_register_block_invalidate() - Invoked when a config block
- * invalidation arrives from the back-end driver.
- * @pdev:		The PCI driver's representation for this
- *			device.
+ * hv_register_block_invalidate() - Invoked when a config block invalidation
+ * arrives from the back-end driver.
+ * @pdev:		The PCI driver's representation for this device.
  * @context:		Identifies the device.
- * @block_invalidate:	Identifies all of the blocks being
- *			invalidated.
+ * @block_invalidate:	Identifies all of the blocks being invalidated.
  *
  * Return: 0 on success, -errno on failure
  */
