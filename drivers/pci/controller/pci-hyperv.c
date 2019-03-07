@@ -378,7 +378,7 @@ struct pci_read_block {
 struct pci_read_block_response {
 	struct vmpacket_descriptor hdr;
 	u32 status;
-	u8 bytes[CONFIG_BLOCK_SIZE_MAX];
+	u8 bytes[HV_CONFIG_BLOCK_SIZE_MAX];
 } __packed;
 
 /*
@@ -389,7 +389,7 @@ struct pci_write_block {
 	u32 block_id;
 	union win_slot_encoding wslot;
 	u32 byte_count;
-	u8 bytes[CONFIG_BLOCK_SIZE_MAX];
+	u8 bytes[HV_CONFIG_BLOCK_SIZE_MAX];
 } __packed;
 
 struct pci_dev_inval_block {
@@ -948,7 +948,7 @@ int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
 	struct pci_read_block *read_blk;
 	int ret;
 
-	if (len == 0 || len > CONFIG_BLOCK_SIZE_MAX)
+	if (len == 0 || len > HV_CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.comp_pkt.host_event);
@@ -1031,7 +1031,7 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
 	u32 pkt_size;
 	int ret;
 
-	if (len == 0 || len > CONFIG_BLOCK_SIZE_MAX)
+	if (len == 0 || len > HV_CONFIG_BLOCK_SIZE_MAX)
 		return -EINVAL;
 
 	init_completion(&comp_pkt.host_event);
