@@ -1547,7 +1547,7 @@ hv_pkt_iter_next(struct vmbus_channel *channel,
  * will be invoked when the host says that one or more of the first 64 block
  * IDs is "invalid" which means that the VF driver should reread them.
  */
-#define CONFIG_BLOCK_SIZE_MAX 128
+#define HV_CONFIG_BLOCK_SIZE_MAX 128
 int hv_read_config_block(struct pci_dev *dev, void *buf, unsigned int buf_len,
 			 unsigned int block_id, unsigned int *bytes_returned);
 int hv_write_config_block(struct pci_dev *dev, void *buf, unsigned int len,
