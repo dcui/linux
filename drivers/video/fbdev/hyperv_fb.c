@@ -202,8 +202,8 @@ struct synthvid_msg {
 
 
 /* FB driver definitions and structures */
-#define HVFB_WIDTH 1152 /* default screen width */
-#define HVFB_HEIGHT 864 /* default screen height */
+#define HVFB_WIDTH 7680 /* default screen width */
+#define HVFB_HEIGHT 4320  /* default screen height */
 #define HVFB_WIDTH_MIN 640
 #define HVFB_HEIGHT_MIN 480
 
@@ -475,6 +475,8 @@ static int synthvid_connect_vsp(struct hv_device *hdev)
 
 	screen_fb_size = hdev->channel->offermsg.offer.
 				mmio_megabytes * 1024 * 1024;
+	printk("cdx: synthvid_connect_vsp: host says: fb-size=0x%x (%d MB)\n",
+		screen_fb_size, screen_fb_size/1024/1024);
 
 	return 0;
 
@@ -697,6 +699,15 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 			return -ENODEV;
 		}
 
+		if (pci_resource_len(pdev, 0) < screen_fb_size) {
+			//XXX: need to test this path in Gen-1 VM
+			pr_info("cdx: hvfb_getmem: gen1-vm: try it elsewhere...\n");
+			pot_start = 0;
+			pot_end = -1;
+
+			goto here;
+		}
+
 		if (!(pci_resource_flags(pdev, 0) & IORESOURCE_MEM) ||
 		    pci_resource_len(pdev, 0) < screen_fb_size)
 			goto err1;
@@ -705,21 +716,26 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 		pot_start = pot_end - screen_fb_size + 1;
 	}
 
+here:
 	info->apertures = alloc_apertures(1);
 	if (!info->apertures)
 		goto err1;
 
+#if 0
 	if (gen2vm) {
-		info->apertures->ranges[0].base = screen_info.lfb_base;
-		info->apertures->ranges[0].size = screen_info.lfb_size;
+		//FIXME
+		info->apertures->ranges[0].base = screen_info.lfb_base; //XXX???
+		info->apertures->ranges[0].size = screen_info.lfb_size; //????
 	} else {
-		info->apertures->ranges[0].base = pci_resource_start(pdev, 0);
-		info->apertures->ranges[0].size = pci_resource_len(pdev, 0);
+		//FIXME
+		info->apertures->ranges[0].base = pci_resource_start(pdev, 0); //???
+		info->apertures->ranges[0].size = pci_resource_len(pdev, 0); //???
 	}
 
 	/* This should be done before vmbus_allocate_mmio() */
 	remove_conflicting_framebuffers(info->apertures,
 					KBUILD_MODNAME, false);
+#endif
 
 	ret = vmbus_allocate_mmio(&par->mem, hdev, pot_start, pot_end,
 				  screen_fb_size, 0x100000, true);
@@ -728,9 +744,22 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 		goto err1;
 	}
 
+
 	fb_virt = ioremap(par->mem->start, screen_fb_size);
 	if (!fb_virt)
 		goto err2;
+
+	//FIXME:
+	if (gen2vm) {
+		//FIXME: XXX
+		info->apertures->ranges[0].base = par->mem->start;
+		info->apertures->ranges[0].size = screen_fb_size;
+	} else {
+		//FIXME
+		BUG_ON(1); //untested code...
+		info->apertures->ranges[0].base = pci_resource_start(pdev, 0); //???
+		info->apertures->ranges[0].size = pci_resource_len(pdev, 0); //???
+	}
 
 	info->fix.smem_start = par->mem->start;
 	info->fix.smem_len = screen_fb_size;
@@ -796,9 +825,13 @@ static int hvfb_probe(struct hv_device *hdev,
 		goto error2;
 	}
 
-	hvfb_get_option(info);
+	hvfb_get_option(info); //FIXME
 	pr_info("Screen resolution: %dx%d, Color depth: %d\n",
 		screen_width, screen_height, screen_depth);
+	if (screen_width * screen_height * screen_depth / 8 > screen_fb_size) {
+		WARN_ON(1);
+		goto error;
+	}
 
 
 	/* Set up fb_info */
