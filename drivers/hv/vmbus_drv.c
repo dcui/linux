@@ -1781,9 +1781,25 @@ static int vmbus_acpi_remove(struct acpi_device *device)
 	return 0;
 }
 
+/*
+ * This is the base address of the EFI framebuffer (for Gen-2 VM) or the legacy
+ * PCI framebuffer (for Gen-1 VM). Reserve the range so it won't be allocated
+ * to PCIe devices that are passed through to the VM, because that can not work
+ * due to the conflict of the MMIO range. The synthetic framebuffer memory,
+ * however, should preferably be allocated from this range.
+ *
+ * Usually grub detects the base address and passes it to the kernel, but in
+ * text mode, grub may not detect it, so screen_info.lfb_base is zero: in this
+ * case, we can safely assume the base is VFB_BASE_ADDRESS, as Hyper-V is very
+ * unlikely to change that.
+ */
+#define VFB_BASE_ADDRESS 0xf8000000
+
 static void vmbus_reserve_fb(void)
 {
+	__u32 fb_base;
 	int size;
+
 	/*
 	 * Make a claim for the frame buffer in the resource tree under the
 	 * first node, which will be the one below 4GB.  The length seems to
@@ -1791,18 +1807,18 @@ static void vmbus_reserve_fb(void)
 	 * reserving a larger area and make it smaller until it succeeds.
 	 */
 
-	if (screen_info.lfb_base) {
-		if (efi_enabled(EFI_BOOT))
-			size = max_t(__u32, screen_info.lfb_size, 0x800000);
-		else
-			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
+	fb_base = screen_info.lfb_base;
+	if (fb_base == 0)
+		fb_base = VFB_BASE_ADDRESS;
 
-		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
-			fb_mmio = __request_region(hyperv_mmio,
-						   screen_info.lfb_base, size,
-						   fb_mmio_name, 0);
-		}
-	}
+	if (efi_enabled(EFI_BOOT))
+		size = max_t(__u32, screen_info.lfb_size, 0x800000);
+	else
+		size = max_t(__u32, screen_info.lfb_size, 0x4000000);
+
+	for (; !fb_mmio && (size >= 0x100000); size >>= 1)
+		fb_mmio = __request_region(hyperv_mmio, fb_base, size,
+					   fb_mmio_name, 0);
 }
 
 /**
