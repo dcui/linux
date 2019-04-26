@@ -705,6 +705,22 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 		pot_start = pot_end - screen_fb_size + 1;
 	}
 
+	info->apertures = alloc_apertures(1);
+	if (!info->apertures)
+		goto err1;
+
+	if (gen2vm) {
+		info->apertures->ranges[0].base = screen_info.lfb_base;
+		info->apertures->ranges[0].size = screen_info.lfb_size;
+	} else {
+		info->apertures->ranges[0].base = pci_resource_start(pdev, 0);
+		info->apertures->ranges[0].size = pci_resource_len(pdev, 0);
+	}
+
+	/* This should be done before vmbus_allocate_mmio() */
+	remove_conflicting_framebuffers(info->apertures,
+					KBUILD_MODNAME, false);
+
 	ret = vmbus_allocate_mmio(&par->mem, hdev, pot_start, pot_end,
 				  screen_fb_size, 0x100000, true);
 	if (ret != 0) {
@@ -716,20 +732,6 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 	if (!fb_virt)
 		goto err2;
 
-	info->apertures = alloc_apertures(1);
-	if (!info->apertures)
-		goto err3;
-
-	if (gen2vm) {
-		info->apertures->ranges[0].base = screen_info.lfb_base;
-		info->apertures->ranges[0].size = screen_info.lfb_size;
-		remove_conflicting_framebuffers(info->apertures,
-						KBUILD_MODNAME, false);
-	} else {
-		info->apertures->ranges[0].base = pci_resource_start(pdev, 0);
-		info->apertures->ranges[0].size = pci_resource_len(pdev, 0);
-	}
-
 	info->fix.smem_start = par->mem->start;
 	info->fix.smem_len = screen_fb_size;
 	info->screen_base = fb_virt;
@@ -740,8 +742,6 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 
 	return 0;
 
-err3:
-	iounmap(fb_virt);
 err2:
 	vmbus_free_mmio(par->mem->start, screen_fb_size);
 	par->mem = NULL;
