@@ -209,7 +209,8 @@ struct synthvid_msg {
 
 #define RING_BUFSIZE (256 * 1024)
 #define VSP_TIMEOUT (10 * HZ)
-#define HVFB_UPDATE_DELAY (HZ / 20)
+//#define HVFB_UPDATE_DELAY (HZ / 20)
+#define HVFB_UPDATE_DELAY (HZ/2)
 
 struct hvfb_par {
 	struct fb_info *info;
@@ -721,7 +722,7 @@ here:
 	if (!info->apertures)
 		goto err1;
 
-#if 0
+#if 1
 	if (gen2vm) {
 		//FIXME
 		info->apertures->ranges[0].base = screen_info.lfb_base; //XXX???
@@ -732,6 +733,8 @@ here:
 		info->apertures->ranges[0].size = pci_resource_len(pdev, 0); //???
 	}
 
+//	info->apertures->ranges[0].base = 0xf0000000;
+//	info->apertures->ranges[0].size = 128UL*1024*1024;
 	/* This should be done before vmbus_allocate_mmio() */
 	remove_conflicting_framebuffers(info->apertures,
 					KBUILD_MODNAME, false);

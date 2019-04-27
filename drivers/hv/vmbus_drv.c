@@ -1816,6 +1816,7 @@ static void vmbus_reserve_fb(void)
 	else
 		size = max_t(__u32, screen_info.lfb_size, 0x4000000);
 
+	//size = 128*1024*1024;
 	for (; !fb_mmio && (size >= 0x100000); size >>= 1)
 		fb_mmio = __request_region(hyperv_mmio, fb_base, size,
 					   fb_mmio_name, 0);
