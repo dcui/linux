@@ -13,6 +13,7 @@
 
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/completion.h>
 #include <linux/hyperv.h>
@@ -132,6 +133,7 @@ static void hv_kbd_on_receive(struct hv_device *hv_dev,
 
 		memcpy(&kbd_dev->protocol_resp, msg,
 			sizeof(struct synth_kbd_protocol_response));
+		printk("cdx: hv_kbd_on_receive: resp got\n");
 		complete(&kbd_dev->wait_event);
 		break;
 
@@ -164,6 +166,8 @@ static void hv_kbd_on_receive(struct hv_device *hv_dev,
 				serio_interrupt(kbd_dev->hv_serio,
 						XTKBD_EMUL1, 0);
 			scan_code = __le16_to_cpu(ks_msg->make_code);
+			printk("cdx: hv_kbd_on_receive: ---> e0=%d, e1=%d, break=%d, scan_code=%2xH\n",
+				!!(info & IS_E0), !!(info & IS_E1), !!(info & IS_BREAK), scan_code);
 			if (info & IS_BREAK)
 				scan_code |= XTKBD_RELEASE;
 
@@ -176,8 +180,11 @@ static void hv_kbd_on_receive(struct hv_device *hv_dev,
 		 * "echo freeze > /sys/power/state" can't really enter the
 		 * state because the Enter-UP can trigger a wakeup at once.
 		 */
+#if 1
+	//	yicheng
 		if (!(info & IS_BREAK))
 			pm_wakeup_hard_event(&hv_dev->device);
+#endif
 
 		break;
 
@@ -381,6 +388,7 @@ static int hv_kbd_probe(struct hv_device *hv_dev,
 		goto err_free_mem;
 
 	error = hv_kbd_connect_to_vsp(hv_dev);
+	printk("cdx: hv_kbd_probe: hv_kbd_connect_to_vsp: ret = %d\n", error);
 	if (error)
 		goto err_close_vmbus;
 
@@ -411,6 +419,40 @@ static int hv_kbd_remove(struct hv_device *hv_dev)
 	return 0;
 }
 
+static int hv_kbd_suspend(struct hv_device *hv_dev, pm_message_t state)
+{
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+	vmbus_close(hv_dev->channel);
+	printk("cdx: 2: %s, line %d\n", __func__, __LINE__);
+	return 0;
+}
+
+static int hv_kbd_resume(struct hv_device *hv_dev)
+{
+	int ret;
+
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+#if 0
+	printk("cdx: 1.1: %s, line %d, sleeping 10s\n", __func__, __LINE__);
+	ssleep(10);
+	printk("cdx: 1.1: %s, line %d, sleeping 10s: done, re-opening...\n", __func__, __LINE__);
+#endif
+	ret = vmbus_open(hv_dev->channel,
+			   KBD_VSC_SEND_RING_BUFFER_SIZE,
+			   KBD_VSC_RECV_RING_BUFFER_SIZE,
+			   NULL, 0,
+			   hv_kbd_on_channel_callback,
+			   hv_dev);
+	printk("cdx: 2: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+
+	if (ret == 0) {
+		ret = hv_kbd_connect_to_vsp(hv_dev);
+		printk("cdx: 3: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+	}
+
+	return 0;
+}
+
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Keyboard guid */
 	{ HV_KBD_GUID, },
@@ -424,6 +466,8 @@ static struct  hv_driver hv_kbd_drv = {
 	.id_table = id_table,
 	.probe = hv_kbd_probe,
 	.remove = hv_kbd_remove,
+	.suspend = hv_kbd_suspend,
+	.resume = hv_kbd_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

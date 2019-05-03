@@ -836,6 +836,7 @@ void vmbus_initiate_unload(bool crash)
 {
 	struct vmbus_channel_message_header hdr;
 
+	printk("cdx: 1: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
 	/* Pre-Win2012R2 hosts don't support reconnect */
 	if (vmbus_proto_version < VERSION_WIN8_1)
 		return;
@@ -846,14 +847,19 @@ void vmbus_initiate_unload(bool crash)
 	vmbus_post_msg(&hdr, sizeof(struct vmbus_channel_message_header),
 		       !crash);
 
+	printk("cdx: 2: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
 	/*
 	 * vmbus_initiate_unload() is also called on crash and the crash can be
 	 * happening in an interrupt context, where scheduling is impossible.
 	 */
-	if (!crash)
+	if (!crash) {
+		printk("cdx: 3: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
 		wait_for_completion(&vmbus_connection.unload_event);
-	else
+	}
+	else {
+		printk("cdx: 4: FAIL>>>>>>>>> !!! on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
 		vmbus_wait_for_unload();
+	}
 }
 
 /*
@@ -863,11 +869,21 @@ void vmbus_initiate_unload(bool crash)
 static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 {
 	struct vmbus_channel_offer_channel *offer;
-	struct vmbus_channel *newchannel;
+	struct vmbus_channel *newchannel, *channel;
 
 	offer = (struct vmbus_channel_offer_channel *)hdr;
 
 	trace_vmbus_onoffer(offer);
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+	channel = relid2channel(offer->child_relid);
+	mutex_unlock(&vmbus_connection.channel_mutex);
+
+	if (channel != NULL) {
+		atomic_dec(&vmbus_connection.offer_in_progress);
+		printk("cdx: vmbus_onoffer: channel exists! chan=%px, inst=%pUl\n", channel, &offer->offer.if_instance);
+		return;
+	}
 
 	/* Allocate the channel object and save this offer. */
 	newchannel = alloc_channel();

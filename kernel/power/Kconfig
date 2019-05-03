@@ -197,8 +197,8 @@ config DPM_WATCHDOG
 
 config DPM_WATCHDOG_TIMEOUT
 	int "Watchdog timeout in seconds"
-	range 1 120
-	default 120
+	range 1 864000
+	default 864000
 	depends on DPM_WATCHDOG
 
 config PM_TRACE

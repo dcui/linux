@@ -841,6 +841,7 @@ bool pm_wakeup_pending(void)
 {
 	unsigned long flags;
 	bool ret = false;
+	bool cdx;
 
 	raw_spin_lock_irqsave(&events_lock, flags);
 	if (events_check_enabled) {
@@ -857,12 +858,18 @@ bool pm_wakeup_pending(void)
 		pm_print_active_wakeup_sources();
 	}
 
-	return ret || atomic_read(&pm_abort_suspend) > 0;
+	cdx = ret || atomic_read(&pm_abort_suspend) > 0;
+	if (cdx)
+		printk("cdx: pm_wakeup_pending: ret=%d, pm_abort_suspend=%d\n", ret, atomic_read(&pm_abort_suspend));
+
+	return cdx;
 }
 
 void pm_system_wakeup(void)
 {
 	atomic_inc(&pm_abort_suspend);
+	printk("cdx: pm_system_wakeup:!!!, in pm_system_wakeup: pm_abort_suspend=%d\n", atomic_read(&pm_abort_suspend));
+	//yicheng: WARN_ON(1);
 	s2idle_wake();
 }
 EXPORT_SYMBOL_GPL(pm_system_wakeup);

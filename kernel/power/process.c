@@ -135,6 +135,9 @@ int freeze_processes(void)
 		atomic_inc(&system_freezing_cnt);
 
 	pm_wakeup_clear(true);
+	printk("cdx: freeze_processes: pm_abort_suspend-------------------, sleep 7s;\n");
+	ssleep(7);
+	printk("cdx: freeze_processes: pm_abort_suspend-------------------, sleep 7s;done\n");
 	pr_info("Freezing user space processes ... ");
 	pm_freezing = true;
 	error = try_to_freeze_tasks(true);

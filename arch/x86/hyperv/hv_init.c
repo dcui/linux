@@ -31,6 +31,7 @@
 #include <linux/hyperv.h>
 #include <linux/slab.h>
 #include <linux/cpuhotplug.h>
+#include <linux/syscore_ops.h>
 
 #ifdef CONFIG_HYPERV_TSCPAGE
 
@@ -52,12 +53,35 @@ static u64 read_hv_clock_tsc(struct clocksource *arg)
 	return current_tick;
 }
 
+static void suspend_hyperv_cs_tsc(struct clocksource *cs)
+{
+	union hv_x64_msr_hypercall_contents tsc_msr;
+
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+	/* Reset the TSC page */
+	tsc_msr.enable = 0;
+	wrmsrl(HV_X64_MSR_REFERENCE_TSC, tsc_msr.as_uint64);
+}
+
+static void resume_hyperv_cs_tsc(struct clocksource *cs)
+{
+	union hv_x64_msr_hypercall_contents tsc_msr;
+
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+	rdmsrl(HV_X64_MSR_REFERENCE_TSC, tsc_msr.as_uint64);
+	tsc_msr.enable = 1;
+	tsc_msr.guest_physical_address = vmalloc_to_pfn(tsc_pg);
+	wrmsrl(HV_X64_MSR_REFERENCE_TSC, tsc_msr.as_uint64);
+}
+
 static struct clocksource hyperv_cs_tsc = {
 		.name		= "hyperv_clocksource_tsc_page",
 		.rating		= 400,
 		.read		= read_hv_clock_tsc,
 		.mask		= CLOCKSOURCE_MASK(64),
 		.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
+		.suspend	= suspend_hyperv_cs_tsc,
+		.resume		= resume_hyperv_cs_tsc,
 };
 #endif
 
@@ -271,6 +295,47 @@ static int __init hv_pci_init(void)
 	return 1;
 }
 
+static void *old_hv_hypercall_pg;
+
+static int hv_suspend(void)
+{
+	union hv_x64_msr_hypercall_contents hypercall_msr;
+
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+
+	BUG_ON(num_online_cpus() > 1 || !irqs_disabled());
+
+	old_hv_hypercall_pg = hv_hypercall_pg;
+	hv_hypercall_pg = NULL;
+
+	/* Reset the hypercall page */
+	hypercall_msr.as_uint64 = 0;
+	wrmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
+
+	return 0;
+}
+
+static void hv_resume(void)
+{
+	union hv_x64_msr_hypercall_contents hypercall_msr;
+
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+
+	BUG_ON(num_online_cpus() > 1 || !irqs_disabled());
+
+	rdmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
+	hypercall_msr.enable = 1;
+	hypercall_msr.guest_physical_address = vmalloc_to_pfn(old_hv_hypercall_pg);
+	wrmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
+
+	hv_hypercall_pg = old_hv_hypercall_pg;
+}
+
+static struct syscore_ops hv_syscore_ops = {
+	.suspend = hv_suspend,
+	.resume = hv_resume,
+};
+
 /*
  * This function is to be invoked early in the boot sequence after the
  * hypervisor has been detected.
@@ -349,6 +414,8 @@ void __init hyperv_init(void)
 
 	x86_init.pci.arch_init = hv_pci_init;
 
+	register_syscore_ops(&hv_syscore_ops);
+
 	/*
 	 * Register Hyper-V specific clocksource.
 	 */
@@ -403,6 +470,8 @@ free_vp_index:
 void hyperv_cleanup(void)
 {
 	union hv_x64_msr_hypercall_contents hypercall_msr;
+
+	unregister_syscore_ops(&hv_syscore_ops);
 
 	/* Reset our OS id */
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);

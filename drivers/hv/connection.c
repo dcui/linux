@@ -72,7 +72,7 @@ static __u32 vmbus_get_next_version(__u32 current_version)
 	}
 }
 
-static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
+int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 					__u32 version)
 {
 	int ret = 0;
@@ -87,6 +87,8 @@ static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 	memset(msg, 0, sizeof(*msg));
 	msg->header.msgtype = CHANNELMSG_INITIATE_CONTACT;
 	msg->vmbus_version_requested = version;
+	printk("cdx: %s, line %d, vmbus_proto_version=0x%x,cur_v=0x%x!! on cpu %d\n",
+		 __func__, __LINE__, vmbus_proto_version, version, raw_smp_processor_id());
 
 	/*
 	 * VMBus protocol 5.0 (VERSION_WIN10_V5) requires that we must use
@@ -163,10 +165,15 @@ static int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo,
 	if (msginfo->response.version_response.version_supported) {
 		vmbus_connection.conn_state = CONNECTED;
 
-		if (version >= VERSION_WIN10_V5)
+		printk("cdx: nego: success, on cpu %d\n", raw_smp_processor_id());
+		if (version >= VERSION_WIN10_V5) {
 			vmbus_connection.msg_conn_id =
 				msginfo->response.version_response.msg_conn_id;
+			printk("cdx:nego: v5: vmbus_connection.msg_conn_id=%d, on cpu %d\n",
+				vmbus_connection.msg_conn_id, raw_smp_processor_id());
+		}
 	} else {
+		printk("cdx: nego: failed!!!\n");
 		return -ECONNREFUSED;
 	}
 

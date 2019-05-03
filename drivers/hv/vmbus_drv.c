@@ -43,6 +43,7 @@
 #include <linux/kdebug.h>
 #include <linux/efi.h>
 #include <linux/random.h>
+#include <linux/syscore_ops.h>
 #include "hyperv_vmbus.h"
 
 struct vmbus_dynid {
@@ -894,6 +895,55 @@ static void vmbus_shutdown(struct device *child_device)
 }
 
 
+static int vmbus_suspend(struct device *child_device, pm_message_t state)
+{
+	struct hv_driver *drv;
+	struct hv_device *dev = device_to_hv_device(child_device);
+	int ret;
+
+	printk("cdx: 1: %s: line %d, msg=%d, dev_inst=%pUl\n", __func__, __LINE__, state.event, &dev->dev_instance);
+	if (!child_device->driver)
+		return 0;
+
+	drv = drv_to_hv_drv(child_device->driver);
+	printk("cdx: 2: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+
+	if (drv->suspend) {
+		printk("cdx: 3.1: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+		ret = drv->suspend(dev, state);
+		printk("cdx: 3.2: %s: line %d, dev_inst=%pUl, dev=%p, ret=%d\n", __func__, __LINE__, &dev->dev_instance, drv, ret);
+		WARN_ON(ret);
+		return ret;
+	}
+	printk("cdx: 4: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+	return 0;
+}
+
+static int vmbus_resume(struct device *child_device)
+{
+	struct hv_driver *drv;
+	struct hv_device *dev = device_to_hv_device(child_device);
+	int ret;
+
+	printk("cdx: 1: %s: line %d, dev_inst=%pUl\n", __func__, __LINE__, &dev->dev_instance);
+	if (!child_device->driver)
+		return 0;
+
+	drv = drv_to_hv_drv(child_device->driver);
+	printk("cdx: 2: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+
+	if (drv->resume) {
+		printk("cdx: 3.1: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+		ret = drv->resume(dev);
+		printk("cdx: 3.2: %s: line %d, dev_inst=%pUl, dev=%p, ret=%d\n", __func__, __LINE__, &dev->dev_instance, drv, ret);
+		WARN_ON(ret);
+		return ret;
+	}
+
+	printk("cdx: 4: %s: line %d, dev_inst=%pUl, dev=%p\n", __func__, __LINE__, &dev->dev_instance, drv);
+	return 0;
+}
+
 /*
  * vmbus_device_release - Final callback release of the vmbus child device
  */
@@ -913,6 +963,8 @@ static struct bus_type  hv_bus = {
 	.name =		"vmbus",
 	.match =		vmbus_match,
 	.shutdown =		vmbus_shutdown,
+	.suspend =		vmbus_suspend,
+	.resume =		vmbus_resume,
 	.remove =		vmbus_remove,
 	.probe =		vmbus_probe,
 	.uevent =		vmbus_uevent,
@@ -1953,12 +2005,67 @@ acpi_walk_err:
 	return ret_val;
 }
 
+int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, __u32 version);
+
 static const struct acpi_device_id vmbus_acpi_device_ids[] = {
 	{"VMBUS", 0},
 	{"VMBus", 0},
 	{"", 0},
 };
 MODULE_DEVICE_TABLE(acpi, vmbus_acpi_device_ids);
+
+static int vmbus_acpi_suspend(struct device *dev)
+{
+	printk("cdx: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
+	vmbus_initiate_unload(false);
+	printk("cdx: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
+
+	return 0;
+}
+
+static int vmbus_acpi_resume(struct device *dev)
+{
+	struct vmbus_channel_msginfo *msginfo = NULL;
+	int ret;
+
+	//WARN_ON(1);
+
+	msginfo = kzalloc(sizeof(*msginfo) +
+			  sizeof(struct vmbus_channel_initiate_contact),
+			  GFP_KERNEL);
+	BUG_ON(msginfo == NULL);
+
+	/*
+	 * Negotiate a compatible VMBUS version number with the
+	 * host. We start with the highest number we can support
+	 * and work our way down until we negotiate a compatible
+	 * version.
+	 */
+
+	printk("cdx: %s, line %d, vmbus_proto_version=0x%x\n", __func__, __LINE__, vmbus_proto_version);
+	ret = vmbus_negotiate_version(msginfo, vmbus_proto_version);
+	printk("cdx: %s, line %d, vmbus_proto_version=0x%x, ret=%d\n", __func__, __LINE__, vmbus_proto_version,
+		ret);
+	BUG_ON(ret != 0);
+
+	kfree(msginfo);
+
+	printk("cdx: %s, line %d, vmbus_proto_version=0x%x, calling vmbus_request_offers....\n", __func__, __LINE__, vmbus_proto_version);
+	vmbus_request_offers();
+	printk("cdx: %s, line %d, vmbus_proto_version=0x%x, calling vmbus_request_offers.... done. \n", __func__, __LINE__, vmbus_proto_version);
+
+	return 0;
+}
+
+static const struct dev_pm_ops vmbus_acpi_pm = {
+#if 0
+	SET_RUNTIME_PM_OPS(vmbus_acpi_suspend,
+			   vmbus_acpi_resume,
+			   NULL),
+	//SET_NOIRQ_SYSTEM_SLEEP_PM_OP(vmbus_acpi_suspend,
+#endif
+	SET_SYSTEM_SLEEP_PM_OPS(vmbus_acpi_suspend, vmbus_acpi_resume)
+};
 
 static struct acpi_driver vmbus_acpi_driver = {
 	.name = "vmbus",
@@ -1967,6 +2074,7 @@ static struct acpi_driver vmbus_acpi_driver = {
 		.add = vmbus_acpi_add,
 		.remove = vmbus_acpi_remove,
 	},
+	.drv.pm = &vmbus_acpi_pm,
 };
 
 static void hv_kexec_handler(void)
@@ -1993,6 +2101,33 @@ static void hv_crash_handler(struct pt_regs *regs)
 	hyperv_cleanup();
 };
 
+static int hv_vmbus_suspend(void)
+{
+	int cpu = raw_smp_processor_id();
+	printk("cdx: %s, line %d, on cpu%d\n", __func__, __LINE__, cpu);
+
+	BUG_ON(cpu != 0 || num_online_cpus() > 1 || !irqs_disabled());
+
+	hv_synic_cleanup(0);
+
+	return 0;
+}
+
+static void hv_vmbus_resume(void)
+{
+	int cpu = raw_smp_processor_id();
+	printk("cdx: %s, line %d, on cpu%d\n", __func__, __LINE__, cpu);
+
+	BUG_ON(cpu != 0 || num_online_cpus() > 1 || !irqs_disabled());
+
+	hv_synic_init(0);
+}
+
+static struct syscore_ops hv_vmbus_syscore_ops = {
+	.suspend = hv_vmbus_suspend,
+	.resume = hv_vmbus_resume,
+};
+
 static int __init hv_acpi_init(void)
 {
 	int ret, t;
@@ -2005,6 +2140,11 @@ static int __init hv_acpi_init(void)
 	/*
 	 * Get ACPI resources first.
 	 */
+	printk("cdx: hv_acpi_init: vmbus_acpi_driver=%px, drv=%px, suspend=%px, resume=%px\n",
+			&vmbus_acpi_driver, &vmbus_acpi_driver.drv,
+			vmbus_acpi_driver.drv.suspend,
+			vmbus_acpi_driver.drv.resume
+			);
 	ret = acpi_bus_register_driver(&vmbus_acpi_driver);
 
 	if (ret)
@@ -2023,6 +2163,8 @@ static int __init hv_acpi_init(void)
 	hv_setup_kexec_handler(hv_kexec_handler);
 	hv_setup_crash_handler(hv_crash_handler);
 
+	register_syscore_ops(&hv_vmbus_syscore_ops);
+
 	return 0;
 
 cleanup:
@@ -2034,6 +2176,8 @@ cleanup:
 static void __exit vmbus_exit(void)
 {
 	int cpu;
+
+	unregister_syscore_ops(&hv_vmbus_syscore_ops);
 
 	hv_remove_kexec_handler();
 	hv_remove_crash_handler();

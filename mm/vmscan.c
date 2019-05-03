@@ -51,6 +51,7 @@
 #include <linux/printk.h>
 #include <linux/dax.h>
 #include <linux/psi.h>
+#include <linux/mmdebug.h>
 
 #include <asm/tlbflush.h>
 #include <asm/div64.h>
@@ -1686,6 +1687,7 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
 			continue;
 
 		default:
+			dump_page(page, "cdx: dump_page() from isolate_lru_pages: before BUG()\n");
 			BUG();
 		}
 	}

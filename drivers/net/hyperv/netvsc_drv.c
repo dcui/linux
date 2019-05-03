@@ -2379,6 +2379,96 @@ static int netvsc_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int netvsc_suspend(struct hv_device *dev, pm_message_t state)
+{
+	struct net_device_context *ndev_ctx;
+	struct net_device *vf_netdev, *net;
+	struct netvsc_device *nvdev;
+	struct netvsc_device_info *device_info;
+	int ret;
+
+	net = hv_get_drvdata(dev);
+	if (net == NULL) {
+		dev_err(&dev->device, "No net device to remove\n");
+		return 0;
+	}
+
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+	ndev_ctx = netdev_priv(net);
+	cancel_delayed_work_sync(&ndev_ctx->dwork);
+
+	rtnl_lock();
+
+	nvdev = rtnl_dereference(ndev_ctx->nvdev);
+	printk("cdx: 2: %s, line %d\n", __func__, __LINE__);
+	BUG_ON(nvdev == NULL);
+
+	if (nvdev)
+		cancel_work_sync(&nvdev->subchan_work);
+
+	/*
+	 * Call to the vsc driver to let it know that the device is being
+	 * removed. Also blocks mtu and channel changes.
+	 */
+	printk("cdx: 3: %s, line %d\n", __func__, __LINE__);
+	vf_netdev = rtnl_dereference(ndev_ctx->vf_netdev);
+	if (vf_netdev)
+		netvsc_unregister_vf(vf_netdev);
+
+	printk("cdx: 4: %s, line %d\n", __func__, __LINE__);
+	device_info = netvsc_devinfo_get(nvdev);
+	ndev_ctx->device_info = device_info;
+
+	ret = netvsc_detach(net, nvdev);
+	printk("cdx: 5: %s, line %d\n", __func__, __LINE__);
+	BUG_ON(ret);
+
+	//list_del(&ndev_ctx->list);
+
+	rtnl_unlock();
+
+	printk("cdx: 6: %s, line %d\n", __func__, __LINE__);
+	return 0;
+}
+
+static int netvsc_resume(struct hv_device *dev)
+{
+	struct net_device_context *net_device_ctx;
+	struct net_device *net;
+	//struct net_device *vf_netdev;
+	//struct netvsc_device *nvdev;
+	struct netvsc_device_info *device_info;
+	int ret;
+
+	net = hv_get_drvdata(dev);
+	if (net == NULL) {
+		dev_err(&dev->device, "No net device to remove\n");
+		return 0;
+	}
+
+//	printk("cdx: 1.1: %s, line %d, sleeping 10s\n", __func__, __LINE__);
+	//ssleep(10);
+//	printk("cdx: 1.2: %s, line %d, sleeping 10s: done, re-opening...\n", __func__, __LINE__);
+
+	rtnl_lock();
+
+	net_device_ctx = netdev_priv(net);
+	device_info = net_device_ctx->device_info;
+
+	printk("cdx: 2: %s, line %d\n", __func__, __LINE__);
+	ret = netvsc_attach(net, device_info);
+	printk("cdx: 3: %s, line %d, ret=%d\n", __func__, __LINE__, ret);
+
+	//struct netvsc_device *nvdev = rtnl_dereference(net_device_ctx->nvdev);
+	//unsigned int orig, count = channels->combined_count;
+
+	//list_add(&net_device_ctx->list, &netvsc_dev_list);
+
+	rtnl_unlock();
+
+	//TODO: kfree(device_info);
+	return 0;
+}
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Network guid */
 	{ HV_NIC_GUID, },
@@ -2393,6 +2483,8 @@ static struct  hv_driver netvsc_drv = {
 	.id_table = id_table,
 	.probe = netvsc_probe,
 	.remove = netvsc_remove,
+	.suspend = netvsc_suspend,
+	.resume = netvsc_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

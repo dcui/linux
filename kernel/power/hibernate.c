@@ -433,6 +433,7 @@ static int resume_target_kernel(bool platform_mode)
 {
 	int error;
 
+	pr_info("cdx: %s: line %d\n", __func__, __LINE__);
 	error = dpm_suspend_end(PMSG_QUIESCE);
 	if (error) {
 		pr_err("Some devices failed to power down, aborting resume\n");
@@ -440,10 +441,12 @@ static int resume_target_kernel(bool platform_mode)
 	}
 
 	error = platform_pre_restore(platform_mode);
+	pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 	if (error)
 		goto Cleanup;
 
 	error = hibernate_resume_nonboot_cpu_disable();
+	pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 	if (error)
 		goto Enable_cpus;
 
@@ -451,13 +454,16 @@ static int resume_target_kernel(bool platform_mode)
 	system_state = SYSTEM_SUSPEND;
 
 	error = syscore_suspend();
+	pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 	if (error)
 		goto Enable_irqs;
 
 	save_processor_state();
 	error = restore_highmem();
+	pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 	if (!error) {
 		error = swsusp_arch_resume();
+		pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 		/*
 		 * The code below is only ever reached in case of a failure.
 		 * Otherwise, execution continues at the place where
@@ -493,6 +499,7 @@ static int resume_target_kernel(bool platform_mode)
 
 	dpm_resume_start(PMSG_RECOVER);
 
+	pr_info("cdx: %s: line %d, error=%d\n", __func__, __LINE__, error);
 	return error;
 }
 
@@ -512,8 +519,10 @@ int hibernation_restore(int platform_mode)
 	suspend_console();
 	pm_restrict_gfp_mask();
 	error = dpm_suspend_start(PMSG_QUIESCE);
+	pr_info("cdx: 1: hibernation_restore, error=%d\n", error);
 	if (!error) {
 		error = resume_target_kernel(platform_mode);
+		pr_info("cdx: 2: hibernation_restore, error=%d\n", error);
 		/*
 		 * The above should either succeed and jump to the new kernel,
 		 * or return with an error. Otherwise things are just
@@ -669,8 +678,10 @@ static int load_image_and_restore(void)
 
 	error = swsusp_read(&flags);
 	swsusp_close(FMODE_READ);
+	pr_info("cdx: 1: load_image_and_restore, error=%d\n", error);
 	if (!error)
-		hibernation_restore(flags & SF_PLATFORM_MODE);
+		error = hibernation_restore(flags & SF_PLATFORM_MODE);
+	pr_info("cdx: 2: load_image_and_restore, error=%d\n", error);
 
 	pr_err("Failed to load hibernation image, recovering.\n");
 	swsusp_free();
@@ -897,7 +908,7 @@ static int software_resume(void)
  Finish:
 	__pm_notifier_call_chain(PM_POST_RESTORE, nr_calls, NULL);
 	pm_restore_console();
-	pr_info("resume from hibernation failed (%d)\n", error);
+	pr_info("resume from hibernation failed (%d):cdx:!!!!!!!!!!!!!!\n", error);
 	atomic_inc(&snapshot_device_available);
 	/* For success case, the suspend path will release the lock */
  Unlock:

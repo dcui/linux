@@ -1156,6 +1156,8 @@ struct hv_driver {
 	int (*probe)(struct hv_device *, const struct hv_vmbus_device_id *);
 	int (*remove)(struct hv_device *);
 	void (*shutdown)(struct hv_device *);
+	int (*suspend)(struct hv_device *, pm_message_t);
+	int (*resume)(struct hv_device *);
 
 };
 

@@ -43,6 +43,8 @@
 #include <linux/fb.h>
 #include <linux/pci.h>
 #include <linux/efi.h>
+#include <linux/delay.h>
+#include <linux/console.h>
 
 #include <linux/hyperv.h>
 
@@ -889,6 +891,60 @@ static int hvfb_remove(struct hv_device *hdev)
 	return 0;
 }
 
+static int hvfb_suspend(struct hv_device *hdev, pm_message_t state)
+{
+	struct fb_info *info = hv_get_drvdata(hdev);
+	struct hvfb_par *par = info->par;
+
+	console_lock();
+	/* 1 means do suspend */
+	fb_set_suspend(info, 1);
+
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+
+	cancel_delayed_work_sync(&par->dwork);
+	par->update = false;
+	par->fb_ready = false;
+
+	vmbus_close(hdev->channel);
+	console_unlock();
+	printk("cdx: 2: %s, line %d\n", __func__, __LINE__);
+	return 0;
+}
+
+static int hvfb_resume(struct hv_device *hdev)
+{
+	struct fb_info *info = hv_get_drvdata(hdev);
+	struct hvfb_par *par = info->par;
+
+	int ret;
+
+	console_lock();
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+#if 0
+	printk("cdx: 1.1: %s, line %d, sleeping 10s\n", __func__, __LINE__);
+	ssleep(10);
+	printk("cdx: 1.1: %s, line %d, sleeping 10s: done, re-opening...\n", __func__, __LINE__);
+#endif
+	ret = synthvid_connect_vsp(hdev);
+	printk("cdx: 2: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+	WARN_ON(ret);
+	if (ret == 0)
+		ret = synthvid_send_config(hdev);
+	printk("cdx: 3: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+	WARN_ON(ret);
+
+	par->fb_ready = true;
+	par->update = true;
+	schedule_delayed_work(&par->dwork, HVFB_UPDATE_DELAY);
+
+	/* 0 means do resume */
+	fb_set_suspend(info, 0);
+	console_unlock();
+
+	return 0;
+}
+
 
 static const struct pci_device_id pci_stub_id_table[] = {
 	{
@@ -912,6 +968,8 @@ static struct hv_driver hvfb_drv = {
 	.id_table = id_table,
 	.probe = hvfb_probe,
 	.remove = hvfb_remove,
+	.suspend = hvfb_suspend,
+	.resume = hvfb_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

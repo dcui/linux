@@ -1738,6 +1738,7 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 
 	if (pm_wakeup_pending()) {
 		dev->power.direct_complete = false;
+		WARN(1, "cdx: __device_suspend: pm_wakeup_pending is true!!!!!!\n");
 		async_error = -EBUSY;
 		goto Complete;
 	}
@@ -1876,6 +1877,7 @@ int dpm_suspend(pm_message_t state)
 		mutex_unlock(&dpm_list_mtx);
 
 		error = device_suspend(dev);
+		if (error) printk("cdx: 1: %s, line %d, dev=%s, error =%d\n", __func__, __LINE__, dev_name(dev), error);
 
 		mutex_lock(&dpm_list_mtx);
 		if (error) {
@@ -1887,11 +1889,13 @@ int dpm_suspend(pm_message_t state)
 		if (!list_empty(&dev->power.entry))
 			list_move(&dev->power.entry, &dpm_suspended_list);
 		put_device(dev);
+		if (error) printk("cdx: 2: %s, line %d, dev=%s, error =%d, async_err=%d\n", __func__, __LINE__, dev_name(dev), error, async_error);
 		if (async_error)
 			break;
 	}
 	mutex_unlock(&dpm_list_mtx);
 	async_synchronize_full();
+	if (error) printk("cdx: 3: %s, line %d, error =%d, async_err=%d\n", __func__, __LINE__,  error, async_error);
 	if (!error)
 		error = async_error;
 	if (error) {
@@ -1900,6 +1904,8 @@ int dpm_suspend(pm_message_t state)
 	}
 	dpm_show_time(starttime, state, error, NULL);
 	trace_suspend_resume(TPS("dpm_suspend"), state.event, false);
+	if (error) printk("cdx: dpm_suspend: error = %d\n", error);
+	WARN_ON(error);
 	return error;
 }
 
@@ -1915,6 +1921,7 @@ static int device_prepare(struct device *dev, pm_message_t state)
 {
 	int (*callback)(struct device *) = NULL;
 	int ret = 0;
+	int cdx;
 
 	if (dev->power.syscore)
 		return 0;
@@ -1938,25 +1945,35 @@ static int device_prepare(struct device *dev, pm_message_t state)
 	if (dev->power.no_pm_callbacks)
 		goto unlock;
 
-	if (dev->pm_domain)
+	if (dev->pm_domain) {
 		callback = dev->pm_domain->ops.prepare;
-	else if (dev->type && dev->type->pm)
+		cdx = 1;
+	} else if (dev->type && dev->type->pm) {
 		callback = dev->type->pm->prepare;
-	else if (dev->class && dev->class->pm)
+		cdx = 2;
+	} else if (dev->class && dev->class->pm) {
 		callback = dev->class->pm->prepare;
-	else if (dev->bus && dev->bus->pm)
+		cdx = 3;
+	} else if (dev->bus && dev->bus->pm) {
 		callback = dev->bus->pm->prepare;
+		cdx = 4;
+	}
 
-	if (!callback && dev->driver && dev->driver->pm)
+	if (!callback && dev->driver && dev->driver->pm) {
 		callback = dev->driver->pm->prepare;
+		cdx = 5;
+	}
 
-	if (callback)
+	if (callback) {
 		ret = callback(dev);
+		if (ret) printk("cdx: %s, line %d, dev=%s, error =%d, cdx = %d\n", __func__, __LINE__, dev_name(dev), ret, cdx);
+	}
 
 unlock:
 	device_unlock(dev);
 
 	if (ret < 0) {
+		if (cdx == 5) printk("cdx: device_prepare: drv=%s\n", dev->driver->name);
 		suspend_report_result(callback, ret);
 		pm_runtime_put(dev);
 		return ret;
@@ -2013,6 +2030,7 @@ int dpm_prepare(pm_message_t state)
 
 		trace_device_pm_callback_start(dev, "", state.event);
 		error = device_prepare(dev, state);
+		if (error) printk("cdx: %s, line %d, error =%d\n", __func__, __LINE__, error);
 		trace_device_pm_callback_end(dev, error);
 
 		mutex_lock(&dpm_list_mtx);
@@ -2035,6 +2053,7 @@ int dpm_prepare(pm_message_t state)
 	}
 	mutex_unlock(&dpm_list_mtx);
 	trace_suspend_resume(TPS("dpm_prepare"), state.event, false);
+	if (error) printk("cdx: %s, line %d, error =%d\n", __func__, __LINE__, error);
 	return error;
 }
 
@@ -2050,11 +2069,14 @@ int dpm_suspend_start(pm_message_t state)
 	int error;
 
 	error = dpm_prepare(state);
+	if (error) pr_info("cdx: 1: dpm_suspend_start, error=%d\n", error);
 	if (error) {
 		suspend_stats.failed_prepare++;
 		dpm_save_failed_step(SUSPEND_PREPARE);
-	} else
+	} else {
 		error = dpm_suspend(state);
+		if (error) pr_info("cdx: 222: dpm_suspend_start, error=%d\n", error);
+	}
 	return error;
 }
 EXPORT_SYMBOL_GPL(dpm_suspend_start);

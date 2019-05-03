@@ -61,8 +61,10 @@ int hv_init(void)
 	if (!hv_context.cpu_context)
 		return -ENOMEM;
 
+#if 1
 	direct_mode_enabled = ms_hyperv.misc_features &
 			HV_STIMER_DIRECT_MODE_AVAILABLE;
+#endif
 	return 0;
 }
 
@@ -290,6 +292,7 @@ int hv_synic_init(unsigned int cpu)
 	union hv_synic_sint shared_sint;
 	union hv_synic_scontrol sctrl;
 
+	printk("cdx: on cpu %d, %s, line %d\n", smp_processor_id(), __func__, __LINE__);
 	/* Setup the Synic's message page */
 	hv_get_simp(simp.as_uint64);
 	simp.simp_enabled = 1;
@@ -327,6 +330,7 @@ int hv_synic_init(unsigned int cpu)
 	/*
 	 * Register the per-cpu clockevent source.
 	 */
+	//cdx
 	if (ms_hyperv.features & HV_MSR_SYNTIMER_AVAILABLE)
 		clockevents_config_and_register(hv_cpu->clk_evt,
 						HV_TIMER_FREQUENCY,
@@ -369,9 +373,11 @@ int hv_synic_cleanup(unsigned int cpu)
 	bool channel_found = false;
 	unsigned long flags;
 
+	printk("cdx: on cpu %d, %s, line %d\n", smp_processor_id(), __func__, __LINE__);
 	hv_get_synic_state(sctrl.as_uint64);
 	if (sctrl.enable != 1)
 		return -EFAULT;
+	printk("cdx: on cpu %d, %s, line %d\n", smp_processor_id(), __func__, __LINE__);
 
 	/*
 	 * Search for channels which are bound to the CPU we're about to
@@ -398,17 +404,19 @@ int hv_synic_cleanup(unsigned int cpu)
 	}
 	mutex_unlock(&vmbus_connection.channel_mutex);
 
+#if 0
 	if (channel_found && vmbus_connection.conn_state == CONNECTED)
 		return -EBUSY;
+#endif
 
 	/* Turn off clockevent device */
+	//cdx
 	if (ms_hyperv.features & HV_MSR_SYNTIMER_AVAILABLE) {
 		struct hv_per_cpu_context *hv_cpu
 			= this_cpu_ptr(hv_context.cpu_context);
 
 		clockevents_unbind_device(hv_cpu->clk_evt, cpu);
 		hv_ce_shutdown(hv_cpu->clk_evt);
-		put_cpu_ptr(hv_cpu);
 	}
 
 	hv_get_synint_state(VMBUS_MESSAGE_SINT, shared_sint.as_uint64);

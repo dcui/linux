@@ -1219,7 +1219,9 @@ static void acpi_dev_pm_detach(struct device *dev, bool power_off)
 {
 	struct acpi_device *adev = ACPI_COMPANION(dev);
 
+	WARN_ON(1);
 	if (adev && dev->pm_domain == &acpi_general_pm_domain) {
+		WARN_ON(1);
 		dev_pm_domain_set(dev, NULL);
 		acpi_remove_pm_notifier(adev);
 		if (power_off) {
@@ -1276,6 +1278,8 @@ int acpi_dev_pm_attach(struct device *dev, bool power_on)
 	}
 
 	dev->pm_domain->detach = acpi_dev_pm_detach;
+	WARN(1, "cdx: acpi_dev_pm_attach: dev=%px, power_on=%d, acpi_general_pm_domain=%px\n",
+		dev, power_on, &acpi_general_pm_domain);
 	return 1;
 }
 EXPORT_SYMBOL_GPL(acpi_dev_pm_attach);

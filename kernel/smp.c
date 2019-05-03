@@ -288,7 +288,7 @@ int smp_call_function_single(int cpu, smp_call_func_t func, void *info,
 	 * can't happen.
 	 */
 	WARN_ON_ONCE(cpu_online(this_cpu) && irqs_disabled()
-		     && !oops_in_progress);
+		     && cpu != this_cpu && !oops_in_progress);
 
 	csd = &csd_stack;
 	if (!wait) {

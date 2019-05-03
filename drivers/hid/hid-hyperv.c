@@ -15,6 +15,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/device.h>
+#include <linux/delay.h>
 #include <linux/completion.h>
 #include <linux/input.h>
 #include <linux/hid.h>
@@ -285,6 +286,7 @@ static void mousevsc_on_receive(struct hv_device *device,
 		       pipe_msg->size + sizeof(struct pipe_prt_msg) -
 		       sizeof(unsigned char));
 		complete(&input_dev->wait_event);
+		printk("cdx: 1: %s, line %d, SYNTH_HID_PROTOCOL_RESPONSE\n", __func__, __LINE__);
 		break;
 
 	case SYNTH_HID_INITIAL_DEVICE_INFO:
@@ -309,6 +311,7 @@ static void mousevsc_on_receive(struct hv_device *device,
 		hid_input_report(input_dev->hid_device, HID_INPUT_REPORT,
 				 input_dev->input_buf, len, 1);
 
+		//yicheng
 		pm_wakeup_hard_event(&input_dev->device->device);
 
 		break;
@@ -585,6 +588,43 @@ static int mousevsc_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int mousevsc_suspend(struct hv_device *dev, pm_message_t state)
+{
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+	vmbus_close(dev->channel);
+	printk("cdx: 2: %s, line %d\n", __func__, __LINE__);
+	return 0;
+}
+
+static int mousevsc_resume(struct hv_device *dev)
+{
+	int ret;
+
+	printk("cdx: 1: %s, line %d\n", __func__, __LINE__);
+#if 0
+	printk("cdx: 1.1: %s, line %d, sleeping 10s\n", __func__, __LINE__);
+	ssleep(10);
+	printk("cdx: 1.1: %s, line %d, sleeping 10s: done, re-opening...\n", __func__, __LINE__);
+#endif
+
+	ret = vmbus_open(dev->channel,
+		INPUTVSC_SEND_RING_BUFFER_SIZE,
+		INPUTVSC_RECV_RING_BUFFER_SIZE,
+		NULL,
+		0,
+		mousevsc_on_channel_callback,
+		dev
+		);
+	printk("cdx: 2: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+	BUG_ON(ret);
+
+	ret = mousevsc_connect_to_vsp(dev);
+	printk("cdx: 3: %s, line %d, ret = %d\n", __func__, __LINE__, ret);
+	BUG_ON(ret);
+
+	return 0;
+}
+
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Mouse guid */
 	{ HV_MOUSE_GUID, },
@@ -598,6 +638,8 @@ static struct  hv_driver mousevsc_drv = {
 	.id_table = id_table,
 	.probe = mousevsc_probe,
 	.remove = mousevsc_remove,
+	.suspend = mousevsc_suspend,
+	.resume = mousevsc_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
