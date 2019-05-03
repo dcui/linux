@@ -21,6 +21,7 @@
 #include <linux/hid.h>
 #include <linux/hiddev.h>
 #include <linux/hyperv.h>
+#include <linux/suspend.h>
 
 
 struct hv_input_dev_info {
@@ -159,6 +160,9 @@ struct mousevsc_dev {
 	struct hv_input_dev_info hid_dev_info;
 	struct hid_device       *hid_device;
 	u8			input_buf[HID_MAX_BUFFER_SIZE];
+
+	struct notifier_block	pm_nb;
+	bool			hibernation_in_progress;
 };
 
 
@@ -312,7 +316,8 @@ static void mousevsc_on_receive(struct hv_device *device,
 				 input_dev->input_buf, len, 1);
 
 		//yicheng
-		pm_wakeup_hard_event(&input_dev->device->device);
+		if (!input_dev->hibernation_in_progress)
+			pm_wakeup_hard_event(&input_dev->device->device);
 
 		break;
 	default:
@@ -486,6 +491,34 @@ static struct hid_ll_driver mousevsc_ll_driver = {
 
 static struct hid_driver mousevsc_hid_driver;
 
+static int mousevsc_pm_notify(struct notifier_block *nb,
+			      unsigned long val, void *ign)
+{
+	struct mousevsc_dev *input_dev;
+
+	input_dev = container_of(nb, struct mousevsc_dev, pm_nb);
+
+	printk("cdx: mousevsc_pm_notify: default: val=0x%lx\n", val);
+
+	switch (val) {
+	case PM_HIBERNATION_PREPARE:
+	case PM_RESTORE_PREPARE:
+		input_dev->hibernation_in_progress = true;
+		printk("cdx: mousevsc_pm_notify: freezing....................\n");
+		return NOTIFY_OK;
+
+	case PM_POST_HIBERNATION:
+	case PM_POST_RESTORE:
+		input_dev->hibernation_in_progress = false;
+		printk("cdx: mousevsc_pm_notify: thawing.................\n");
+		return NOTIFY_OK;
+
+	default:
+		WARN_ON(1);
+		return NOTIFY_DONE;
+	}
+}
+
 static int mousevsc_probe(struct hv_device *device,
 			const struct hv_vmbus_device_id *dev_id)
 {
@@ -560,6 +593,9 @@ static int mousevsc_probe(struct hv_device *device,
 	input_dev->connected = true;
 	input_dev->init_complete = true;
 
+	input_dev->pm_nb.notifier_call = mousevsc_pm_notify;
+	register_pm_notifier(&input_dev->pm_nb);
+
 	return ret;
 
 probe_err2:
@@ -578,6 +614,8 @@ probe_err0:
 static int mousevsc_remove(struct hv_device *dev)
 {
 	struct mousevsc_dev *input_dev = hv_get_drvdata(dev);
+
+	unregister_pm_notifier(&input_dev->pm_nb);
 
 	device_init_wakeup(&dev->device, false);
 	vmbus_close(dev->channel);
