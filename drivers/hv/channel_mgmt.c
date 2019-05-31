@@ -925,6 +925,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	struct device *dev;
 
 	rescind = (struct vmbus_channel_rescind_offer *)hdr;
+	printk("cdx: vmbus_onoffer_rescind: yicheng: chan: relid=%d\n", rescind->child_relid);
 
 	trace_vmbus_onoffer_rescind(rescind);
 

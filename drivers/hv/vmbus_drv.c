@@ -2017,6 +2017,12 @@ MODULE_DEVICE_TABLE(acpi, vmbus_acpi_device_ids);
 static int vmbus_acpi_suspend(struct device *dev)
 {
 	printk("cdx: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
+#if 0
+	drain_workqueue(&vmbus_connection.work_queue);
+	drain_workqueue(&vmbus_connection.handle_primary_chan_wq);
+	kdrain_workqueue(&vmbus_connection.handle_sub_chan_wq);
+#endif
+	drain_workqueue(system_wq);
 	vmbus_initiate_unload(false);
 	printk("cdx: on cpu %d, %s, line %d\n", raw_smp_processor_id(), __func__, __LINE__);
 

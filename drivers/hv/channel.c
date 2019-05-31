@@ -666,6 +666,7 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
 	msg->header.msgtype = CHANNELMSG_CLOSECHANNEL;
 	msg->child_relid = channel->offermsg.child_relid;
 
+	printk("cdx: vmbus_close_internal: yicheng: closing chan id=%d\n", channel->offermsg.child_relid);
 	ret = vmbus_post_msg(msg, sizeof(struct vmbus_channel_close_channel),
 			     true);
 
