@@ -22,6 +22,7 @@
 #include <linux/jiffies.h>
 #include <linux/mman.h>
 #include <linux/delay.h>
+#include <linux/freezer.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -512,7 +513,9 @@ struct hv_dynmem_device {
 	struct hv_device *dev;
 	enum hv_dm_state state;
 	struct completion host_event;
-	struct completion config_event;
+
+	unsigned long post_status_requested;
+	wait_queue_head_t config_event_wq;
 
 	/*
 	 * Number of pages we have currently ballooned out.
@@ -1372,7 +1375,10 @@ static void balloon_down(struct hv_dynmem_device *dm,
 
 	for (i = 0; i < range_count; i++) {
 		free_balloon_pages(dm, &range_array[i]);
-		complete(&dm_device.config_event);
+
+		set_bit(0, &dm_device.post_status_requested);
+		if (waitqueue_active(&dm_device.config_event_wq))
+			wake_up(&dm_device.config_event_wq);
 	}
 
 	pr_debug("Freed %u ballooned pages.\n",
@@ -1400,14 +1406,17 @@ static int dm_thread_func(void *dm_dev)
 {
 	struct hv_dynmem_device *dm = dm_dev;
 
+	set_freezable();
 	while (!kthread_should_stop()) {
-		wait_for_completion_interruptible_timeout(
-						&dm_device.config_event, 1*HZ);
+		wait_event_freezable_timeout(dm_device.config_event_wq,
+					     dm_device.post_status_requested,
+					     HZ);
 		/*
 		 * The host expects us to post information on the memory
 		 * pressure every second.
 		 */
-		reinit_completion(&dm_device.config_event);
+		test_and_clear_bit(0, &dm_device.post_status_requested);
+
 		post_status(dm);
 	}
 
@@ -1574,58 +1583,18 @@ static void balloon_onchannelcallback(void *context)
 
 }
 
-static int balloon_probe(struct hv_device *dev,
-			const struct hv_vmbus_device_id *dev_id)
+static int balloon_connect_vsp(struct hv_device *dev)
 {
-	int ret;
-	unsigned long t;
 	struct dm_version_request version_req;
 	struct dm_capabilities cap_msg;
-
-#ifdef CONFIG_MEMORY_HOTPLUG
-	do_hot_add = hot_add;
-#else
-	do_hot_add = false;
-#endif
-
-	/*
-	 * First allocate a send buffer.
-	 */
-
-	send_buffer = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	if (!send_buffer)
-		return -ENOMEM;
+	unsigned long t;
+	int ret;
 
 	ret = vmbus_open(dev->channel, dm_ring_size, dm_ring_size, NULL, 0,
-			balloon_onchannelcallback, dev);
-
+			 balloon_onchannelcallback, dev);
 	if (ret)
-		goto probe_error0;
+		return ret;
 
-	dm_device.dev = dev;
-	dm_device.state = DM_INITIALIZING;
-	dm_device.next_version = DYNMEM_PROTOCOL_VERSION_WIN8;
-	init_completion(&dm_device.host_event);
-	init_completion(&dm_device.config_event);
-	INIT_LIST_HEAD(&dm_device.ha_region_list);
-	spin_lock_init(&dm_device.ha_lock);
-	INIT_WORK(&dm_device.balloon_wrk.wrk, balloon_up);
-	INIT_WORK(&dm_device.ha_wrk.wrk, hot_add_req);
-	dm_device.host_specified_ha_region = false;
-
-	dm_device.thread =
-		 kthread_run(dm_thread_func, &dm_device, "hv_balloon");
-	if (IS_ERR(dm_device.thread)) {
-		ret = PTR_ERR(dm_device.thread);
-		goto probe_error1;
-	}
-
-#ifdef CONFIG_MEMORY_HOTPLUG
-	set_online_page_callback(&hv_online_page);
-	register_memory_notifier(&hv_memory_nb);
-#endif
-
-	hv_set_drvdata(dev, &dm_device);
 	/*
 	 * Initiate the hand shake with the host and negotiate
 	 * a version that the host can support. We start with the
@@ -1645,22 +1614,18 @@ static int balloon_probe(struct hv_device *dev,
 				(unsigned long)NULL,
 				VM_PKT_DATA_INBAND, 0);
 	if (ret)
-		goto probe_error2;
+		return ret;
 
 	t = wait_for_completion_timeout(&dm_device.host_event, 5*HZ);
-	if (t == 0) {
-		ret = -ETIMEDOUT;
-		goto probe_error2;
-	}
+	if (t == 0)
+		return -ETIMEDOUT;
 
 	/*
 	 * If we could not negotiate a compatible version with the host
 	 * fail the probe function.
 	 */
-	if (dm_device.state == DM_INIT_ERROR) {
-		ret = -ETIMEDOUT;
-		goto probe_error2;
-	}
+	if (dm_device.state == DM_INIT_ERROR)
+		return -EPROTO;
 
 	pr_info("Using Dynamic Memory protocol version %u.%u\n",
 		DYNMEM_MAJOR_VERSION(dm_device.version),
@@ -1696,37 +1661,80 @@ static int balloon_probe(struct hv_device *dev,
 				(unsigned long)NULL,
 				VM_PKT_DATA_INBAND, 0);
 	if (ret)
-		goto probe_error2;
+		return ret;
 
 	t = wait_for_completion_timeout(&dm_device.host_event, 5*HZ);
-	if (t == 0) {
-		ret = -ETIMEDOUT;
-		goto probe_error2;
-	}
+	if (t == 0)
+		return -ETIMEDOUT;
 
 	/*
 	 * If the host does not like our capabilities,
 	 * fail the probe function.
 	 */
-	if (dm_device.state == DM_INIT_ERROR) {
-		ret = -ETIMEDOUT;
-		goto probe_error2;
-	}
+	if (dm_device.state == DM_INIT_ERROR)
+		return -EPROTO;
+
+	return 0;
+}
+
+static int balloon_probe(struct hv_device *dev,
+			const struct hv_vmbus_device_id *dev_id)
+{
+	int ret;
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+	do_hot_add = hot_add;
+#else
+	do_hot_add = false;
+#endif
+
+	/*
+	 * First allocate a send buffer.
+	 */
+
+	send_buffer = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!send_buffer)
+		return -ENOMEM;
+
+	dm_device.dev = dev;
+	dm_device.state = DM_INITIALIZING;
+	dm_device.next_version = DYNMEM_PROTOCOL_VERSION_WIN8;
+	init_completion(&dm_device.host_event);
+	init_waitqueue_head(&dm_device.config_event_wq);
+	INIT_LIST_HEAD(&dm_device.ha_region_list);
+	spin_lock_init(&dm_device.ha_lock);
+	INIT_WORK(&dm_device.balloon_wrk.wrk, balloon_up);
+	INIT_WORK(&dm_device.ha_wrk.wrk, hot_add_req);
+	dm_device.host_specified_ha_region = false;
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+	set_online_page_callback(&hv_online_page);
+	register_memory_notifier(&hv_memory_nb);
+#endif
+
+	hv_set_drvdata(dev, &dm_device);
+
+	ret = balloon_connect_vsp(dev);
+	if (ret != 0)
+		goto probe_error;
 
 	dm_device.state = DM_INITIALIZED;
-	last_post_time = jiffies;
+
+	dm_device.thread =
+		 kthread_run(dm_thread_func, &dm_device, "hv_balloon");
+	if (IS_ERR(dm_device.thread)) {
+		ret = PTR_ERR(dm_device.thread);
+		goto probe_error;
+	}
 
 	return 0;
 
-probe_error2:
+probe_error:
+	vmbus_close(dev->channel);
 #ifdef CONFIG_MEMORY_HOTPLUG
 	restore_online_page_callback(&hv_online_page);
+	unregister_memory_notifier(&hv_memory_nb);
 #endif
-	kthread_stop(dm_device.thread);
-
-probe_error1:
-	vmbus_close(dev->channel);
-probe_error0:
 	kfree(send_buffer);
 	return ret;
 }
@@ -1744,8 +1752,8 @@ static int balloon_remove(struct hv_device *dev)
 	cancel_work_sync(&dm->balloon_wrk.wrk);
 	cancel_work_sync(&dm->ha_wrk.wrk);
 
-	vmbus_close(dev->channel);
 	kthread_stop(dm->thread);
+	vmbus_close(dev->channel);
 	kfree(send_buffer);
 #ifdef CONFIG_MEMORY_HOTPLUG
 	restore_online_page_callback(&hv_online_page);
@@ -1765,6 +1773,33 @@ static int balloon_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int balloon_suspend(struct hv_device *hv_dev, pm_message_t state)
+{
+	struct hv_dynmem_device *dm = hv_get_drvdata(hv_dev);
+
+	tasklet_disable(&hv_dev->channel->callback_event);
+
+	cancel_work_sync(&dm->balloon_wrk.wrk);
+	cancel_work_sync(&dm->ha_wrk.wrk);
+
+	vmbus_close(hv_dev->channel);
+
+	tasklet_enable(&hv_dev->channel->callback_event);
+
+	printk("cdx: balloon_suspend: ret=%d\n", 0);
+	return 0;
+
+}
+
+static int balloon_resume(struct hv_device *dev)
+{
+	int ret;
+
+	ret = balloon_connect_vsp(dev);
+	printk("cdx: balloon_resume: ret=%d\n", ret);
+	return 0;
+}
+
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Dynamic Memory Class ID */
 	/* 525074DC-8985-46e2-8057-A307DC18A502 */
@@ -1779,6 +1814,8 @@ static  struct hv_driver balloon_drv = {
 	.id_table = id_table,
 	.probe =  balloon_probe,
 	.remove =  balloon_remove,
+	.suspend = balloon_suspend,
+	.resume = balloon_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
