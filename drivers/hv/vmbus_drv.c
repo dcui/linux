@@ -481,6 +481,7 @@ static ssize_t in_write_bytes_avail_show(struct device *dev,
 }
 static DEVICE_ATTR_RO(in_write_bytes_avail);
 
+volatile int cdx_stop_writing_msr;
 static ssize_t channel_vp_mapping_show(struct device *dev,
 				       struct device_attribute *dev_attr,
 				       char *buf)
@@ -493,6 +494,9 @@ static ssize_t channel_vp_mapping_show(struct device *dev,
 
 	if (!channel)
 		return -ENODEV;
+
+	cdx_stop_writing_msr = 1;
+	printk("cdx: set cdx_stop_writing_msr to 1\n");
 
 	tot_written = snprintf(buf, buf_size, "%u:%u\n",
 		channel->offermsg.child_relid, channel->target_cpu);

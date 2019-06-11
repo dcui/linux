@@ -46,6 +46,7 @@ static inline  __u64 generate_guest_id(__u64 d_info1, __u64 kernel_version,
 
 
 /* Free the message slot and signal end-of-message if required */
+extern volatile int cdx_stop_writing_msr;
 static inline void vmbus_signal_eom(struct hv_message *msg, u32 old_msg_type)
 {
 	/*
@@ -77,6 +78,10 @@ static inline void vmbus_signal_eom(struct hv_message *msg, u32 old_msg_type)
 		 * possibly deliver another msg from the
 		 * hypervisor
 		 */
+		if (cdx_stop_writing_msr) {
+			WARN_ON_ONCE(1);
+			return;
+		}
 		wrmsrl(HV_X64_MSR_EOM, 0);
 	}
 }
