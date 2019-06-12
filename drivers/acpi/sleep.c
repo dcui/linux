@@ -79,7 +79,7 @@ static int acpi_sleep_prepare(u32 acpi_state)
 	return 0;
 }
 
-static bool acpi_sleep_state_supported(u8 sleep_state)
+bool acpi_sleep_state_supported(u8 sleep_state)
 {
 	acpi_status status;
 	u8 type_a, type_b;
@@ -89,6 +89,7 @@ static bool acpi_sleep_state_supported(u8 sleep_state)
 		|| (acpi_gbl_FADT.sleep_control.address
 			&& acpi_gbl_FADT.sleep_status.address));
 }
+EXPORT_SYMBOL_GPL(acpi_sleep_state_supported);
 
 #ifdef CONFIG_ACPI_SLEEP
 static u32 acpi_target_sleep_state = ACPI_STATE_S0;

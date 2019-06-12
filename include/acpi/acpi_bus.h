@@ -664,6 +664,8 @@ static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
 }
 #endif
 
+bool acpi_sleep_state_supported(u8 sleep_state);
+
 #ifdef CONFIG_ACPI_SLEEP
 u32 acpi_target_system_state(void);
 #else

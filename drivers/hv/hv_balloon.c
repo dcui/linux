@@ -19,6 +19,7 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/kernel.h>
+#include <linux/acpi.h>
 #include <linux/jiffies.h>
 #include <linux/mman.h>
 #include <linux/delay.h>
@@ -468,6 +469,7 @@ struct hot_add_wrk {
 	struct work_struct wrk;
 };
 
+static bool hv_hibernation_enabled;
 static bool hot_add = true;
 static bool do_hot_add;
 /*
@@ -1639,8 +1641,8 @@ static int balloon_connect_vsp(struct hv_device *dev)
 	cap_msg.hdr.size = sizeof(struct dm_capabilities);
 	cap_msg.hdr.trans_id = atomic_inc_return(&trans_id);
 
-	cap_msg.caps.cap_bits.balloon = 1;
-	cap_msg.caps.cap_bits.hot_add = 1;
+	cap_msg.caps.cap_bits.balloon = !hv_hibernation_enabled;
+	cap_msg.caps.cap_bits.hot_add = !hv_hibernation_enabled;
 
 	/*
 	 * Specify our alignment requirements as it relates
@@ -1681,6 +1683,10 @@ static int balloon_probe(struct hv_device *dev,
 			const struct hv_vmbus_device_id *dev_id)
 {
 	int ret;
+
+	hv_hibernation_enabled = acpi_sleep_state_supported(ACPI_STATE_S4);
+	if (hv_hibernation_enabled)
+		hot_add = false;
 
 #ifdef CONFIG_MEMORY_HOTPLUG
 	do_hot_add = hot_add;
