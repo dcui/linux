@@ -60,8 +60,14 @@ static int hv_cpu_init(unsigned int cpu)
 	if (!hv_vp_assist_page)
 		return 0;
 
+	/*
+	 * The ZERO flag is necessary, because in the case of CPU offlining
+	 * the page can still be used by hv_apic_eoi_write() for a while,
+	 * after the VP ASSIST PAGE is disabled in hv_cpu_die().
+	 */
 	if (!*hvp)
-		*hvp = __vmalloc(PAGE_SIZE, GFP_KERNEL, PAGE_KERNEL);
+		*hvp = __vmalloc(PAGE_SIZE, GFP_KERNEL | __GFP_ZERO,
+				 PAGE_KERNEL);
 
 	if (*hvp) {
 		u64 val;
