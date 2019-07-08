@@ -34,6 +34,8 @@
 #include <linux/fb.h>
 #include <linux/pci.h>
 #include <linux/efi.h>
+#include <linux/delay.h>
+#include <linux/console.h>
 
 #include <linux/hyperv.h>
 
@@ -880,6 +882,49 @@ static int hvfb_remove(struct hv_device *hdev)
 	return 0;
 }
 
+static int hvfb_suspend(struct hv_device *hdev)
+{
+	struct fb_info *info = hv_get_drvdata(hdev);
+	struct hvfb_par *par = info->par;
+
+	console_lock();
+	/* 1 means do suspend */
+	fb_set_suspend(info, 1);
+
+	cancel_delayed_work_sync(&par->dwork);
+	par->update = false;
+	par->fb_ready = false;
+
+	vmbus_close(hdev->channel);
+	console_unlock();
+	return 0;
+}
+
+static int hvfb_resume(struct hv_device *hdev)
+{
+	struct fb_info *info = hv_get_drvdata(hdev);
+	struct hvfb_par *par = info->par;
+
+	int ret;
+
+	console_lock();
+	ret = synthvid_connect_vsp(hdev);
+	WARN_ON(ret);
+	if (ret == 0)
+		ret = synthvid_send_config(hdev);
+	WARN_ON(ret);
+
+	par->fb_ready = true;
+	par->update = true;
+	schedule_delayed_work(&par->dwork, HVFB_UPDATE_DELAY);
+
+	/* 0 means do resume */
+	fb_set_suspend(info, 0);
+	console_unlock();
+
+	return 0;
+}
+
 
 static const struct pci_device_id pci_stub_id_table[] = {
 	{
@@ -903,6 +948,8 @@ static struct hv_driver hvfb_drv = {
 	.id_table = id_table,
 	.probe = hvfb_probe,
 	.remove = hvfb_remove,
+	.suspend = hvfb_suspend,
+	.resume = hvfb_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

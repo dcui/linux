@@ -9,6 +9,7 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/kernel.h>
+#include <linux/delay.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -440,6 +441,22 @@ static int util_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int util_suspend(struct hv_device *hv_dev)
+{
+	vmbus_close(hv_dev->channel);
+	return 0;
+}
+
+static int util_resume(struct hv_device *hv_dev)
+{
+	struct hv_util_service *srv = hv_get_drvdata(hv_dev);
+	int ret;
+
+	ret = vmbus_open(hv_dev->channel, 4 * PAGE_SIZE, 4 * PAGE_SIZE,
+			 NULL, 0, srv->util_cb, hv_dev->channel);
+	return ret;
+}
+
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Shutdown guid */
 	{ HV_SHUTDOWN_GUID,
@@ -476,6 +493,8 @@ static  struct hv_driver util_drv = {
 	.id_table = id_table,
 	.probe =  util_probe,
 	.remove =  util_remove,
+	.suspend = util_suspend,
+	.resume =  util_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

@@ -5,11 +5,13 @@
 
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/completion.h>
 #include <linux/hyperv.h>
 #include <linux/serio.h>
 #include <linux/slab.h>
+#include <linux/suspend.h>
 
 /*
  * Current version 1.0
@@ -95,6 +97,9 @@ struct hv_kbd_dev {
 	struct completion wait_event;
 	spinlock_t lock; /* protects 'started' field */
 	bool started;
+
+	struct notifier_block pm_nb;
+	bool hibernation_in_progress;
 };
 
 static void hv_kbd_on_receive(struct hv_device *hv_dev,
@@ -168,8 +173,11 @@ static void hv_kbd_on_receive(struct hv_device *hv_dev,
 		 * "echo freeze > /sys/power/state" can't really enter the
 		 * state because the Enter-UP can trigger a wakeup at once.
 		 */
-		if (!(info & IS_BREAK))
+#if 1
+	//	yicheng
+		if (!(info & IS_BREAK) && !kbd_dev->hibernation_in_progress)
 			pm_wakeup_hard_event(&hv_dev->device);
+#endif
 
 		break;
 
@@ -332,6 +340,29 @@ static void hv_kbd_stop(struct serio *serio)
 	spin_unlock_irqrestore(&kbd_dev->lock, flags);
 }
 
+static int hv_kbd_pm_notify(struct notifier_block *nb,
+			    unsigned long val, void *ign)
+{
+	struct hv_kbd_dev *kbd_dev;
+
+	kbd_dev = container_of(nb, struct hv_kbd_dev, pm_nb);
+
+	switch (val) {
+	case PM_HIBERNATION_PREPARE:
+	case PM_RESTORE_PREPARE:
+		kbd_dev->hibernation_in_progress = true;
+		return NOTIFY_OK;
+
+	case PM_POST_HIBERNATION:
+	case PM_POST_RESTORE:
+		kbd_dev->hibernation_in_progress = false;
+		return NOTIFY_OK;
+
+	default:
+		return NOTIFY_DONE;
+	}
+}
+
 static int hv_kbd_probe(struct hv_device *hv_dev,
 			const struct hv_vmbus_device_id *dev_id)
 {
@@ -380,6 +411,9 @@ static int hv_kbd_probe(struct hv_device *hv_dev,
 
 	device_init_wakeup(&hv_dev->device, true);
 
+	kbd_dev->pm_nb.notifier_call = hv_kbd_pm_notify;
+	register_pm_notifier(&kbd_dev->pm_nb);
+
 	return 0;
 
 err_close_vmbus:
@@ -394,6 +428,7 @@ static int hv_kbd_remove(struct hv_device *hv_dev)
 {
 	struct hv_kbd_dev *kbd_dev = hv_get_drvdata(hv_dev);
 
+	unregister_pm_notifier(&kbd_dev->pm_nb);
 	serio_unregister_port(kbd_dev->hv_serio);
 	vmbus_close(hv_dev->channel);
 	kfree(kbd_dev);
@@ -401,6 +436,28 @@ static int hv_kbd_remove(struct hv_device *hv_dev)
 	hv_set_drvdata(hv_dev, NULL);
 
 	return 0;
+}
+
+static int hv_kbd_suspend(struct hv_device *hv_dev)
+{
+	vmbus_close(hv_dev->channel);
+	return 0;
+}
+
+static int hv_kbd_resume(struct hv_device *hv_dev)
+{
+	int ret;
+
+	ret = vmbus_open(hv_dev->channel,
+			   KBD_VSC_SEND_RING_BUFFER_SIZE,
+			   KBD_VSC_RECV_RING_BUFFER_SIZE,
+			   NULL, 0,
+			   hv_kbd_on_channel_callback,
+			   hv_dev);
+	if (ret == 0)
+		ret = hv_kbd_connect_to_vsp(hv_dev);
+
+	return ret;
 }
 
 static const struct hv_vmbus_device_id id_table[] = {
@@ -416,6 +473,8 @@ static struct  hv_driver hv_kbd_drv = {
 	.id_table = id_table,
 	.probe = hv_kbd_probe,
 	.remove = hv_kbd_remove,
+	.suspend = hv_kbd_suspend,
+	.resume = hv_kbd_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

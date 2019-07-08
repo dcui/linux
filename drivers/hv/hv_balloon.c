@@ -12,6 +12,7 @@
 #include <linux/jiffies.h>
 #include <linux/mman.h>
 #include <linux/delay.h>
+#include <linux/freezer.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -457,6 +458,7 @@ struct hot_add_wrk {
 	struct work_struct wrk;
 };
 
+static bool hv_hibernation_enabled = true;
 static bool hot_add = true;
 static bool do_hot_add;
 /*
@@ -502,7 +504,9 @@ struct hv_dynmem_device {
 	struct hv_device *dev;
 	enum hv_dm_state state;
 	struct completion host_event;
-	struct completion config_event;
+
+	unsigned long post_status_requested;
+	wait_queue_head_t config_event_wq;
 
 	/*
 	 * Number of pages we have currently ballooned out.
@@ -1053,7 +1057,7 @@ static void hot_add_req(struct work_struct *dummy)
 	else
 		resp.result = 0;
 
-	if (!do_hot_add || (resp.page_count == 0))
+	if (!hv_hibernation_enabled && (!do_hot_add || resp.page_count == 0))
 		pr_err("Memory hot add failed\n");
 
 	dm->state = DM_INITIALIZED;
@@ -1362,7 +1366,9 @@ static void balloon_down(struct hv_dynmem_device *dm,
 
 	for (i = 0; i < range_count; i++) {
 		free_balloon_pages(dm, &range_array[i]);
-		complete(&dm_device.config_event);
+		set_bit(0, &dm_device.post_status_requested);
+		if (waitqueue_active(&dm_device.config_event_wq))
+			wake_up(&dm_device.config_event_wq);
 	}
 
 	pr_debug("Freed %u ballooned pages.\n",
@@ -1390,14 +1396,17 @@ static int dm_thread_func(void *dm_dev)
 {
 	struct hv_dynmem_device *dm = dm_dev;
 
+	set_freezable();
 	while (!kthread_should_stop()) {
-		wait_for_completion_interruptible_timeout(
-						&dm_device.config_event, 1*HZ);
+		wait_event_freezable_timeout(dm_device.config_event_wq,
+					     dm_device.post_status_requested,
+					     HZ);
 		/*
 		 * The host expects us to post information on the memory
 		 * pressure every second.
 		 */
-		reinit_completion(&dm_device.config_event);
+		test_and_clear_bit(0, &dm_device.post_status_requested);
+
 		post_status(dm);
 	}
 
@@ -1509,6 +1518,11 @@ static void balloon_onchannelcallback(void *context)
 			break;
 
 		case DM_BALLOON_REQUEST:
+			if (hv_hibernation_enabled) {
+				printk("cdx: balloon: ignore DM_BALLOON_REQUEST@@@@@@@@@@@@\n");
+				break;
+			}
+
 			if (dm->state == DM_BALLOON_UP)
 				pr_warn("Currently ballooning\n");
 			bal_msg = (struct dm_balloon *)recv_buffer;
@@ -1518,6 +1532,11 @@ static void balloon_onchannelcallback(void *context)
 			break;
 
 		case DM_UNBALLOON_REQUEST:
+			if (hv_hibernation_enabled) {
+				printk("cdx: balloon: ignore DM_UNBALLOON_REQUEST!!!\n");
+				break;
+			}
+
 			dm->state = DM_BALLOON_DOWN;
 			balloon_down(dm,
 				 (struct dm_unballoon_request *)recv_buffer);
@@ -1623,6 +1642,11 @@ static int balloon_connect_vsp(struct hv_device *dev)
 	cap_msg.hdr.size = sizeof(struct dm_capabilities);
 	cap_msg.hdr.trans_id = atomic_inc_return(&trans_id);
 
+	/*
+	 * When hibernation (i.e. virtual ACPI S4 state) is enabled, the host
+	 * currently still requires the bits to be set, and we have to add code
+	 * to fail the host's hot-add and balloon up/down requests, if any.
+	 */
 	cap_msg.caps.cap_bits.balloon = 1;
 	cap_msg.caps.cap_bits.hot_add = 1;
 
@@ -1681,7 +1705,7 @@ static int balloon_probe(struct hv_device *dev,
 	dm_device.state = DM_INITIALIZING;
 	dm_device.next_version = DYNMEM_PROTOCOL_VERSION_WIN8;
 	init_completion(&dm_device.host_event);
-	init_completion(&dm_device.config_event);
+	init_waitqueue_head(&dm_device.config_event_wq);
 	INIT_LIST_HEAD(&dm_device.ha_region_list);
 	spin_lock_init(&dm_device.ha_lock);
 	INIT_WORK(&dm_device.balloon_wrk.wrk, balloon_up);
@@ -1752,6 +1776,28 @@ static int balloon_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int balloon_suspend(struct hv_device *hv_dev)
+{
+	struct hv_dynmem_device *dm = hv_get_drvdata(hv_dev);
+
+	tasklet_disable(&hv_dev->channel->callback_event);
+
+	cancel_work_sync(&dm->balloon_wrk.wrk);
+	cancel_work_sync(&dm->ha_wrk.wrk);
+
+	vmbus_close(hv_dev->channel);
+
+	tasklet_enable(&hv_dev->channel->callback_event);
+
+	return 0;
+
+}
+
+static int balloon_resume(struct hv_device *dev)
+{
+	return balloon_connect_vsp(dev);
+}
+
 static const struct hv_vmbus_device_id id_table[] = {
 	/* Dynamic Memory Class ID */
 	/* 525074DC-8985-46e2-8057-A307DC18A502 */
@@ -1766,6 +1812,8 @@ static  struct hv_driver balloon_drv = {
 	.id_table = id_table,
 	.probe =  balloon_probe,
 	.remove =  balloon_remove,
+	.suspend = balloon_suspend,
+	.resume = balloon_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},

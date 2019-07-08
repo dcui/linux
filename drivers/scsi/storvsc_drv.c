@@ -884,6 +884,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 		    STORAGE_CHANNEL_SUPPORTS_MULTI_CHANNEL)
 			process_sub_channels = true;
 	}
+
 	stor_device->max_transfer_bytes =
 		vstor_packet->storage_channel_properties.max_transfer_bytes;
 
@@ -1712,6 +1713,7 @@ static const struct hv_vmbus_device_id id_table[] = {
 	{ HV_SCSI_GUID,
 	  .driver_data = SCSI_GUID
 	},
+#if 1
 	/* IDE guid */
 	{ HV_IDE_GUID,
 	  .driver_data = IDE_GUID
@@ -1721,10 +1723,30 @@ static const struct hv_vmbus_device_id id_table[] = {
 	  HV_SYNTHFC_GUID,
 	  .driver_data = SFC_GUID
 	},
+#endif
 	{ },
 };
 
 MODULE_DEVICE_TABLE(vmbus, id_table);
+
+static const struct { guid_t guid; } ide_guid	= { HV_IDE_GUID };
+static const struct { guid_t guid; } scsi_guid	= { HV_SCSI_GUID };
+static const struct { guid_t guid; } fc_guid	= { HV_SYNTHFC_GUID };
+
+static bool hv_dev_is_ide(struct hv_device *hv_dev)
+{
+	return guid_equal(&ide_guid.guid, &hv_dev->dev_type);
+}
+
+static bool hv_dev_is_scsi(struct hv_device *hv_dev)
+{
+	return guid_equal(&scsi_guid.guid, &hv_dev->dev_type);
+}
+
+static bool hv_dev_is_fc(struct hv_device *hv_dev)
+{
+	return guid_equal(&fc_guid.guid, &hv_dev->dev_type);
+}
 
 static int storvsc_probe(struct hv_device *device,
 			const struct hv_vmbus_device_id *dev_id)
@@ -1742,6 +1764,9 @@ static int storvsc_probe(struct hv_device *device,
 	int max_channels;
 	int max_sub_channels = 0;
 
+	printk("cdx: storvsc_probe: hv_dev=%px, chan=%px, ide=%d/%d, fc=%d/%d, scsi=%d\n",
+		device, device->channel, dev_is_ide, hv_dev_is_ide(device),
+		is_fc, hv_dev_is_fc(device), hv_dev_is_scsi(device));
 	/*
 	 * Based on the windows host we are running on,
 	 * set state to properly communicate with the host.
@@ -1925,11 +1950,50 @@ static int storvsc_remove(struct hv_device *dev)
 	return 0;
 }
 
+static int storvsc_suspend(struct hv_device *hv_dev)
+{
+	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
+	struct Scsi_Host *host = stor_device->host;
+	struct hv_host_device *host_dev = shost_priv(host);
+
+	/*
+	 * At this point, all outbound traffic should be disable. We
+	 * only allow inbound traffic (responses) to proceed so that
+	 * outstanding requests can be completed.
+	 */
+
+	storvsc_wait_to_drain(stor_device);
+
+	drain_workqueue(host_dev->handle_error_wq);
+
+	vmbus_close(hv_dev->channel);
+
+	memset(stor_device->stor_chns, 0, num_possible_cpus() * sizeof(void *));
+
+	kfree(stor_device->stor_chns);
+	stor_device->stor_chns = NULL;
+	cpumask_clear(&stor_device->alloced_cpus);
+
+	return 0;
+}
+
+static int storvsc_resume(struct hv_device *hv_dev)
+{
+	int ret;
+
+	//BUG_ON(!hv_dev_is_scsi(hv_dev));
+	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size, hv_dev_is_fc(hv_dev));
+
+	return 0;
+}
+
 static struct hv_driver storvsc_drv = {
 	.name = KBUILD_MODNAME,
 	.id_table = id_table,
 	.probe = storvsc_probe,
 	.remove = storvsc_remove,
+	.suspend = storvsc_suspend,
+	.resume = storvsc_resume,
 	.driver = {
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
