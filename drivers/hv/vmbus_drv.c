@@ -30,6 +30,7 @@
 #include <linux/kdebug.h>
 #include <linux/efi.h>
 #include <linux/random.h>
+#include <linux/syscore_ops.h>
 #include <clocksource/hyperv_timer.h>
 #include "hyperv_vmbus.h"
 
@@ -2088,6 +2089,41 @@ static void hv_crash_handler(struct pt_regs *regs)
 	hyperv_cleanup();
 };
 
+static int hv_synic_suspend(void)
+{
+	/*
+	 * Here we only need to care about CPU0: when the other CPUs are
+	 * offlined, hv_synic_cleanup() has been called for them, and the
+	 * timers on them have been automatically disabled and deleted in
+	 * tick_cleanup_dead_cpu().
+	 */
+	hv_stimer_cleanup(0);
+
+	hv_synic_disable_regs(0);
+
+	return 0;
+}
+
+static void hv_synic_resume(void)
+{
+	/*
+	 * Here we only need to care about CPU0: when the other CPUs are
+	 * onlined, hv_synic_init() has been called, and the timers are
+	 * added there.
+	 *
+	 * Note: we don't need to call hv_stimer_init() for stimer0, because
+	 * it is not deleted before hibernation and it's resumed in
+	 * timekeeping_resume().
+	 */
+	hv_synic_enable_regs(0);
+}
+
+/* The callbacks run only on CPU0, with irqs_disabled. */
+static struct syscore_ops hv_synic_syscore_ops = {
+	.suspend = hv_synic_suspend,
+	.resume = hv_synic_resume,
+};
+
 static int __init hv_acpi_init(void)
 {
 	int ret, t;
@@ -2118,6 +2154,8 @@ static int __init hv_acpi_init(void)
 	hv_setup_kexec_handler(hv_kexec_handler);
 	hv_setup_crash_handler(hv_crash_handler);
 
+	register_syscore_ops(&hv_synic_syscore_ops);
+
 	return 0;
 
 cleanup:
@@ -2129,6 +2167,8 @@ cleanup:
 static void __exit vmbus_exit(void)
 {
 	int cpu;
+
+	unregister_syscore_ops(&hv_synic_syscore_ops);
 
 	hv_remove_kexec_handler();
 	hv_remove_crash_handler();
