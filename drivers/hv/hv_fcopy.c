@@ -345,9 +345,16 @@ int hv_fcopy_init(struct hv_util_service *srv)
 	return 0;
 }
 
+void hv_fcopy_cancel_work(void)
+{
+	cancel_delayed_work_sync(&fcopy_timeout_work);
+}
+
 void hv_fcopy_deinit(void)
 {
 	fcopy_transaction.state = HVUTIL_DEVICE_DYING;
-	cancel_delayed_work_sync(&fcopy_timeout_work);
+
+	hv_fcopy_cancel_work();
+
 	hvutil_transport_destroy(hvt);
 }
