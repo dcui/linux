@@ -24,6 +24,8 @@
 
 #define SD_MAJOR	3
 #define SD_MINOR	0
+#define SD_MINOR_2	2
+#define SD_VERSION_3_2	(SD_MAJOR << 16 | SD_MINOR_2)
 #define SD_VERSION	(SD_MAJOR << 16 | SD_MINOR)
 
 #define SD_MAJOR_1	1
@@ -50,8 +52,9 @@ static int sd_srv_version;
 static int ts_srv_version;
 static int hb_srv_version;
 
-#define SD_VER_COUNT 2
+#define SD_VER_COUNT 3
 static const int sd_versions[] = {
+	SD_VERSION_3_2,
 	SD_VERSION,
 	SD_VERSION_1
 };
@@ -75,9 +78,17 @@ static const int fw_versions[] = {
 	UTIL_WS2K8_FW_VERSION
 };
 
+static bool execute_hibernate;
+static int hv_shutdown_init(struct hv_util_service *srv)
+{
+	execute_hibernate = hv_is_hibernation_supported();
+	return 0;
+}
+
 static void shutdown_onchannelcallback(void *context);
 static struct hv_util_service util_shutdown = {
 	.util_cb = shutdown_onchannelcallback,
+	.util_init = hv_shutdown_init,
 };
 
 static int hv_timesync_init(struct hv_util_service *srv);
@@ -123,10 +134,37 @@ static void perform_shutdown(struct work_struct *dummy)
 	orderly_poweroff(true);
 }
 
+static void perform_hibernation(struct work_struct *dummy)
+{
+	/*
+	 * The user is expected to create the program, which can be a simple
+	 * script containing two lines:
+	 * #!/bin/bash
+	 * echo disk > /sys/power/state
+	 */
+	static char hibernate_cmd[PATH_MAX] = "/sbin/hyperv-hibernate";
+
+	static char *envp[] = {
+		NULL,
+	};
+
+	static char *argv[] = {
+		hibernate_cmd,
+		NULL,
+	};
+
+	call_usermodehelper(hibernate_cmd, argv, envp, UMH_NO_WAIT);
+}
+
 /*
  * Perform the shutdown operation in a thread context.
  */
 static DECLARE_WORK(shutdown_work, perform_shutdown);
+
+/*
+ * Perform the hibernation operation in a thread context.
+ */
+static DECLARE_WORK(hibernate_work, perform_hibernation);
 
 static void shutdown_onchannelcallback(void *context)
 {
@@ -170,6 +208,19 @@ static void shutdown_onchannelcallback(void *context)
 
 				pr_info("Shutdown request received -"
 					    " graceful shutdown initiated\n");
+				break;
+			case 4:
+			case 5:
+				pr_info("Hibernation request received -"
+					    " hibernation %sinitiated\n",
+					execute_hibernate ? "" : "not ");
+
+				if (execute_hibernate) {
+					icmsghdrp->status = HV_S_OK;
+					schedule_work(&hibernate_work);
+				} else {
+					icmsghdrp->status = HV_E_FAIL;
+				}
 				break;
 			default:
 				icmsghdrp->status = HV_E_FAIL;
