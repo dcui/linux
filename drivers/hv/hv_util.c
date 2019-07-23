@@ -24,7 +24,9 @@
 
 #define SD_MAJOR	3
 #define SD_MINOR	0
+#define SD_MINOR_1	1
 #define SD_MINOR_2	2
+#define SD_VERSION_3_1	(SD_MAJOR << 16 | SD_MINOR_1)
 #define SD_VERSION_3_2	(SD_MAJOR << 16 | SD_MINOR_2)
 #define SD_VERSION	(SD_MAJOR << 16 | SD_MINOR)
 
@@ -52,9 +54,10 @@ static int sd_srv_version;
 static int ts_srv_version;
 static int hb_srv_version;
 
-#define SD_VER_COUNT 3
+#define SD_VER_COUNT 4
 static const int sd_versions[] = {
 	SD_VERSION_3_2,
+	SD_VERSION_3_1,
 	SD_VERSION,
 	SD_VERSION_1
 };
@@ -134,6 +137,11 @@ static void perform_shutdown(struct work_struct *dummy)
 	orderly_poweroff(true);
 }
 
+static void perform_restart(struct work_struct *dummy)
+{
+	orderly_reboot();
+}
+
 static void perform_hibernation(struct work_struct *dummy)
 {
 	/*
@@ -160,6 +168,11 @@ static void perform_hibernation(struct work_struct *dummy)
  * Perform the shutdown operation in a thread context.
  */
 static DECLARE_WORK(shutdown_work, perform_shutdown);
+
+/*
+ * Perform the restart operation in a thread context.
+ */
+static DECLARE_WORK(restart_work, perform_restart);
 
 /*
  * Perform the hibernation operation in a thread context.
@@ -208,6 +221,14 @@ static void shutdown_onchannelcallback(void *context)
 
 				pr_info("Shutdown request received -"
 					    " graceful shutdown initiated\n");
+				break;
+			case 2:
+			case 3:
+				pr_info("Restart request received -"
+					    " graceful restart initiated\n");
+				icmsghdrp->status = HV_S_OK;
+
+				schedule_work(&restart_work);
 				break;
 			case 4:
 			case 5:
