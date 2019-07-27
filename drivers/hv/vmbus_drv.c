@@ -2174,12 +2174,21 @@ static void hv_crash_handler(struct pt_regs *regs)
 static int hv_synic_suspend(void)
 {
 	/*
-	 * Here we only need to care about CPU0: when the other CPUs are
-	 * offlined, hv_synic_cleanup() has been called for them, and the
-	 * timers on them have been automatically disabled and deleted in
-	 * tick_cleanup_dead_cpu().
+	 * When we reach here, all the non-boot CPUs have been offlined, and
+	 * the stimers on them have been unbound in hv_synic_cleanup() ->
+	 * hv_stimer_cleanup() -> clockevents_unbind_device().
+	 *
+	 * hv_synic_suspend() only runs on CPU0 with interrupts disabled. Here
+	 * we do not unbind the stimer on CPU0 because: 1) it's unnecessary
+	 * because the interrupts remain disabled between syscore_suspend()
+	 * and syscore_resume(): see create_image() and resume_target_kernel();
+	 * 2) the stimer on CPU0 is automatically disabled later by
+	 * syscore_suspend() -> timekeeping_suspend() -> tick_suspend() -> ...
+	 * -> clockevents_shutdown() -> ... -> hv_ce_shutdown(); 3) a warning
+	 * would be triggered if we call clockevents_unbind_device(), which
+	 * may sleep, in an interrupts-disabled context. So, intentionally we
+	 * don't call hv_stimer_cleanup(0) here.
 	 */
-	hv_stimer_cleanup(0);
 
 	hv_synic_disable_regs(0);
 
@@ -2188,16 +2197,13 @@ static int hv_synic_suspend(void)
 
 static void hv_synic_resume(void)
 {
-	/*
-	 * Here we only need to care about CPU0: when the other CPUs are
-	 * onlined, hv_synic_init() has been called, and the timers are
-	 * added there.
-	 *
-	 * Note: we don't need to call hv_stimer_init() for stimer0, because
-	 * it is not deleted before hibernation and it's resumed in
-	 * timekeeping_resume().
-	 */
 	hv_synic_enable_regs(0);
+
+	/*
+	 * Note: we don't need to call hv_stimer_init(0), because
+	 * it is not unbound in hv_synic_suspend(). Here the timer on CPU0 is
+	 * automatically re-enabled in timekeeping_resume().
+	 */
 }
 
 /* The callbacks run only on CPU0, with irqs_disabled. */
