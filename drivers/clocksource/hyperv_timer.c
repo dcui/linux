@@ -139,6 +139,7 @@ void hv_stimer_cleanup(unsigned int cpu)
 	/* Turn off clockevent device */
 	if (ms_hyperv.features & HV_MSR_SYNTIMER_AVAILABLE) {
 		ce = per_cpu_ptr(hv_clock_event, cpu);
+		clockevents_unbind_device(ce, cpu);
 		hv_ce_shutdown(ce);
 	}
 }
