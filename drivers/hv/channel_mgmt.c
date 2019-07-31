@@ -854,11 +854,38 @@ void vmbus_initiate_unload(bool crash)
 static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 {
 	struct vmbus_channel_offer_channel *offer;
-	struct vmbus_channel *newchannel;
+	struct vmbus_channel *oldchannel, *newchannel;
+	size_t offer_sz;
 
 	offer = (struct vmbus_channel_offer_channel *)hdr;
 
 	trace_vmbus_onoffer(offer);
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+	oldchannel = relid2channel(offer->child_relid);
+	mutex_unlock(&vmbus_connection.channel_mutex);
+
+	if (oldchannel != NULL) {
+		atomic_dec(&vmbus_connection.offer_in_progress);
+
+		/*
+		 * We're resuming from hibernation: we expect the host to send
+		 * exactly the same offers that we had before the hibernation.
+		 */
+		offer_sz = sizeof(*offer);
+		if (memcmp(offer, &oldchannel->offermsg, offer_sz) == 0)
+			return;
+
+		pr_err("Mismatched offer from the host (relid=%d)!\n",
+		       offer->child_relid);
+
+		print_hex_dump(KERN_ERR, "Old offer: ", DUMP_PREFIX_OFFSET,
+				     16, 4, &oldchannel->offermsg, offer_sz,
+				     false);
+		print_hex_dump(KERN_ERR,"New offer: ", DUMP_PREFIX_OFFSET,
+				     16, 4, offer, offer_sz, false);
+		return;
+	}
 
 	/* Allocate the channel object and save this offer. */
 	newchannel = alloc_channel();
