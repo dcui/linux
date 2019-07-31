@@ -337,6 +337,33 @@ struct vmbus_channel *relid2channel(u32 relid)
 }
 
 /*
+ * find_primary_channel_by_offer - Get the channel object given the new offer.
+ * This is only used in the resume path of hibernation.
+ */
+struct vmbus_channel *
+find_primary_channel_by_offer(const struct vmbus_channel_offer_channel *offer)
+{
+	struct vmbus_channel *channel;
+	const guid_t *inst1, *inst2;
+
+	WARN_ON(!mutex_is_locked(&vmbus_connection.channel_mutex));
+
+	/* Ignore sub-channel offers. */
+	if (offer->offer.sub_channel_index != 0)
+		return NULL;
+
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		inst1 = &channel->offermsg.offer.if_instance;
+		inst2 = &offer->offer.if_instance;
+
+		if (guid_equal(inst1, inst2))
+			return channel;
+	}
+
+	return NULL;
+}
+
+/*
  * vmbus_on_event - Process a channel event notification
  *
  * For batched channels (default) optimize host to guest signaling
