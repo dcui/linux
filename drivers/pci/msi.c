@@ -906,11 +906,8 @@ void pci_disable_msi(struct pci_dev *dev)
 	if (!pci_msi_enable || !dev || !dev->msi_enabled)
 		return;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_msi_shutdown(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	free_msi_irqs(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 }
 EXPORT_SYMBOL(pci_disable_msi);
 
@@ -998,11 +995,8 @@ void pci_disable_msix(struct pci_dev *dev)
 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
 		return;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_msix_shutdown(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	free_msi_irqs(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 }
 EXPORT_SYMBOL(pci_disable_msix);
 
@@ -1214,11 +1208,8 @@ EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
  */
 void pci_free_irq_vectors(struct pci_dev *dev)
 {
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_disable_msix(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_disable_msi(dev);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 }
 EXPORT_SYMBOL(pci_free_irq_vectors);
 
