@@ -92,16 +92,12 @@ void nvme_kick_requeue_lists(struct nvme_ctrl *ctrl)
 {
 	struct nvme_ns *ns;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	down_read(&ctrl->namespaces_rwsem);
 	list_for_each_entry(ns, &ctrl->namespaces, list) {
-		if (ns->head->disk) {
-			printk("cdx: %s, line %d\n", __func__, __LINE__);
+		if (ns->head->disk)
 			kblockd_schedule_work(&ns->head->requeue_work);
-		}
 	}
 	up_read(&ctrl->namespaces_rwsem);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 }
 
 static const char *nvme_ana_state_names[] = {

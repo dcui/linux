@@ -444,30 +444,23 @@ static void nvme_loop_reset_ctrl_work(struct work_struct *work)
 	bool changed;
 	int ret;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_stop_ctrl(&ctrl->ctrl);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_loop_shutdown_ctrl(ctrl);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	if (!nvme_change_ctrl_state(&ctrl->ctrl, NVME_CTRL_CONNECTING)) {
 		/* state change failure should never happen */
-		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		WARN_ON_ONCE(1);
 		return;
 	}
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	ret = nvme_loop_configure_admin_queue(ctrl);
 	if (ret)
 		goto out_disable;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	ret = nvme_loop_init_io_queues(ctrl);
 	if (ret)
 		goto out_destroy_admin;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	ret = nvme_loop_connect_io_queues(ctrl);
 	if (ret)
 		goto out_destroy_io;
@@ -478,9 +471,7 @@ static void nvme_loop_reset_ctrl_work(struct work_struct *work)
 	changed = nvme_change_ctrl_state(&ctrl->ctrl, NVME_CTRL_LIVE);
 	WARN_ON_ONCE(!changed);
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_start_ctrl(&ctrl->ctrl);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	return;
 

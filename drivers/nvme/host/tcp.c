@@ -1902,28 +1902,21 @@ static void nvme_reset_ctrl_work(struct work_struct *work)
 	struct nvme_ctrl *ctrl =
 		container_of(work, struct nvme_ctrl, reset_work);
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_stop_ctrl(ctrl);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_tcp_teardown_ctrl(ctrl, false);
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	if (!nvme_change_ctrl_state(ctrl, NVME_CTRL_CONNECTING)) {
 		/* state change failure is ok if we're in DELETING state */
-		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		WARN_ON_ONCE(ctrl->state != NVME_CTRL_DELETING);
 		return;
 	}
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (nvme_tcp_setup_ctrl(ctrl, false))
 		goto out_fail;
 
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return;
 
 out_fail:
-	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	++ctrl->nr_reconnects;
 	nvme_tcp_reconnect_or_remove(ctrl);
 }
