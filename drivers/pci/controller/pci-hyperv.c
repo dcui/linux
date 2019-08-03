@@ -859,6 +859,7 @@ static void hv_msi_free(struct irq_domain *domain, struct msi_domain_info *info,
 	struct irq_data *irq_data = irq_domain_get_irq_data(domain, irq);
 	struct msi_desc *msi = irq_data_get_msi_desc(irq_data);
 
+	WARN_ON(1);
 	pdev = msi_desc_to_pci_dev(msi);
 	hbus = info->data;
 	int_desc = irq_data_get_irq_chip_data(irq_data);
@@ -872,6 +873,7 @@ static void hv_msi_free(struct irq_domain *domain, struct msi_domain_info *info,
 		return;
 	}
 
+	printk("cdx: hv_msi_free: free!\n");
 	hv_int_desc_free(hpdev, int_desc);
 	put_pcichild(hpdev);
 }
@@ -914,6 +916,7 @@ static void hv_irq_unmask(struct irq_data *data)
 	int cpu, nr_bank;
 	u64 res;
 
+	WARN_ON(1);
 	dest = irq_data_get_effective_affinity_mask(data);
 	pdev = msi_desc_to_pci_dev(msi_desc);
 	pbus = pdev->bus;
@@ -933,6 +936,9 @@ static void hv_irq_unmask(struct irq_data *data)
 			   (hbus->hdev->dev_instance.b[6] & 0xf8) |
 			   PCI_FUNC(pdev->devfn);
 	params->int_target.vector = cfg->vector;
+	printk("cdx: hv_irq_unmask: addr: lo=%x, data=%x, vector=%x\n",
+		msi_desc->msg.address_lo, params->int_entry.data,
+		cfg->vector);
 
 	/*
 	 * Honoring apic->irq_delivery_mode set to dest_Fixed by
@@ -1095,10 +1101,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	if (!hpdev)
 		goto return_null_message;
 
+	WARN_ON(1);
 	/* Free any previous message that might have already been composed. */
 	if (data->chip_data) {
 		int_desc = data->chip_data;
 		data->chip_data = NULL;
+		printk("cdx: 1: hv_compose_msi_msg: free!\n");
 		hv_int_desc_free(hpdev, int_desc);
 	}
 
@@ -1204,6 +1212,8 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	msg->address_lo = comp.int_desc.address & 0xffffffff;
 	msg->data = comp.int_desc.data;
 
+	printk("cdx: 2: hv_compose_msi_msg: add(hi=%x, lo=%x), data=%x\n",
+			msg->address_hi, msg->address_lo, msg->data);
 	put_pcichild(hpdev);
 	return;
 
@@ -1309,12 +1319,15 @@ static void survey_child_resources(struct hv_pcibus_device *hbus)
 	int i;
 
 	/* If nobody is waiting on the answer, don't compute it. */
+	printk("cdx: survey_child_resources: 1\n");
 	event = xchg(&hbus->survey_event, NULL);
 	if (!event)
 		return;
 
+	printk("cdx: survey_child_resources: 2\n");
 	/* If the answer has already been computed, go with it. */
 	if (hbus->low_mmio_space || hbus->high_mmio_space) {
+		printk("cdx: survey_child_resources: 3\n");
 		complete(event);
 		return;
 	}
@@ -1357,6 +1370,7 @@ static void survey_child_resources(struct hv_pcibus_device *hbus)
 
 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
 	complete(event);
+	printk("cdx: survey_child_resources: 4\n");
 }
 
 /**
@@ -1388,24 +1402,42 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 	if (hbus->low_mmio_space) {
 		low_size = 1ULL << (63 - __builtin_clzll(hbus->low_mmio_space));
 		low_base = hbus->low_mmio_res->start;
+		printk("cdx: prepopulate_bars: low: space=%llx, sz=%llx, base=%llx\n",
+			hbus->low_mmio_space, low_size, low_base);
 	}
 
 	if (hbus->high_mmio_space) {
 		high_size = 1ULL <<
 			(63 - __builtin_clzll(hbus->high_mmio_space));
 		high_base = hbus->high_mmio_res->start;
+		printk("cdx: prepopulate_bars: hi: space=%llx, sz=%llx, base=%llx\n",
+			hbus->high_mmio_space, high_size, high_base);
 	}
 
 	spin_lock_irqsave(&hbus->device_list_lock, flags);
 
+		list_for_each_entry(hpdev, &hbus->children, list_entry) {
+				/* Clear the memory enable bit. */
+				_hv_pcifront_read_config(hpdev, PCI_COMMAND, 2,
+							 &command);
+				command &= ~PCI_COMMAND_MEMORY;
+				_hv_pcifront_write_config(hpdev, PCI_COMMAND, 2,
+							  command);
+	}
+
 	/* Pick addresses for the BARs. */
 	do {
+		printk("cdx: prepopulate_bars: do: 1:\n");
+
 		list_for_each_entry(hpdev, &hbus->children, list_entry) {
+			printk("cdx: prepopulate_bars: do: wip: new: hi_sz=%llx, lo_sz=%llx\n", high_size, low_size);
 			for (i = 0; i < 6; i++) {
 				bar_val = hpdev->probed_bar[i];
+				printk("cdx: prepopulate_bars: y1: i=%d, b_vals=%llx\n", i, bar_val);
 				if (bar_val == 0)
 					continue;
 				high = bar_val & PCI_BASE_ADDRESS_MEM_TYPE_64;
+				printk("cdx: prepopulate_bars: y2: i=%d, b_vals=%llx, 64bit=%d\n", i, bar_val, !!high);
 				if (high) {
 					bar_val |=
 						((u64)hpdev->probed_bar[i + 1]
@@ -1413,7 +1445,9 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 				} else {
 					bar_val |= 0xffffffffULL << 32;
 				}
+				printk("cdx: prepopulate_bars: y3: i=%d, b_vals=%llx, 64bit=%d\n", i, bar_val, !!high);
 				bar_size = get_bar_size(bar_val);
+				printk("cdx: prepopulate_bars: y4: i=%d, b_vals=%llx, 64bit=%d, bar_sz=%llx, high_sz=%llx\n", i, bar_val, !!high, bar_size, high_size);
 				if (high) {
 					if (high_size != bar_size) {
 						i++;
@@ -1423,10 +1457,12 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 						PCI_BASE_ADDRESS_0 + (4 * i),
 						4,
 						(u32)(high_base & 0xffffff00));
+					printk("cdx: prepopulate_bars: y5: ***: i=%d, written=%llx\n", i, high_base);
 					i++;
 					_hv_pcifront_write_config(hpdev,
 						PCI_BASE_ADDRESS_0 + (4 * i),
 						4, (u32)(high_base >> 32));
+					printk("cdx: prepopulate_bars: y5: ***: i=%d, written=%llx\n", i, high_base);
 					high_base += bar_size;
 				} else {
 					if (low_size != bar_size)
@@ -1435,9 +1471,11 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 						PCI_BASE_ADDRESS_0 + (4 * i),
 						4,
 						(u32)(low_base & 0xffffff00));
+					printk("cdx: prepopulate_bars: y53: ***: i=%d, written=%llx\n", i, low_base);
 					low_base += bar_size;
 				}
 			}
+			printk("cdx: prepopulate_bars: do: 44: new: hi_sz=%llx, lo_sz=%llx\n", high_size, low_size);
 			if (high_size <= 1 && low_size <= 1) {
 				/* Set the memory enable bit. */
 				_hv_pcifront_read_config(hpdev, PCI_COMMAND, 2,
@@ -1451,9 +1489,17 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 
 		high_size >>= 1;
 		low_size >>= 1;
+		printk("cdx: prepopulate_bars: do: 99: new: hi_sz=%llx, lo_sz=%llx\n", high_size, low_size);
 	}  while (high_size || low_size);
 
 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+
+	{
+		void * bar_va = ioremap(0xfe0000000, 0x2000);
+		printk("cdx: prepopulate_bars: 100: bar_va=%px\n", bar_va);
+		u32 reg = readl(bar_va + 0x001c);
+		printk("cdx: prepopulate_bars: 100: bar_va-read=%px, reg=%x\n", bar_va + 0x001c, reg);
+	}
 }
 
 /*
@@ -1611,6 +1657,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
 			       (unsigned long)&pkt.init_packet,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+	printk("cdx: new_pcichild_device: sent res query\n");
 	if (ret)
 		goto error;
 
@@ -1724,6 +1771,7 @@ static void pci_devices_present_work(struct work_struct *work)
 		return;
 	}
 
+	printk("cdx: pci_devices_present_work: 1\n");
 	/* First, mark all existing children as reported missing. */
 	spin_lock_irqsave(&hbus->device_list_lock, flags);
 	list_for_each_entry(hpdev, &hbus->children, list_entry) {
@@ -1748,6 +1796,8 @@ static void pci_devices_present_work(struct work_struct *work)
 		}
 		spin_unlock_irqrestore(&hbus->device_list_lock, flags);
 
+		printk("cdx: pci_devices_present_work: child_no:=%d, found=%d\n",
+			child_no, found);
 		if (!found) {
 			hpdev = new_pcichild_device(hbus, new_desc);
 			if (!hpdev)
@@ -1775,6 +1825,7 @@ static void pci_devices_present_work(struct work_struct *work)
 	while (!list_empty(&removed)) {
 		hpdev = list_first_entry(&removed, struct hv_pci_dev,
 					 list_entry);
+		printk("cdx: del one dev from removed!\n");
 		list_del(&hpdev->list_entry);
 
 		if (hpdev->pci_slot)
@@ -1789,6 +1840,7 @@ static void pci_devices_present_work(struct work_struct *work)
 		 * Tell the core to rescan bus
 		 * because there may have been changes.
 		 */
+		printk("cdx: hbus->state = installed\n");
 		pci_lock_rescan_remove();
 		pci_scan_child_bus(hbus->pci_bus);
 		hv_pci_assign_slots(hbus);
@@ -1796,7 +1848,11 @@ static void pci_devices_present_work(struct work_struct *work)
 		break;
 
 	case hv_pcibus_init:
+		printk("cdx: hbus->state = init\n");
+		survey_child_resources(hbus);
+		break;
 	case hv_pcibus_probed:
+		printk("cdx: hbus->state = probed\n");
 		survey_child_resources(hbus);
 		break;
 
@@ -1920,6 +1976,7 @@ static void hv_eject_device_work(struct work_struct *work)
 			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
 			 VM_PKT_DATA_INBAND, 0);
 
+	printk("cdx: hv_eject_device_work: removed 1 device!\n");
 	/* For the get_pcichild() in hv_pci_eject_device() */
 	put_pcichild(hpdev);
 	/* For the two refs got in new_pcichild_device() */
@@ -2031,11 +2088,13 @@ static void hv_pci_onchannelcallback(void *context)
 					break;
 				}
 
+				printk("cdx: cb: +++: cnt=%d\n", bus_rel->device_count);
 				hv_pci_devices_present(hbus, bus_rel);
 				break;
 
 			case PCI_EJECT:
 
+				printk("cdx: cb: ---:\n");
 				dev_message = (struct pci_dev_incoming *)buffer;
 				hpdev = get_pcichild_wslot(hbus,
 						      dev_message->wslot.slot);
@@ -2080,7 +2139,9 @@ static void hv_pci_onchannelcallback(void *context)
  * failing if the host doesn't support the necessary protocol
  * level.
  */
-static int hv_pci_protocol_negotiation(struct hv_device *hdev)
+static int hv_pci_protocol_negotiation(struct hv_device *hdev,
+				       enum pci_protocol_version_t version[],
+				       int num_version)
 {
 	struct pci_version_request *version_req;
 	struct hv_pci_compl comp_pkt;
@@ -2094,6 +2155,7 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 	 * highest version number and go down if the host cannot
 	 * support it.
 	 */
+	printk("cdx: hv_pci_protocol_negotiation: 1: num_version=%d\n", num_version);
 	pkt = kzalloc(sizeof(*pkt) + sizeof(*version_req), GFP_KERNEL);
 	if (!pkt)
 		return -ENOMEM;
@@ -2104,15 +2166,17 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 	version_req = (struct pci_version_request *)&pkt->message;
 	version_req->message_type.type = PCI_QUERY_PROTOCOL_VERSION;
 
-	for (i = 0; i < ARRAY_SIZE(pci_protocol_versions); i++) {
-		version_req->protocol_version = pci_protocol_versions[i];
+	for (i = 0; i < num_version; i++) {
+		version_req->protocol_version = version[i];
 		ret = vmbus_sendpacket(hdev->channel, version_req,
 				sizeof(struct pci_version_request),
 				(unsigned long)pkt, VM_PKT_DATA_INBAND,
 				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+		printk("cdx: hv_pci_protocol_negotiation: 2.1: i=%d, ret=%d begin!\n", i, ret);
 		if (!ret)
 			ret = wait_for_response(hdev, &comp_pkt.host_event);
 
+		printk("cdx: hv_pci_protocol_negotiation: 2.2: ret=%d\n", ret);
 		if (ret) {
 			dev_err(&hdev->device,
 				"PCI Pass-through VSP failed to request version: %d",
@@ -2120,8 +2184,9 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 			goto exit;
 		}
 
+		printk("cdx: hv_pci_protocol_negotiation: 2.3: ret=%d, sts=0x%x\n", ret, comp_pkt.completion_status);
 		if (comp_pkt.completion_status >= 0) {
-			pci_protocol_version = pci_protocol_versions[i];
+			pci_protocol_version = version[i];
 			dev_info(&hdev->device,
 				"PCI VMBus probing: Using version %#x\n",
 				pci_protocol_version);
@@ -2137,6 +2202,7 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 		}
 
 		reinit_completion(&comp_pkt.host_event);
+		printk("cdx: hv_pci_protocol_negotiation: 2.1: i=%d, ret=%d end!\n", i, ret);
 	}
 
 	dev_err(&hdev->device,
@@ -2328,9 +2394,11 @@ static int hv_pci_enter_d0(struct hv_device *hdev)
 	ret = vmbus_sendpacket(hdev->channel, d0_entry, sizeof(*d0_entry),
 			       (unsigned long)pkt, VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+	printk("cdx: hv_pci_enter_d0: 1: ret=%d\n", ret);
 	if (!ret)
 		ret = wait_for_response(hdev, &comp_pkt.host_event);
 
+	printk("cdx: hv_pci_enter_d0: 2: ret=%d, sts=0x%x\n", ret, comp_pkt.completion_status);
 	if (ret)
 		goto exit;
 
@@ -2371,11 +2439,14 @@ static int hv_pci_query_relations(struct hv_device *hdev)
 	memset(&message, 0, sizeof(message));
 	message.type = PCI_QUERY_BUS_RELATIONS;
 
+	printk("cdx: hv_pci_query_relations: 1: ret=%d", 0);
 	ret = vmbus_sendpacket(hdev->channel, &message, sizeof(message),
 			       0, VM_PKT_DATA_INBAND, 0);
+	printk("cdx: hv_pci_query_relations: 2: ret=%d", ret);
 	if (!ret)
 		ret = wait_for_response(hdev, &comp);
 
+	printk("cdx: hv_pci_query_relations: 3: ret=%d", ret);
 	return ret;
 }
 
@@ -2446,8 +2517,11 @@ static int hv_send_resources_allocated(struct hv_device *hdev)
 				size_res, (unsigned long)pkt,
 				VM_PKT_DATA_INBAND,
 				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+		printk("cdx: hv_send_resources_allocated: 1: wslot=%d, ret=%d\n", wslot, ret);
 		if (!ret)
 			ret = wait_for_response(hdev, &comp_pkt.host_event);
+		printk("cdx: hv_send_resources_allocated: 2: wslot=%d, ret=%d, sts=0x%x\n", wslot, ret,
+				comp_pkt.completion_status);
 		if (ret)
 			break;
 
@@ -2572,7 +2646,8 @@ static int hv_pci_probe(struct hv_device *hdev,
 
 	hv_set_drvdata(hdev, hbus);
 
-	ret = hv_pci_protocol_negotiation(hdev);
+	ret = hv_pci_protocol_negotiation(hdev, pci_protocol_versions,
+					  ARRAY_SIZE(pci_protocol_versions));
 	if (ret)
 		goto close;
 
@@ -2644,7 +2719,7 @@ free_bus:
 	return ret;
 }
 
-static void hv_pci_bus_exit(struct hv_device *hdev)
+static int hv_pci_bus_exit(struct hv_device *hdev, bool hibernating)
 {
 	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
 	struct {
@@ -2660,16 +2735,20 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 	 * access the per-channel ringbuffer any longer.
 	 */
 	if (hdev->channel->rescind)
-		return;
+		return 0;
 
-	/* Delete any children which might still exist. */
-	memset(&relations, 0, sizeof(relations));
-	hv_pci_devices_present(hbus, &relations);
+	if (!hibernating) {
+		/* Delete any children which might still exist. */
+		memset(&relations, 0, sizeof(relations));
+		hv_pci_devices_present(hbus, &relations);
+	}
 
 	ret = hv_send_resources_released(hdev);
-	if (ret)
+	if (ret) {
 		dev_err(&hdev->device,
 			"Couldn't send resources released packet(s)\n");
+		return ret;
+	}
 
 	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
 	init_completion(&comp_pkt.host_event);
@@ -2682,8 +2761,13 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 			       (unsigned long)&pkt.teardown_packet,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret)
-		wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ);
+	if (ret)
+		return ret;
+
+	if (wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ) == 0)
+		return -ETIMEDOUT;
+
+	return 0;
 }
 
 /**
@@ -2695,19 +2779,20 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 static int hv_pci_remove(struct hv_device *hdev)
 {
 	struct hv_pcibus_device *hbus;
+	int ret;
 
 	hbus = hv_get_drvdata(hdev);
 	if (hbus->state == hv_pcibus_installed) {
 		/* Remove the bus from PCI's point of view. */
 		pci_lock_rescan_remove();
 		pci_stop_root_bus(hbus->pci_bus);
-		pci_remove_root_bus(hbus->pci_bus);
 		hv_pci_remove_slots(hbus);
+		pci_remove_root_bus(hbus->pci_bus);
 		pci_unlock_rescan_remove();
 		hbus->state = hv_pcibus_removed;
 	}
 
-	hv_pci_bus_exit(hdev);
+	ret = hv_pci_bus_exit(hdev, false);
 
 	vmbus_close(hdev->channel);
 
@@ -2721,7 +2806,71 @@ static int hv_pci_remove(struct hv_device *hdev)
 	wait_for_completion(&hbus->remove_event);
 	destroy_workqueue(hbus->wq);
 	free_page((unsigned long)hbus);
+	return ret;
+}
+
+static int hv_pci_suspend(struct hv_device *hdev)
+{
+	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
+	int ret;
+
+	flush_workqueue(hbus->wq); //FIXME
+
+	ret = hv_pci_bus_exit(hdev, true);
+	if (ret)
+		return ret;
+
+	vmbus_close(hdev->channel);
+
 	return 0;
+}
+
+static int hv_pci_resume(struct hv_device *hdev)
+{
+	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
+	enum pci_protocol_version_t version[1];
+	int ret;
+
+	hbus->state = hv_pcibus_init;
+
+	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+			 hv_pci_onchannelcallback, hbus);
+	printk("cdx: hv_pci_resume: 1: vmbus_open=%d\n", ret);
+	if (ret)
+		return ret;
+
+	/* Only try the version that was in use before hibernation. */
+	version[0] = pci_protocol_version;
+	ret = hv_pci_protocol_negotiation(hdev, version, 1);
+	printk("cdx: hv_pci_resume: 2: ret=%d\n", ret);
+	if (ret)
+		goto out;
+
+	printk("cdx: hv_pci_resume: 1: hbus->survey_event=%px\n", hbus->survey_event);
+	WARN_ON(hbus->survey_event);
+
+	ret = hv_pci_query_relations(hdev);
+	printk("cdx: hv_pci_resume: 3: ret=%d\n", ret);
+	if (ret)
+		goto out;
+
+	ret = hv_pci_enter_d0(hdev);
+	printk("cdx: hv_pci_resume: 4: ret=%d\n", ret);
+	if (ret)
+		goto out;
+
+	ret = hv_send_resources_allocated(hdev);
+	printk("cdx: hv_pci_resume: 5: ret=%d. ---------- success!!!\n", ret);
+	if (ret)
+		goto out;
+
+	prepopulate_bars(hbus);
+
+	hbus->state = hv_pcibus_installed;
+	return 0;
+out:
+	vmbus_close(hdev->channel);
+	return ret;
 }
 
 static const struct hv_vmbus_device_id hv_pci_id_table[] = {
@@ -2738,6 +2887,8 @@ static struct hv_driver hv_pci_drv = {
 	.id_table	= hv_pci_id_table,
 	.probe		= hv_pci_probe,
 	.remove		= hv_pci_remove,
+	.suspend	= hv_pci_suspend,
+	.resume		= hv_pci_resume,
 };
 
 static void __exit exit_hv_pci_drv(void)

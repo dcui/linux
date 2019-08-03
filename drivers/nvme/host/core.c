@@ -119,10 +119,13 @@ static void nvme_queue_scan(struct nvme_ctrl *ctrl)
 
 int nvme_reset_ctrl(struct nvme_ctrl *ctrl)
 {
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (!nvme_change_ctrl_state(ctrl, NVME_CTRL_RESETTING))
 		return -EBUSY;
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (!queue_work(nvme_reset_wq, &ctrl->reset_work))
 		return -EBUSY;
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(nvme_reset_ctrl);
@@ -305,47 +308,60 @@ bool nvme_change_ctrl_state(struct nvme_ctrl *ctrl,
 	old_state = ctrl->state;
 	switch (new_state) {
 	case NVME_CTRL_ADMIN_ONLY:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_CONNECTING:
 			changed = true;
 			/* FALLTHRU */
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	case NVME_CTRL_LIVE:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_NEW:
 		case NVME_CTRL_RESETTING:
 		case NVME_CTRL_CONNECTING:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			changed = true;
 			/* FALLTHRU */
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	case NVME_CTRL_RESETTING:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_NEW:
 		case NVME_CTRL_LIVE:
 		case NVME_CTRL_ADMIN_ONLY:
 			changed = true;
 			/* FALLTHRU */
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	case NVME_CTRL_CONNECTING:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_NEW:
 		case NVME_CTRL_RESETTING:
 			changed = true;
 			/* FALLTHRU */
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	case NVME_CTRL_DELETING:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_LIVE:
 		case NVME_CTRL_ADMIN_ONLY:
@@ -353,29 +369,41 @@ bool nvme_change_ctrl_state(struct nvme_ctrl *ctrl,
 		case NVME_CTRL_CONNECTING:
 			changed = true;
 			/* FALLTHRU */
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	case NVME_CTRL_DEAD:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		switch (old_state) {
 		case NVME_CTRL_DELETING:
 			changed = true;
 			/* FALLTHRU */
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 		default:
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			break;
 		}
 		break;
 	default:
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		break;
 	}
 
-	if (changed)
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+	if (changed) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		ctrl->state = new_state;
+	}
 
 	spin_unlock_irqrestore(&ctrl->lock, flags);
-	if (changed && ctrl->state == NVME_CTRL_LIVE)
+	if (changed && ctrl->state == NVME_CTRL_LIVE) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		nvme_kick_requeue_lists(ctrl);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
+	}
 	return changed;
 }
 EXPORT_SYMBOL_GPL(nvme_change_ctrl_state);
@@ -3708,14 +3736,18 @@ EXPORT_SYMBOL_GPL(nvme_stop_ctrl);
 
 void nvme_start_ctrl(struct nvme_ctrl *ctrl)
 {
-	if (ctrl->kato)
+	if (ctrl->kato) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		nvme_start_keep_alive(ctrl);
+	}
 
 	if (ctrl->queue_count > 1) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		nvme_queue_scan(ctrl);
 		nvme_enable_aen(ctrl);
 		queue_work(nvme_wq, &ctrl->async_event_work);
 		nvme_start_queues(ctrl);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 	}
 }
 EXPORT_SYMBOL_GPL(nvme_start_ctrl);

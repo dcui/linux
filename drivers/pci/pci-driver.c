@@ -749,6 +749,7 @@ static int pci_pm_suspend(struct device *dev)
 	struct pci_dev *pci_dev = to_pci_dev(dev);
 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_dev->skip_bus_pm = false;
 
 	if (pci_has_legacy_pm_support(pci_dev))
@@ -780,11 +781,14 @@ static int pci_pm_suspend(struct device *dev)
 		pci_dev_adjust_pme(pci_dev);
 	}
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pm->suspend) {
 		pci_power_t prev = pci_dev->current_state;
 		int error;
 
 		error = pm->suspend(dev);
+		printk("cdx: pci_pm_suspend: dev.name=%s\n", dev_name(dev));
+		WARN_ON(1);
 		suspend_report_result(pm->suspend, error);
 		if (error)
 			return error;
@@ -796,6 +800,8 @@ static int pci_pm_suspend(struct device *dev)
 				pm->suspend);
 		}
 	}
+
+	WARN_ON(1);
 
 	return 0;
 }
@@ -961,6 +967,7 @@ static int pci_pm_resume(struct device *dev)
 	 * This is necessary for the suspend error path in which resume is
 	 * called without restoring the standard config registers of the device.
 	 */
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pci_dev->state_saved)
 		pci_restore_standard_config(pci_dev);
 
@@ -969,13 +976,16 @@ static int pci_pm_resume(struct device *dev)
 
 	pci_pm_default_resume(pci_dev);
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pm) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		if (pm->resume)
 			error = pm->resume(dev);
 	} else {
 		pci_pm_reenable_device(pci_dev);
 	}
 
+	WARN_ON(1);
 	return error;
 }
 
@@ -1022,15 +1032,19 @@ static int pci_pm_freeze(struct device *dev)
 	pm_runtime_resume(dev);
 	pci_dev->state_saved = false;
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pm->freeze) {
 		int error;
 
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		error = pm->freeze(dev);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		suspend_report_result(pm->freeze, error);
 		if (error)
 			return error;
 	}
 
+	WARN_ON(1);
 	return 0;
 }
 
@@ -1097,17 +1111,23 @@ static int pci_pm_thaw(struct device *dev)
 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
 	int error = 0;
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pci_has_legacy_pm_support(pci_dev))
 		return pci_legacy_resume(dev);
 
 	if (pm) {
-		if (pm->thaw)
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
+		if (pm->thaw) {
+			printk("cdx: %s, line %d\n", __func__, __LINE__);
 			error = pm->thaw(dev);
+		}
 	} else {
 		pci_pm_reenable_device(pci_dev);
 	}
 
 	pci_dev->state_saved = false;
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
+	WARN_ON(1);
 
 	return error;
 }

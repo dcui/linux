@@ -1641,17 +1641,28 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
 {
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 
-	if (size <= dev->bar_mapped_size)
+	printk("cdx: nvme_remap_bar: 1: bar va=%px, contro reg=%px, sz=%lx,%lx\n",
+		dev->bar, dev->bar + NVME_REG_CSTS, size, dev->bar_mapped_size);
+	if (size <= dev->bar_mapped_size) {
+		WARN_ON(1);
 		return 0;
-	if (size > pci_resource_len(pdev, 0))
+	}
+	if (size > pci_resource_len(pdev, 0)) {
+		WARN_ON(1);
 		return -ENOMEM;
+	}
 	if (dev->bar)
 		iounmap(dev->bar);
 	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
+	printk("cdx: nvme_remap_bar: start=0x%llx, sz=0x%lx, va=%px\n",
+		(unsigned long long)pci_resource_start(pdev, 0),
+		size, dev->bar);
 	if (!dev->bar) {
 		dev->bar_mapped_size = 0;
 		return -ENOMEM;
 	}
+	printk("cdx: nvme_remap_bar: control sts=0x%x", readl(dev->bar + 0x001c));
+	WARN_ON(1);
 	dev->bar_mapped_size = size;
 	dev->dbs = dev->bar + NVME_REG_DBS;
 
@@ -2092,17 +2103,20 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 
 	nr_io_queues = max_io_queues();
 	result = nvme_set_queue_count(&dev->ctrl, &nr_io_queues);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result < 0)
 		return result;
 
 	if (nr_io_queues == 0)
 		return 0;
 	
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	clear_bit(NVMEQ_ENABLED, &adminq->flags);
 
 	if (dev->cmb_use_sqes) {
 		result = nvme_cmb_qdepth(dev, nr_io_queues,
 				sizeof(struct nvme_command));
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		if (result > 0)
 			dev->q_depth = result;
 		else
@@ -2112,24 +2126,31 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	do {
 		size = db_bar_size(dev, nr_io_queues);
 		result = nvme_remap_bar(dev, size);
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		if (!result)
 			break;
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		if (!--nr_io_queues)
 			return -ENOMEM;
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	} while (1);
 	adminq->q_db = dev->dbs;
 
  retry:
 	/* Deregister the admin queue's interrupt */
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	pci_free_irq(pdev, 0, adminq);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 
 	/*
 	 * If we enable msix early due to not intx, disable it again before
 	 * setting up the full range we need.
 	 */
 	pci_free_irq_vectors(pdev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 
 	result = nvme_setup_irqs(dev, nr_io_queues);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result <= 0)
 		return -EIO;
 
@@ -2144,11 +2165,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	 * number of interrupts.
 	 */
 	result = queue_request_irq(adminq);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		return result;
 	set_bit(NVMEQ_ENABLED, &adminq->flags);
 
 	result = nvme_create_io_queues(dev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result || dev->online_queues < 2)
 		return result;
 
@@ -2162,6 +2185,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 					dev->io_queues[HCTX_TYPE_DEFAULT],
 					dev->io_queues[HCTX_TYPE_READ],
 					dev->io_queues[HCTX_TYPE_POLL]);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	return 0;
 }
 
@@ -2284,26 +2308,38 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 	int result = -ENOMEM;
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 
-	if (pci_enable_device_mem(pdev))
+	printk("cdx: nvme_pci_enable: 1\n");
+	if (pci_enable_device_mem(pdev)) {
+		printk("cdx: nvme_pci_enable: 2: result=%d\n", result);
 		return result;
+	}
 
 	pci_set_master(pdev);
 
 	if (dma_set_mask_and_coherent(dev->dev, DMA_BIT_MASK(64)) &&
-	    dma_set_mask_and_coherent(dev->dev, DMA_BIT_MASK(32)))
-		goto disable;
-
-	if (readl(dev->bar + NVME_REG_CSTS) == -1) {
-		result = -ENODEV;
+	    dma_set_mask_and_coherent(dev->dev, DMA_BIT_MASK(32))) {
+		printk("cdx: nvme_pci_enable: 3: result=%d\n", result);
 		goto disable;
 	}
 
+	printk("cdx: nvme_pci_enable: 4.0: result=%d, bar va=%px, reading %px\n", result,
+		dev->bar, dev->bar + NVME_REG_CSTS);
+
+	if (readl(dev->bar + NVME_REG_CSTS) == -1) {
+		printk("cdx: nvme_pci_enable: 4: result=%d, bar va=%px\n", result, dev->bar + NVME_REG_CSTS);
+		result = -ENODEV;
+		WARN_ON(1);
+		goto disable;
+	}
+
+	printk("cdx: nvme_pci_enable: 5\n");
 	/*
 	 * Some devices and/or platforms don't advertise or work with INTx
 	 * interrupts. Pre-enable a single MSIX or MSI vec for setup. We'll
 	 * adjust this later.
 	 */
 	result = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+	printk("cdx: nvme_pci_enable: 6: result=%d\n", result);
 	if (result < 0)
 		return result;
 
@@ -2353,11 +2389,15 @@ static void nvme_pci_disable(struct nvme_dev *dev)
 {
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_free_irq_vectors(pdev);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	if (pci_is_enabled(pdev)) {
 		pci_disable_pcie_error_reporting(pdev);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		pci_disable_device(pdev);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 	}
 }
 
@@ -2394,7 +2434,9 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
 	}
 	nvme_suspend_io_queues(dev);
 	nvme_suspend_queue(&dev->queues[0]);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_pci_disable(dev);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	blk_mq_tagset_busy_iter(&dev->tagset, nvme_cancel_request, &dev->ctrl);
 	blk_mq_tagset_busy_iter(&dev->admin_tagset, nvme_cancel_request, &dev->ctrl);
@@ -2468,11 +2510,13 @@ static void nvme_reset_work(struct work_struct *work)
 	int result;
 	enum nvme_ctrl_state new_state = NVME_CTRL_LIVE;
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (WARN_ON(dev->ctrl.state != NVME_CTRL_RESETTING)) {
 		result = -ENODEV;
 		goto out;
 	}
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	/*
 	 * If we're called to reset a live controller first shut it down before
 	 * moving on.
@@ -2483,14 +2527,17 @@ static void nvme_reset_work(struct work_struct *work)
 
 	mutex_lock(&dev->shutdown_lock);
 	result = nvme_pci_enable(dev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		goto out_unlock;
 
 	result = nvme_pci_configure_admin_queue(dev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		goto out_unlock;
 
 	result = nvme_alloc_admin_tags(dev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		goto out_unlock;
 
@@ -2516,10 +2563,12 @@ static void nvme_reset_work(struct work_struct *work)
 		dev_warn(dev->ctrl.device,
 			"failed to mark controller CONNECTING\n");
 		result = -EBUSY;
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		goto out;
 	}
 
 	result = nvme_init_identify(&dev->ctrl);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		goto out;
 
@@ -2536,6 +2585,7 @@ static void nvme_reset_work(struct work_struct *work)
 
 	if (dev->ctrl.oacs & NVME_CTRL_OACS_DBBUF_SUPP) {
 		result = nvme_dbbuf_dma_alloc(dev);
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		if (result)
 			dev_warn(dev->dev,
 				 "unable to allocate dma for dbbuf\n");
@@ -2543,11 +2593,14 @@ static void nvme_reset_work(struct work_struct *work)
 
 	if (dev->ctrl.hmpre) {
 		result = nvme_setup_host_mem(dev);
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		if (result < 0)
 			goto out;
 	}
 
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	result = nvme_setup_io_queues(dev);
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		goto out;
 
@@ -2577,15 +2630,18 @@ static void nvme_reset_work(struct work_struct *work)
 		dev_warn(dev->ctrl.device,
 			"failed to mark controller state %d\n", new_state);
 		result = -ENODEV;
+		printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 		goto out;
 	}
 
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	nvme_start_ctrl(&dev->ctrl);
 	return;
 
  out_unlock:
 	mutex_unlock(&dev->shutdown_lock);
  out:
+	printk("cdx: %s, line %d, result=%d\n", __func__, __LINE__, result);
 	if (result)
 		dev_warn(dev->ctrl.device,
 			 "Removing after probe failure status: %d\n", result);
@@ -2597,8 +2653,10 @@ static void nvme_remove_dead_ctrl_work(struct work_struct *work)
 	struct nvme_dev *dev = container_of(work, struct nvme_dev, remove_work);
 	struct pci_dev *pdev = to_pci_dev(dev->dev);
 
-	if (pci_get_drvdata(pdev))
+	if (pci_get_drvdata(pdev)) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		device_release_driver(&pdev->dev);
+	}
 	nvme_put_ctrl(&dev->ctrl);
 }
 
@@ -2842,9 +2900,14 @@ static int nvme_resume(struct device *dev)
 	struct nvme_dev *ndev = pci_get_drvdata(to_pci_dev(dev));
 	struct nvme_ctrl *ctrl = &ndev->ctrl;
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pm_resume_via_firmware() || !ctrl->npss ||
-	    nvme_set_power_state(ctrl, ndev->last_ps) != 0)
+	    nvme_set_power_state(ctrl, ndev->last_ps) != 0) {
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		nvme_reset_ctrl(ctrl);
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
+	}
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return 0;
 }
 
@@ -2863,14 +2926,18 @@ static int nvme_suspend(struct device *dev)
 	 * device does not support any non-default power states, shut down the
 	 * device fully.
 	 */
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (pm_suspend_via_firmware() || !ctrl->npss) {
 		nvme_dev_disable(ndev, true);
 		return 0;
 	}
 
 	nvme_start_freeze(ctrl);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_wait_freeze(ctrl);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_sync_queues(ctrl);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 
 	if (ctrl->state != NVME_CTRL_LIVE &&
 	    ctrl->state != NVME_CTRL_ADMIN_ONLY)
@@ -2878,10 +2945,12 @@ static int nvme_suspend(struct device *dev)
 
 	ndev->last_ps = 0;
 	ret = nvme_get_power_state(ctrl, &ndev->last_ps);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (ret < 0)
 		goto unfreeze;
 
 	ret = nvme_set_power_state(ctrl, ctrl->npss);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	if (ret < 0)
 		goto unfreeze;
 
@@ -2890,9 +2959,11 @@ static int nvme_suspend(struct device *dev)
 		 * Clearing npss forces a controller reset on resume. The
 		 * correct value will be resdicovered then.
 		 */
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		nvme_dev_disable(ndev, true);
 		ctrl->npss = 0;
 		ret = 0;
+		printk("cdx: %s, line %d\n", __func__, __LINE__);
 		goto unfreeze;
 	}
 	/*
@@ -2900,9 +2971,13 @@ static int nvme_suspend(struct device *dev)
 	 * device's power. If we're using protocol specific settings, we don't
 	 * want pci interfering.
 	 */
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	pci_save_state(pdev);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 unfreeze:
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_unfreeze(ctrl);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return ret;
 }
 
@@ -2910,7 +2985,9 @@ static int nvme_simple_suspend(struct device *dev)
 {
 	struct nvme_dev *ndev = pci_get_drvdata(to_pci_dev(dev));
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_dev_disable(ndev, true);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return 0;
 }
 
@@ -2919,17 +2996,22 @@ static int nvme_simple_resume(struct device *dev)
 	struct pci_dev *pdev = to_pci_dev(dev);
 	struct nvme_dev *ndev = pci_get_drvdata(pdev);
 
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	nvme_reset_ctrl(&ndev->ctrl);
+	printk("cdx: %s, line %d\n", __func__, __LINE__);
 	return 0;
 }
 
 const struct dev_pm_ops nvme_dev_pm_ops = {
 	.suspend	= nvme_suspend,
 	.resume		= nvme_resume,
-	.freeze		= nvme_simple_suspend,
-	.thaw		= nvme_simple_resume,
+	//.freeze		= nvme_simple_suspend,
+	.freeze		= nvme_suspend,
+	//.thaw		= nvme_simple_resume,
+	.thaw		= nvme_resume,
 	.poweroff	= nvme_simple_suspend,
-	.restore	= nvme_simple_resume,
+	//.restore	= nvme_simple_resume,
+	.restore	= nvme_resume,
 };
 #endif /* CONFIG_PM_SLEEP */
 
