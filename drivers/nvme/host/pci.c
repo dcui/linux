@@ -3005,13 +3005,13 @@ static int nvme_simple_resume(struct device *dev)
 const struct dev_pm_ops nvme_dev_pm_ops = {
 	.suspend	= nvme_suspend,
 	.resume		= nvme_resume,
-	//.freeze		= nvme_simple_suspend,
-	.freeze		= nvme_suspend,
-	//.thaw		= nvme_simple_resume,
-	.thaw		= nvme_resume,
+	.freeze		= nvme_simple_suspend,
+	//.freeze		= nvme_suspend,
+	.thaw		= nvme_simple_resume,
+	//.thaw		= nvme_resume,
 	.poweroff	= nvme_simple_suspend,
-	//.restore	= nvme_simple_resume,
-	.restore	= nvme_resume,
+	.restore	= nvme_simple_resume,
+	//.restore	= nvme_resume,
 };
 #endif /* CONFIG_PM_SLEEP */
 
