@@ -422,6 +422,7 @@ enum hv_pcibus_state {
 	hv_pcibus_init = 0,
 	hv_pcibus_probed,
 	hv_pcibus_installed,
+	hv_pcibus_removing,
 	hv_pcibus_removed,
 	hv_pcibus_maximum
 };
@@ -1841,6 +1842,12 @@ static void hv_pci_devices_present(struct hv_pcibus_device *hbus,
 	unsigned long flags;
 	bool pending_dr;
 
+	if (hbus->state == hv_pcibus_removing) {
+		dev_info(&hbus->hdev->device,
+			 "PCI VMBus BUS_RELATIONS: ignored\n");
+		return;
+	}
+
 	dr_wrk = kzalloc(sizeof(*dr_wrk), GFP_NOWAIT);
 	if (!dr_wrk)
 		return;
@@ -1957,11 +1964,19 @@ static void hv_eject_device_work(struct work_struct *work)
  */
 static void hv_pci_eject_device(struct hv_pci_dev *hpdev)
 {
+	struct hv_pcibus_device *hbus = hpdev->hbus;
+	struct hv_device *hdev = hbus->hdev;;
+
+	if (hbus->state == hv_pcibus_removing) {
+		dev_info(&hdev->device, "PCI VMBus EJECT: ignored\n");
+		return;
+	}
+
 	hpdev->state = hv_pcichild_ejecting;
 	get_pcichild(hpdev);
 	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
-	get_hvpcibus(hpdev->hbus);
-	queue_work(hpdev->hbus->wq, &hpdev->wrk);
+	get_hvpcibus(hbus);
+	queue_work(hbus->wq, &hpdev->wrk);
 }
 
 /**
@@ -2757,9 +2772,21 @@ static int hv_pci_remove(struct hv_device *hdev)
 static int hv_pci_suspend(struct hv_device *hdev)
 {
 	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
+	enum hv_pcibus_state old_state;
 	int ret;
 
-	/* XXX: Need to prevent any new work from being queued. */
+	tasklet_disable(&hdev->channel->callback_event);
+
+	/* Change the hbus state to prevent new work items. */
+	old_state = hbus->state;
+	if (hbus->state == hv_pcibus_installed)
+		hbus->state = hv_pcibus_removing;
+
+	tasklet_enable(&hdev->channel->callback_event);
+
+	if (old_state != hv_pcibus_installed)
+		return -EINVAL;
+
 	flush_workqueue(hbus->wq);
 
 	ret = hv_pci_bus_exit(hdev, true);
