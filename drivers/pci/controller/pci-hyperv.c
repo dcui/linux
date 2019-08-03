@@ -2080,7 +2080,9 @@ static void hv_pci_onchannelcallback(void *context)
  * failing if the host doesn't support the necessary protocol
  * level.
  */
-static int hv_pci_protocol_negotiation(struct hv_device *hdev)
+static int hv_pci_protocol_negotiation(struct hv_device *hdev,
+				       enum pci_protocol_version_t version[],
+				       int num_version)
 {
 	struct pci_version_request *version_req;
 	struct hv_pci_compl comp_pkt;
@@ -2104,8 +2106,8 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 	version_req = (struct pci_version_request *)&pkt->message;
 	version_req->message_type.type = PCI_QUERY_PROTOCOL_VERSION;
 
-	for (i = 0; i < ARRAY_SIZE(pci_protocol_versions); i++) {
-		version_req->protocol_version = pci_protocol_versions[i];
+	for (i = 0; i < num_version; i++) {
+		version_req->protocol_version = version[i];
 		ret = vmbus_sendpacket(hdev->channel, version_req,
 				sizeof(struct pci_version_request),
 				(unsigned long)pkt, VM_PKT_DATA_INBAND,
@@ -2121,7 +2123,7 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
 		}
 
 		if (comp_pkt.completion_status >= 0) {
-			pci_protocol_version = pci_protocol_versions[i];
+			pci_protocol_version = version[i];
 			dev_info(&hdev->device,
 				"PCI VMBus probing: Using version %#x\n",
 				pci_protocol_version);
@@ -2572,7 +2574,8 @@ static int hv_pci_probe(struct hv_device *hdev,
 
 	hv_set_drvdata(hdev, hbus);
 
-	ret = hv_pci_protocol_negotiation(hdev);
+	ret = hv_pci_protocol_negotiation(hdev, pci_protocol_versions,
+					  ARRAY_SIZE(pci_protocol_versions));
 	if (ret)
 		goto close;
 
@@ -2644,7 +2647,7 @@ free_bus:
 	return ret;
 }
 
-static void hv_pci_bus_exit(struct hv_device *hdev)
+static int hv_pci_bus_exit(struct hv_device *hdev, bool hibernating)
 {
 	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
 	struct {
@@ -2660,16 +2663,20 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 	 * access the per-channel ringbuffer any longer.
 	 */
 	if (hdev->channel->rescind)
-		return;
+		return 0;
 
-	/* Delete any children which might still exist. */
-	memset(&relations, 0, sizeof(relations));
-	hv_pci_devices_present(hbus, &relations);
+	if (!hibernating) {
+		/* Delete any children which might still exist. */
+		memset(&relations, 0, sizeof(relations));
+		hv_pci_devices_present(hbus, &relations);
+	}
 
 	ret = hv_send_resources_released(hdev);
-	if (ret)
+	if (ret) {
 		dev_err(&hdev->device,
 			"Couldn't send resources released packet(s)\n");
+		return ret;
+	}
 
 	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
 	init_completion(&comp_pkt.host_event);
@@ -2682,8 +2689,13 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 			       (unsigned long)&pkt.teardown_packet,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-	if (!ret)
-		wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ);
+	if (ret)
+		return ret;
+
+	if (wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ) == 0)
+		return -ETIMEDOUT;
+
+	return 0;
 }
 
 /**
@@ -2695,6 +2707,7 @@ static void hv_pci_bus_exit(struct hv_device *hdev)
 static int hv_pci_remove(struct hv_device *hdev)
 {
 	struct hv_pcibus_device *hbus;
+	int ret;
 
 	hbus = hv_get_drvdata(hdev);
 	if (hbus->state == hv_pcibus_installed) {
@@ -2707,7 +2720,7 @@ static int hv_pci_remove(struct hv_device *hdev)
 		hbus->state = hv_pcibus_removed;
 	}
 
-	hv_pci_bus_exit(hdev);
+	ret = hv_pci_bus_exit(hdev, false);
 
 	vmbus_close(hdev->channel);
 
@@ -2721,7 +2734,7 @@ static int hv_pci_remove(struct hv_device *hdev)
 	wait_for_completion(&hbus->remove_event);
 	destroy_workqueue(hbus->wq);
 	free_page((unsigned long)hbus);
-	return 0;
+	return ret;
 }
 
 static const struct hv_vmbus_device_id hv_pci_id_table[] = {
