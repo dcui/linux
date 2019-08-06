@@ -1236,25 +1236,10 @@ static void netvsc_get_pcpu_stats(struct net_device *net,
 	}
 }
 
-static void netvsc_get_stats64(struct net_device *net,
-			       struct rtnl_link_stats64 *t)
+static void netvsc_get_per_chan_stats(struct netvsc_device *nvdev,
+				      struct rtnl_link_stats64 *t)
 {
-	struct net_device_context *ndev_ctx = netdev_priv(net);
-	struct netvsc_device *nvdev = rcu_dereference_rtnl(ndev_ctx->nvdev);
-	struct netvsc_vf_pcpu_stats vf_tot;
-	int i;
-
-	if (!nvdev)
-		return;
-
-	netdev_stats_to_stats64(t, &net->stats);
-
-	netvsc_get_vf_stats(net, &vf_tot);
-	t->rx_packets += vf_tot.rx_packets;
-	t->tx_packets += vf_tot.tx_packets;
-	t->rx_bytes   += vf_tot.rx_bytes;
-	t->tx_bytes   += vf_tot.tx_bytes;
-	t->tx_dropped += vf_tot.tx_dropped;
+	u32 i;
 
 	for (i = 0; i < nvdev->num_chn; i++) {
 		const struct netvsc_channel *nvchan = &nvdev->chan_table[i];
@@ -1284,6 +1269,29 @@ static void netvsc_get_stats64(struct net_device *net,
 		t->rx_packets	+= packets;
 		t->multicast	+= multicast;
 	}
+}
+
+static void netvsc_get_stats64(struct net_device *net,
+			       struct rtnl_link_stats64 *t)
+{
+	struct net_device_context *ndev_ctx = netdev_priv(net);
+	struct netvsc_device *nvdev;
+	struct netvsc_vf_pcpu_stats vf_tot;
+
+	netdev_stats_to_stats64(t, &net->stats);
+
+	netvsc_get_vf_stats(net, &vf_tot);
+	t->rx_packets += vf_tot.rx_packets;
+	t->tx_packets += vf_tot.tx_packets;
+	t->rx_bytes   += vf_tot.rx_bytes;
+	t->tx_bytes   += vf_tot.tx_bytes;
+	t->tx_dropped += vf_tot.tx_dropped;
+
+	rcu_read_lock();
+	nvdev = rcu_dereference(ndev_ctx->nvdev);
+	if (nvdev)
+		netvsc_get_per_chan_stats(nvdev, t);
+	rcu_read_unlock();
 }
 
 static int netvsc_set_mac_addr(struct net_device *ndev, void *p)
