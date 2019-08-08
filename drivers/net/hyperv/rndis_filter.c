@@ -1386,9 +1386,12 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 				    rsscap.num_recv_que);
 
 	net_device->max_chn = min_t(u32, VRSS_CHANNEL_MAX, num_possible_rss_qs);
+	net_device->max_chn = 1; //disable sub-channels
+	printk("cdx: setting net_device->max_chn = 1 by force!\n");
 
 	/* We will use the given number of channels if available. */
 	net_device->num_chn = min(net_device->max_chn, device_info->num_chn);
+	printk("cdx: setting net_device->max_chn = 1 by force!: num_chn=%d\n", net_device->num_chn);
 
 	for (i = 0; i < ITAB_NUM; i++)
 		rndis_device->rx_table[i] = ethtool_rxfh_indir_default(

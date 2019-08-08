@@ -2922,6 +2922,7 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
 	int i;
 	int port = 0;
 
+	printk("cdx: mlx4_enable_msi_x: 1: msi_x=%d\n", msi_x);
 	if (msi_x) {
 		int nreq = min3(dev->caps.num_ports *
 				(int)num_online_cpus() + 1,
@@ -2932,15 +2933,19 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
 			nreq = min_t(int, nreq, msi_x);
 
 		entries = kcalloc(nreq, sizeof(*entries), GFP_KERNEL);
-		if (!entries)
+		if (!entries) {
+			WARN_ON(1);
 			goto no_msi;
+		}
 
 		for (i = 0; i < nreq; ++i)
 			entries[i].entry = i;
 
+		printk("cdx: mlx4_enable_msi_x:2 : nreq=%d, MLX4_EQ_ASYNC=%d\n", nreq, MLX4_EQ_ASYNC);
 		nreq = pci_enable_msix_range(dev->persist->pdev, entries, 2,
 					     nreq);
 
+		printk("cdx: mlx4_enable_msi_x:3 : nreq=%d, MLX4_EQ_ASYNC=%d\n", nreq, MLX4_EQ_ASYNC);
 		if (nreq < 0 || nreq < MLX4_EQ_ASYNC) {
 			kfree(entries);
 			goto no_msi;
@@ -3313,6 +3318,7 @@ static int mlx4_load_one(struct pci_dev *pdev, int pci_dev_data,
 	struct mlx4_dev_cap *dev_cap = NULL;
 	int existing_vfs = 0;
 
+	WARN_ON(1);
 	dev = &priv->dev;
 
 	INIT_LIST_HEAD(&priv->ctx_list);
@@ -3560,7 +3566,9 @@ slave_start:
 	bitmap_zero(priv->msix_ctl.pool_bm, MAX_MSIX);
 	mutex_init(&priv->msix_ctl.pool_lock);
 
+	printk("cdx: mlx4_load_one: 1:, is_mfunc=%d, msix=0x%lx\n", mlx4_is_mfunc(dev), dev->flags & MLX4_FLAG_MSI_X);
 	mlx4_enable_msi_x(dev);
+	printk("cdx: mlx4_load_one: 1:, is_mfunc=%d, msix=0x%lx\n", mlx4_is_mfunc(dev), dev->flags & MLX4_FLAG_MSI_X);
 	if ((mlx4_is_mfunc(dev)) &&
 	    !(dev->flags & MLX4_FLAG_MSI_X)) {
 		err = -EOPNOTSUPP;

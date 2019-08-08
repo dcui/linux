@@ -461,6 +461,7 @@ static int dpm_run_callback(pm_callback_t cb, struct device *dev,
 
 	initcall_debug_report(dev, calltime, cb, error);
 
+	//WARN(error, "cdx: dpm_run_callback: error=%d\n", error);
 	return error;
 }
 

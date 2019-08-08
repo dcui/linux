@@ -964,7 +964,8 @@ static void vmbus_device_release(struct device *device)
 }
 
 static const struct dev_pm_ops vmbus_pm = {
-	SET_SYSTEM_SLEEP_PM_OPS(vmbus_suspend, vmbus_resume)
+      //SET_SYSTEM_SLEEP_PM_OPS(vmbus_suspend, vmbus_resume)
+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(vmbus_suspend, vmbus_resume)
 };
 
 /* The one and only one */
@@ -2093,6 +2094,7 @@ static int vmbus_bus_suspend(struct device *dev)
 
 	vmbus_connection.conn_state = DISCONNECTED;
 
+	printk("cdx: vmbus_bus_suspend\n");
 	return 0;
 }
 
@@ -2127,6 +2129,7 @@ static int vmbus_bus_resume(struct device *dev)
 	if (ret != 0)
 		return ret;
 
+	printk("cdx: vmbus_bus_resume\n");
 	vmbus_request_offers();
 
 	return 0;
@@ -2140,7 +2143,8 @@ static const struct acpi_device_id vmbus_acpi_device_ids[] = {
 MODULE_DEVICE_TABLE(acpi, vmbus_acpi_device_ids);
 
 static const struct dev_pm_ops vmbus_bus_pm = {
-	SET_SYSTEM_SLEEP_PM_OPS(vmbus_bus_suspend, vmbus_bus_resume)
+      //SET_SYSTEM_SLEEP_PM_OPS(vmbus_bus_suspend, vmbus_bus_resume)
+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(vmbus_bus_suspend, vmbus_bus_resume)
 };
 
 static struct acpi_driver vmbus_acpi_driver = {

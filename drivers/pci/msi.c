@@ -748,19 +748,24 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
 	/* Request & Map MSI-X table region */
 	base = msix_map_region(dev, msix_table_size(control));
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (!base)
 		return -ENOMEM;
 
+	printk("cdx: %s: line %d, base=%px\n", __func__, __LINE__, base);
 	ret = msix_setup_entries(dev, base, entries, nvec, affd);
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	if (ret)
 		return ret;
 
 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	if (ret)
 		goto out_avail;
 
 	/* Check if all MSI entries honor device restrictions */
 	ret = msi_verify_entries(dev);
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	if (ret)
 		goto out_free;
 
@@ -775,6 +780,7 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
 	msix_program_entries(dev, entries);
 
 	ret = populate_msi_sysfs(dev);
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	if (ret)
 		goto out_free;
 
@@ -784,9 +790,11 @@ static int msix_capability_init(struct pci_dev *dev, struct msix_entry *entries,
 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
 
 	pcibios_free_irq(dev);
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	return 0;
 
 out_avail:
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	if (ret < 0) {
 		/*
 		 * If we had some success, report the number of irqs
@@ -804,6 +812,7 @@ out_avail:
 	}
 
 out_free:
+	printk("cdx: %s: line %d, ret=%d\n", __func__, __LINE__, ret);
 	free_msi_irqs(dev);
 
 	return ret;
@@ -822,10 +831,12 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
 {
 	struct pci_bus *bus;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	/* MSI must be globally enabled and supported by the device */
 	if (!pci_msi_enable)
 		return 0;
 
+	printk("cdx: %s: line %d, dev=%px, dev->no_msi=%d, state=%d\n", __func__, __LINE__, dev, dev->no_msi, dev->current_state);
 	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
 		return 0;
 
@@ -834,8 +845,10 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
 	 *  a) it's stupid ..
 	 *  b) the list manipulation code assumes nvec >= 1.
 	 */
-	if (nvec < 1)
+	if (nvec < 1) {
+		printk("cdx: %s: line %d, nvec=%d\n", __func__, __LINE__, nvec);
 		return 0;
+	}
 
 	/*
 	 * Any bridge which does NOT route MSI transactions from its
@@ -845,8 +858,10 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
 	 * or quirks for specific PCI bridges to be setting NO_MSI.
 	 */
 	for (bus = dev->bus; bus; bus = bus->parent)
-		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI) {
+			printk("cdx: %s: line %d\n", __func__, __LINE__);
 			return 0;
+		}
 
 	return 1;
 }
@@ -937,32 +952,41 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
 	int nr_entries;
 	int i, j;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (!pci_msi_supported(dev, nvec))
 		return -EINVAL;
 
 	nr_entries = pci_msix_vec_count(dev);
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (nr_entries < 0)
 		return nr_entries;
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (nvec > nr_entries)
 		return nr_entries;
 
 	if (entries) {
 		/* Check for any invalid entries */
 		for (i = 0; i < nvec; i++) {
-			if (entries[i].entry >= nr_entries)
+			if (entries[i].entry >= nr_entries) {
+				printk("cdx: %s: line %d\n", __func__, __LINE__);
 				return -EINVAL;		/* invalid entry */
+			}
 			for (j = i + 1; j < nvec; j++) {
-				if (entries[i].entry == entries[j].entry)
+				if (entries[i].entry == entries[j].entry) {
+					printk("cdx: %s: line %d\n", __func__, __LINE__);
 					return -EINVAL;	/* duplicate entry */
+				}
 			}
 		}
 	}
 
 	/* Check whether driver already requested for MSI irq */
 	if (dev->msi_enabled) {
+		printk("cdx: %s: line %d\n", __func__, __LINE__);
 		pci_info(dev, "can't enable MSI-X (MSI IRQ already assigned)\n");
 		return -EINVAL;
 	}
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	return msix_capability_init(dev, entries, nvec, affd);
 }
 
@@ -1083,20 +1107,26 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
 {
 	int rc, nvec = maxvec;
 
+	printk("cdx: __pci_enable_msix_range: 1: minvec=%d, maxvec=%d\n", minvec, maxvec);
 	if (maxvec < minvec)
 		return -ERANGE;
 
 	if (WARN_ON_ONCE(dev->msix_enabled))
 		return -EINVAL;
 
+	printk("cdx: __pci_enable_msix_range: 2: minvec=%d, maxvec=%d\n", minvec, maxvec);
 	for (;;) {
+		printk("cdx: __pci_enable_msix_range: loop, 1: affd=%px\n", affd);
 		if (affd) {
 			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+			printk("cdx: __pci_enable_msix_range: loop, 2: nvec=%d, minvec=%d\n", nvec, minvec);
 			if (nvec < minvec)
 				return -ENOSPC;
 		}
 
+		printk("cdx: __pci_enable_msix_range: loop, 3: nvec=%d, minvec=%d\n", nvec, minvec);
 		rc = __pci_enable_msix(dev, entries, nvec, affd);
+		printk("cdx: __pci_enable_msix_range: loop, 4: nvec=%d, minvec=%d, rc=%d\n", nvec, minvec, rc);
 		if (rc == 0)
 			return nvec;
 
@@ -1106,6 +1136,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
 			return -ENOSPC;
 
 		nvec = rc;
+		printk("cdx: __pci_enable_msix_range: loop, 5: nvec=%d, minvec=%d, rc=%d\n", nvec, minvec, rc);
 	}
 }
 

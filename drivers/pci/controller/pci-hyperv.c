@@ -676,6 +676,9 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 		 */
 		mb();
 		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+		printk("cdx: _hv_pcifront_read_config: offset=0x%x, val=0x%x, len=%d\n",
+			where, *val, size);
+		WARN_ON_ONCE(where==0xffc);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
 			"Attempt to read beyond a function's config space.\n");
@@ -747,6 +750,8 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 		 */
 		mb();
 		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+		printk("cdx: _hv_pcifront_write_config: offset=0x%x, val=0x%x, len=%d\n",
+			where, val, size);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
 			"Attempt to write beyond a function's config space.\n");
@@ -800,8 +805,10 @@ static int hv_pcifront_write_config(struct pci_bus *bus, unsigned int devfn,
 	struct hv_pci_dev *hpdev;
 
 	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(devfn));
-	if (!hpdev)
+	if (!hpdev) {
+		printk("cdx: hv_pcifront_write_config: not found!\n");
 		return PCIBIOS_DEVICE_NOT_FOUND;
+	}
 
 	_hv_pcifront_write_config(hpdev, where, size, val);
 
@@ -2692,22 +2699,27 @@ static int hv_pci_bus_exit(struct hv_device *hdev, bool hibernating)
 	 * After the host sends the RESCIND_CHANNEL message, it doesn't
 	 * access the per-channel ringbuffer any longer.
 	 */
+	printk("cdx: hv_pci_bus_exit: 1\n");
 	if (hdev->channel->rescind)
 		return 0;
 
 	if (!hibernating) {
+		printk("cdx: hv_pci_bus_exit: 44444\n");
 		/* Delete any children which might still exist. */
 		memset(&relations, 0, sizeof(relations));
 		hv_pci_devices_present(hbus, &relations);
 	}
 
+	printk("cdx: hv_pci_bus_exit: 2\n");
 	ret = hv_send_resources_released(hdev);
+	printk("cdx: hv_pci_bus_exit: 3\n");
 	if (ret) {
 		dev_err(&hdev->device,
 			"Couldn't send resources released packet(s)\n");
 		return ret;
 	}
 
+	printk("cdx: hv_pci_bus_exit: 4\n");
 	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
 	init_completion(&comp_pkt.host_event);
 	pkt.teardown_packet.completion_func = hv_pci_generic_compl;
@@ -2719,12 +2731,15 @@ static int hv_pci_bus_exit(struct hv_device *hdev, bool hibernating)
 			       (unsigned long)&pkt.teardown_packet,
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+	printk("cdx: hv_pci_bus_exit: 5, ret=%d\n", ret);
 	if (ret)
 		return ret;
 
+	printk("cdx: hv_pci_bus_exit: 6, ret=%d\n", ret);
 	if (wait_for_completion_timeout(&comp_pkt.host_event, 10 * HZ) == 0)
 		return -ETIMEDOUT;
 
+	printk("cdx: hv_pci_bus_exit: 7, ret=%d\n", ret);
 	return 0;
 }
 
@@ -2773,25 +2788,34 @@ static int hv_pci_suspend(struct hv_device *hdev)
 	enum hv_pcibus_state old_state;
 	int ret;
 
+	printk("cdx: hv_pci_suspend: 1\n");
 	tasklet_disable(&hdev->channel->callback_event);
 
 	/* Change the hbus state to prevent new work items. */
 	old_state = hbus->state;
-	if (hbus->state == hv_pcibus_installed)
+	printk("cdx: hv_pci_suspend: 2\n");
+	if (hbus->state == hv_pcibus_installed) {
+		printk("cdx: hv_pci_suspend: 3\n");
 		hbus->state = hv_pcibus_removing;
+	}
 
 	tasklet_enable(&hdev->channel->callback_event);
 
+	printk("cdx: hv_pci_suspend: 4\n");
 	if (old_state != hv_pcibus_installed)
 		return -EINVAL;
 
+	printk("cdx: hv_pci_suspend: 5\n");
 	flush_workqueue(hbus->wq);
 
+	printk("cdx: hv_pci_suspend: 6\n");
 	ret = hv_pci_bus_exit(hdev, true);
 	if (ret)
 		return ret;
 
+	printk("cdx: hv_pci_suspend: 7\n");
 	vmbus_close(hdev->channel);
+	printk("cdx: hv_pci_suspend: 8\n");
 
 	return 0;
 }

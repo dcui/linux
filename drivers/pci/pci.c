@@ -824,9 +824,11 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 	bool need_restore = false;
 
 	/* Check if we're already there */
+	pci_info(dev, "cdx: pci_raw_set_power_state: 1: power transition (from state %d to %d)\n", dev->current_state, state);
 	if (dev->current_state == state)
 		return 0;
 
+	pci_info(dev, "cdx: pci_raw_set_power_state: 2: power transition (from state %d to %d)\n", dev->current_state, state);
 	if (!dev->pm_cap)
 		return -EIO;
 
@@ -850,7 +852,10 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 	   || (state == PCI_D2 && !dev->d2_support))
 		return -EIO;
 
+	pci_info(dev, "cdx: pci_raw_set_power_state: 3: power transition (from state %d to %d)\n", dev->current_state, state);
+	WARN(1, "cdx: pci_raw_set_power_state: 4: Setting to %d\n", state);
 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+	printk("cdx: pci_raw_set_power_state:yicheng1 pmcsr=0x%x, dev->current_state=%d\n", pmcsr, dev->current_state);
 
 	/*
 	 * If we're (effectively) in D3, force entire word to 0.
@@ -876,6 +881,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 		break;
 	}
 
+	printk("cdx: pci_raw_set_power_state:yicheng2 pmcsr=0x%x, dev->current_state=%d\n", pmcsr, dev->current_state);
 	/* Enter specified state */
 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
 
@@ -889,6 +895,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 		udelay(PCI_PM_D2_DELAY);
 
 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+	printk("cdx: pci_raw_set_power_state:yicheng3 pmcsr=0x%x, dev->current_state=%d\n", pmcsr, dev->current_state);
 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
 	if (dev->current_state != state && printk_ratelimit())
 		pci_info(dev, "Refused to change power state, currently in D%d\n",
@@ -930,6 +937,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
  */
 void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
 {
+	WARN(1, "cdx: pci_update_current_state: state=%x\n", state);
 	if (platform_pci_get_power_state(dev) == PCI_D3cold ||
 	    !pci_device_is_present(dev)) {
 		dev->current_state = PCI_D3cold;
@@ -1106,12 +1114,13 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
 {
 	int error;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	/* Bound the state we're entering */
 	if (state > PCI_D3cold)
 		state = PCI_D3cold;
 	else if (state < PCI_D0)
 		state = PCI_D0;
-	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev))
+	else if ((state == PCI_D1 || state == PCI_D2) && pci_no_d1d2(dev)) {
 
 		/*
 		 * If the device or the parent bridge do not support PCI
@@ -1119,11 +1128,15 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
 		 * than putting it into D0 (which would only happen on
 		 * boot).
 		 */
+		printk("cdx: %s: line %d\n", __func__, __LINE__);
 		return 0;
+	}
 
 	/* Check if we're already there */
-	if (dev->current_state == state)
+	if (dev->current_state == state) {
+		printk("cdx: %s: line %d\n", __func__, __LINE__);
 		return 0;
+	}
 
 	__pci_start_power_transition(dev, state);
 
@@ -1131,8 +1144,10 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
 	 * This device is quirked not to be put into D3, so don't put it in
 	 * D3
 	 */
-	if (state >= PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+	if (state >= PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3)) {
+		printk("cdx: %s: line %d\n", __func__, __LINE__);
 		return 0;
+	}
 
 	/*
 	 * To put device in D3cold, we put device into D3hot in native
@@ -1141,9 +1156,11 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
 	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
 					PCI_D3hot : state);
 
+	printk("cdx: %s: line %d, err=%d\n", __func__, __LINE__, error);
 	if (!__pci_complete_power_transition(dev, state))
 		error = 0;
 
+	printk("cdx: %s: line %d, err=%d\n", __func__, __LINE__, error);
 	return error;
 }
 EXPORT_SYMBOL(pci_set_power_state);
@@ -1161,6 +1178,7 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
 {
 	pci_power_t ret;
 
+	pci_info(dev, "cdx: pci_update_current_state: state=%x\n", state.event);
 	if (!dev->pm_cap)
 		return PCI_D0;
 
@@ -2302,6 +2320,7 @@ EXPORT_SYMBOL(pci_enable_wake);
  */
 int pci_wake_from_d3(struct pci_dev *dev, bool enable)
 {
+	WARN_ON(1);
 	return pci_pme_capable(dev, PCI_D3cold) ?
 			pci_enable_wake(dev, PCI_D3cold, enable) :
 			pci_enable_wake(dev, PCI_D3hot, enable);
@@ -2326,6 +2345,7 @@ static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
 		 * Call the platform to find the target state for the device.
 		 */
 		pci_power_t state = platform_pci_choose_state(dev);
+		pci_info(dev, "cdx: pci_target_state: warn: 1: target_state=%x, state=%d\n", target_state, state);
 
 		switch (state) {
 		case PCI_POWER_ERROR:
@@ -2366,6 +2386,7 @@ static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
 		}
 	}
 
+	pci_info(dev, "cdx: pci_target_state: warn: 2: target_state=%x, state=%d\n", target_state, 0);
 	return target_state;
 }
 
@@ -2384,15 +2405,20 @@ int pci_prepare_to_sleep(struct pci_dev *dev)
 	pci_power_t target_state = pci_target_state(dev, wakeup);
 	int error;
 
+	printk("cdx: %s: line %d, target=%x, err=%d\n", __func__, __LINE__, target_state, 0);
 	if (target_state == PCI_POWER_ERROR)
 		return -EIO;
 
+	printk("cdx: %s: line %d, target=%x, err=%d\n", __func__, __LINE__, target_state, 0);
 	pci_enable_wake(dev, target_state, wakeup);
 
 	error = pci_set_power_state(dev, target_state);
+	printk("cdx: %s: line %d, target=%x, err=%d\n", __func__, __LINE__, target_state, error);
 
-	if (error)
+	if (error) {
 		pci_enable_wake(dev, target_state, false);
+		printk("cdx: %s: line %d, target=%x, err=%d\n", __func__, __LINE__, target_state, error);
+	}
 
 	return error;
 }
@@ -2495,9 +2521,11 @@ bool pci_dev_need_resume(struct pci_dev *pci_dev)
 	struct device *dev = &pci_dev->dev;
 	pci_power_t target_state;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (!pm_runtime_suspended(dev) || platform_pci_need_resume(pci_dev))
 		return true;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	target_state = pci_target_state(pci_dev, device_may_wakeup(dev));
 
 	/*
@@ -2505,6 +2533,7 @@ bool pci_dev_need_resume(struct pci_dev *pci_dev)
 	 * removal on top of D3hot, so no need to resume the device in that
 	 * case.
 	 */
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	return target_state != pci_dev->current_state &&
 		target_state != PCI_D3cold &&
 		pci_dev->current_state != PCI_D3hot;
@@ -4577,16 +4606,20 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
 {
 	u16 csr;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
 		return -ENOTTY;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
 	if (csr & PCI_PM_CTRL_NO_SOFT_RESET)
 		return -ENOTTY;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (probe)
 		return 0;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (dev->current_state != PCI_D0)
 		return -EINVAL;
 
@@ -4600,6 +4633,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
 	pci_dev_d3_sleep(dev);
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
 }
 

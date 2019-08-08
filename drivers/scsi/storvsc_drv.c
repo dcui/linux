@@ -913,6 +913,7 @@ done:
 	if (ret != 0)
 		return ret;
 
+	process_sub_channels = false; //disable sub-channels
 	if (process_sub_channels)
 		handle_multichannel_storage(device, max_chns);
 
@@ -1775,6 +1776,7 @@ static int storvsc_probe(struct hv_device *device,
 				(num_cpus - 1) / storvsc_vcpus_per_sub_channel;
 	}
 
+	max_sub_channels = 0; //cdx: disable sub-channels
 	scsi_driver.can_queue = max_outstanding_req_per_channel *
 				(max_sub_channels + 1) *
 				(100 - ring_avail_percent_lowater) / 100;

@@ -2312,6 +2312,7 @@ static int netvsc_probe(struct hv_device *dev,
 	 */
 	rtnl_lock();
 
+	printk("cdx: testing: nvdev->max_chn = %d\n", nvdev->num_chn);
 	if (nvdev->num_chn > 1)
 		schedule_work(&nvdev->subchan_work);
 

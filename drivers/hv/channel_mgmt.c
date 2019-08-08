@@ -879,10 +879,10 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 		pr_err("Mismatched offer from the host (relid=%d)!\n",
 		       offer->child_relid);
 
-		print_hex_dump_debug("Old vmbus offer: ", DUMP_PREFIX_OFFSET,
+		print_hex_dump(KERN_ERR, "Old offer: ", DUMP_PREFIX_OFFSET,
 				     16, 4, &oldchannel->offermsg, offer_sz,
 				     false);
-		print_hex_dump_debug("New vmbus offer: ", DUMP_PREFIX_OFFSET,
+		print_hex_dump(KERN_ERR,"New offer: ", DUMP_PREFIX_OFFSET,
 				     16, 4, offer, offer_sz, false);
 		return;
 	}

@@ -455,8 +455,10 @@ static int pci_device_remove(struct device *dev)
 	 * If the device is still on, set the power state as "unknown",
 	 * since it might change by the next time we load the driver.
 	 */
-	if (pci_dev->current_state == PCI_D0)
+	if (pci_dev->current_state == PCI_D0) {
 		pci_dev->current_state = PCI_UNKNOWN;
+		WARN_ON(1);
+	}
 
 	/*
 	 * We would love to complain here if pci_dev->is_enabled is set, that
@@ -536,6 +538,8 @@ static void pci_pm_set_unknown_state(struct pci_dev *pci_dev)
 	 * mark its power state as "unknown", since we don't know if
 	 * e.g. the BIOS will change its device state when we suspend.
 	 */
+	pci_info(pci_dev, "cdx: pci_pm_set_unknown_state:, curr=%d\n", pci_dev->current_state);
+	WARN_ON(1);
 	if (pci_dev->current_state == PCI_D0)
 		pci_dev->current_state = PCI_UNKNOWN;
 }
@@ -626,6 +630,8 @@ static int pci_legacy_resume_early(struct device *dev)
 	struct pci_dev *pci_dev = to_pci_dev(dev);
 	struct pci_driver *drv = pci_dev->driver;
 
+	pci_set_power_state(pci_dev, PCI_D0);
+	pci_info(pci_dev, "cdx: pci_legacy_resume_early: drv=%px, drv.name=%s, resume_early=%px\n", drv, drv ? drv->name:"", drv ? drv->resume_early : 0);
 	return drv && drv->resume_early ?
 			drv->resume_early(pci_dev) : 0;
 }
@@ -1068,26 +1074,32 @@ static int pci_pm_thaw_noirq(struct device *dev)
 	struct device_driver *drv = dev->driver;
 	int error = 0;
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pcibios_pm_ops.thaw_noirq) {
 		error = pcibios_pm_ops.thaw_noirq(dev);
+		pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 		if (error)
 			return error;
 	}
 
-	if (pci_has_legacy_pm_support(pci_dev))
-		return pci_legacy_resume_early(dev);
-
+	pci_info(pci_dev, "%s: line %d. chengnianke\n", __func__, __LINE__);
 	/*
 	 * pci_restore_state() requires the device to be in D0 (because of MSI
 	 * restoration among other things), so force it into D0 in case the
 	 * driver's "freeze" callbacks put it into a low-power state directly.
 	 */
 	pci_set_power_state(pci_dev, PCI_D0);
+
+	if (pci_has_legacy_pm_support(pci_dev))
+		return pci_legacy_resume_early(dev);
+
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	pci_restore_state(pci_dev);
 
 	if (drv && drv->pm && drv->pm->thaw_noirq)
 		error = drv->pm->thaw_noirq(dev);
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	return error;
 }
 
@@ -1097,14 +1109,19 @@ static int pci_pm_thaw(struct device *dev)
 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
 	int error = 0;
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pci_has_legacy_pm_support(pci_dev))
 		return pci_legacy_resume(dev);
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pm) {
-		if (pm->thaw)
+		if (pm->thaw) {
 			error = pm->thaw(dev);
+			pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
+		}
 	} else {
 		pci_pm_reenable_device(pci_dev);
+		pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	}
 
 	pci_dev->state_saved = false;
@@ -1205,21 +1222,33 @@ static int pci_pm_restore_noirq(struct device *dev)
 	struct device_driver *drv = dev->driver;
 	int error = 0;
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pcibios_pm_ops.restore_noirq) {
+		pci_info(pci_dev, "%s: line %d, %px, %px, err=%d\n", __func__, __LINE__, &pcibios_pm_ops, pcibios_pm_ops.restore_noirq, error);
 		error = pcibios_pm_ops.restore_noirq(dev);
+		pci_info(pci_dev, "%s: line %d, %px, %px, err=%d\n", __func__, __LINE__, &pcibios_pm_ops, pcibios_pm_ops.restore_noirq, error);
 		if (error)
 			return error;
 	}
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	pci_pm_default_resume_early(pci_dev);
 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
 
-	if (pci_has_legacy_pm_support(pci_dev))
-		return pci_legacy_resume_early(dev);
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
+	if (pci_has_legacy_pm_support(pci_dev)) {
+		error= pci_legacy_resume_early(dev);
+		pci_info(pci_dev, "%s: line %d, error=%d\n", __func__, __LINE__, error);
+		return error;
+	}
 
-	if (drv && drv->pm && drv->pm->restore_noirq)
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
+	if (drv && drv->pm && drv->pm->restore_noirq) {
 		error = drv->pm->restore_noirq(dev);
+		pci_info(pci_dev, "%s: line %d, error=%d\n", __func__, __LINE__, error);
+	}
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	return error;
 }
 
@@ -1233,19 +1262,27 @@ static int pci_pm_restore(struct device *dev)
 	 * This is necessary for the hibernation error path in which restore is
 	 * called without restoring the standard config registers of the device.
 	 */
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pci_dev->state_saved)
 		pci_restore_standard_config(pci_dev);
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pci_has_legacy_pm_support(pci_dev))
 		return pci_legacy_resume(dev);
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	pci_pm_default_resume(pci_dev);
 
+	pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	if (pm) {
-		if (pm->restore)
+		pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
+		if (pm->restore) {
 			error = pm->restore(dev);
+			pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
+		}
 	} else {
 		pci_pm_reenable_device(pci_dev);
+		pci_info(pci_dev, "%s: line %d\n", __func__, __LINE__);
 	}
 
 	return error;
