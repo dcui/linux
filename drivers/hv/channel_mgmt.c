@@ -407,7 +407,8 @@ void hv_process_channel_removal(struct vmbus_channel *channel)
 		cpumask_clear_cpu(channel->target_cpu,
 				  &primary_channel->alloced_cpus_in_node);
 
-	vmbus_release_relid(channel->offermsg.child_relid);
+	if (channel->offermsg.child_relid != U32_MAX)
+		vmbus_release_relid(channel->offermsg.child_relid);
 
 	free_channel(channel);
 }
@@ -530,6 +531,9 @@ err_deq_chan:
 	vmbus_release_relid(newchannel->offermsg.child_relid);
 
 	free_channel(newchannel);
+
+	// if hv-such or sub-channel: complete???
+	//atomic_dec(&vmbus_connection.suspend_offer_in_progress); //FIXME
 }
 
 /*
@@ -544,6 +548,10 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 	bool fnew = true;
 
 	mutex_lock(&vmbus_connection.channel_mutex);
+
+	if (is_hvsock_channel(newchannel) || newchannel->offermsg.offer.sub_channel_index > 0) {
+		atomic_inc(&vmbus_connection.suspend_offer_in_progress);
+	}
 
 	/*
 	 * Now that we have acquired the channel_mutex,
@@ -575,6 +583,8 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 			 * is not initialized yet.
 			 */
 			kfree(newchannel);
+			// if hv-such or sub-channel: complete???
+			//atomic_dec(&vmbus_connection.suspend_offer_in_progress); //FIXME
 			WARN_ON_ONCE(1);
 			return;
 		}
@@ -862,7 +872,7 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 	trace_vmbus_onoffer(offer);
 
 	mutex_lock(&vmbus_connection.channel_mutex);
-	oldchannel = relid2channel(offer->child_relid);
+	oldchannel = find_primary_channel_by_offer(offer);
 	mutex_unlock(&vmbus_connection.channel_mutex);
 
 	if (oldchannel != NULL) {
@@ -872,11 +882,17 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 		 * We're resuming from hibernation: we expect the host to send
 		 * exactly the same offers that we had before the hibernation.
 		 */
-		offer_sz = sizeof(*offer);
-		if (memcmp(offer, &oldchannel->offermsg, offer_sz) == 0)
-			return;
+		WARN_ON(oldchannel->offermsg.child_relid != U32_MAX);
+		oldchannel->offermsg.child_relid = offer->child_relid;
 
-		pr_err("Mismatched offer from the host (relid=%d)!\n",
+		offer_sz = sizeof(*offer);
+		if (memcmp(offer, &oldchannel->offermsg, offer_sz) == 0) {
+			if (atomic_dec_and_test(&vmbus_connection.resume_offer_in_progress))
+				complete(&vmbus_connection.resume_event);
+			return;
+		}
+
+		pr_err("Mismatched offer from the host (relid=%d)!!!8/9 22:57\n",
 		       offer->child_relid);
 
 		print_hex_dump(KERN_ERR, "Old offer: ", DUMP_PREFIX_OFFSET,
@@ -884,6 +900,25 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 				     false);
 		print_hex_dump(KERN_ERR,"New offer: ", DUMP_PREFIX_OFFSET,
 				     16, 4, offer, offer_sz, false);
+		/*
+		 * Setup state for signalling the host.
+		 */
+		oldchannel->sig_event = VMBUS_EVENT_CONNECTION_ID;
+
+		if (vmbus_proto_version != VERSION_WS2008) {
+			oldchannel->is_dedicated_interrupt =
+					(offer->is_dedicated_interrupt != 0);
+			oldchannel->sig_event = offer->connection_id;
+		}
+
+		memcpy(&oldchannel->offermsg, offer,
+		       sizeof(struct vmbus_channel_offer_channel));
+		oldchannel->monitor_grp = (u8)offer->monitorid / 32;
+		oldchannel->monitor_bit = (u8)offer->monitorid % 32;
+
+		if (atomic_dec_and_test(&vmbus_connection.resume_offer_in_progress))
+			complete(&vmbus_connection.resume_event);
+
 		return;
 	}
 
@@ -925,6 +960,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	struct vmbus_channel_rescind_offer *rescind;
 	struct vmbus_channel *channel;
 	struct device *dev;
+	bool complete_suspend_event;
 
 	rescind = (struct vmbus_channel_rescind_offer *)hdr;
 
@@ -964,6 +1000,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 		return;
 	}
 
+	complete_suspend_event = is_hvsock_channel(channel) || channel->offermsg.offer.sub_channel_index > 0;
 	/*
 	 * Before setting channel->rescind in vmbus_rescind_cleanup(), we
 	 * should make sure the channel callback is not running any more.
@@ -989,6 +1026,11 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	if (channel->device_obj) {
 		if (channel->chn_rescind_callback) {
 			channel->chn_rescind_callback(channel);
+			if (complete_suspend_event) {
+				//WARN_ON(1);
+				if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress))
+					complete(&vmbus_connection.suspend_event);
+			}
 			return;
 		}
 		/*
@@ -1020,6 +1062,13 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 			complete(&channel->rescind_event);
 		}
 		mutex_unlock(&vmbus_connection.channel_mutex);
+	}
+
+
+	if (complete_suspend_event) {
+		if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress)) {
+			complete(&vmbus_connection.suspend_event);
+		}
 	}
 }
 

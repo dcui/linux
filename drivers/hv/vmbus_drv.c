@@ -24,6 +24,7 @@
 #include <linux/sched/task_stack.h>
 
 #include <asm/mshyperv.h>
+#include <linux/delay.h>
 #include <linux/notifier.h>
 #include <linux/ptrace.h>
 #include <linux/screen_info.h>
@@ -1069,6 +1070,28 @@ msg_handled:
 	vmbus_signal_eom(msg, message_type);
 }
 
+static void vmbus_force_channel_rescinded(struct vmbus_channel *channel)
+{
+	struct onmessage_work_context *ctx;
+	struct vmbus_channel_rescind_offer *rescind;
+
+	WARN_ON(!is_hvsock_channel(channel));
+
+	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL | __GFP_NOFAIL);
+
+	ctx->msg.header.message_type = 1;
+	ctx->msg.header.payload_size = sizeof(*rescind);
+
+	rescind = (struct vmbus_channel_rescind_offer *)ctx->msg.u.payload;
+	rescind->header.msgtype = CHANNELMSG_RESCIND_CHANNELOFFER;
+	rescind->child_relid = channel->offermsg.child_relid;
+
+	INIT_WORK(&ctx->work, vmbus_onmessage_work);
+
+	queue_work_on(vmbus_connection.connect_cpu,
+		      vmbus_connection.work_queue,
+		      &ctx->work);
+}
 
 /*
  * Direct callback for channels using other deferred processing
@@ -2093,9 +2116,63 @@ acpi_walk_err:
 
 static int vmbus_bus_suspend(struct device *dev)
 {
+	struct vmbus_channel *channel, *sc;
+	unsigned long flags;
+
+	WARN_ON(atomic_read(&vmbus_connection.resume_offer_in_progress) != 0);
+
+	while (atomic_read(&vmbus_connection.offer_in_progress) != 0) {
+		/*
+		 * We wait here until any channel offer is currently
+		 * being processed.
+		 */
+		msleep(1);
+	}
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		if (!is_hvsock_channel(channel))
+			continue;
+
+		vmbus_force_channel_rescinded(channel);
+	}
+	mutex_unlock(&vmbus_connection.channel_mutex);
+
+	//init_completion(&vmbus_connection.suspend_event);
+	wait_for_completion(&vmbus_connection.suspend_event);
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		/* Set the id to -1 so vmbus_chan_sched() can not find the channel by mistake*/
+		channel->offermsg.child_relid = U32_MAX;
+
+		if (is_hvsock_channel(channel)) {
+			//pr_err("hvsock channel not deleted!\n");
+			//WARN_ON_ONCE(1);
+			continue;
+		}
+
+		spin_lock_irqsave(&channel->lock, flags);
+
+		list_for_each_entry(sc, &channel->sc_list, sc_list) {
+			pr_err("subchannel not deleted!\n");
+			WARN_ON_ONCE(1);
+		}
+
+		spin_unlock_irqrestore(&channel->lock, flags);
+
+		atomic_inc(&vmbus_connection.resume_offer_in_progress);
+	}
+
+	mutex_unlock(&vmbus_connection.channel_mutex);
+
+
 	vmbus_initiate_unload(false);
 
 	vmbus_connection.conn_state = DISCONNECTED;
+
+	reinit_completion(&vmbus_connection.resume_event);
 
 	return 0;
 }
@@ -2132,6 +2209,10 @@ static int vmbus_bus_resume(struct device *dev)
 		return ret;
 
 	vmbus_request_offers();
+
+	wait_for_completion(&vmbus_connection.resume_event);
+
+	reinit_completion(&vmbus_connection.suspend_event);
 
 	return 0;
 }
