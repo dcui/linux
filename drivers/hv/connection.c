@@ -26,6 +26,8 @@
 struct vmbus_connection vmbus_connection = {
 	.conn_state		= DISCONNECTED,
 	.next_gpadl_handle	= ATOMIC_INIT(0xE1E10),
+	.suspend_event		= COMPLETION_INITIALIZER(vmbus_connection.suspend_event),
+	.resume_event		= COMPLETION_INITIALIZER(vmbus_connection.resume_event),
 };
 EXPORT_SYMBOL_GPL(vmbus_connection);
 
@@ -190,6 +192,13 @@ int vmbus_connect(void)
 		goto cleanup;
 	}
 
+	vmbus_connection.handle_rescind_chan_wq =
+		create_workqueue("hv_rescind_chan");
+	if (!vmbus_connection.handle_rescind_chan_wq) {
+		ret = -ENOMEM;
+		goto cleanup;
+	}
+
 	INIT_LIST_HEAD(&vmbus_connection.chn_msg_list);
 	spin_lock_init(&vmbus_connection.channelmsg_lock);
 
@@ -280,6 +289,9 @@ void vmbus_disconnect(void)
 	 */
 	vmbus_initiate_unload(false);
 
+	if (vmbus_connection.handle_rescind_chan_wq)
+		destroy_workqueue(vmbus_connection.handle_rescind_chan_wq);
+
 	if (vmbus_connection.handle_sub_chan_wq)
 		destroy_workqueue(vmbus_connection.handle_sub_chan_wq);
 
@@ -333,6 +345,33 @@ struct vmbus_channel *relid2channel(u32 relid)
 	}
 
 	return found_channel;
+}
+
+/*
+ * relid2channel - Get the channel object given its
+ * child relative id (ie channel id)
+ */
+struct vmbus_channel *find_primary_channel_by_offer(
+	const struct vmbus_channel_offer_channel *offer)
+{
+	struct vmbus_channel *channel;
+	const guid_t *inst1, *inst2;
+
+	BUG_ON(!mutex_is_locked(&vmbus_connection.channel_mutex));
+
+	/* XXX: add comment */
+	if (offer->offer.sub_channel_index > 0)
+		return NULL;
+
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		inst1 = &channel->offermsg.offer.if_instance;
+		inst2 = &offer->offer.if_instance;
+
+		if (guid_equal(inst1, inst2))
+			return channel;
+	}
+
+	return NULL;
 }
 
 /*

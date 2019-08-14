@@ -343,8 +343,14 @@ void hvutil_transport_destroy(struct hvutil_transport *hvt)
 	if (hvt->cn_id.idx > 0 && hvt->cn_id.val > 0)
 		cn_del_callback(&hvt->cn_id);
 
-	if (mode_old == HVUTIL_TRANSPORT_CHARDEV)
+	printk("cdx: hvutil_transport_destroy: 1: sleeping 3s\n");
+	ssleep(3);
+	printk("cdx: hvutil_transport_destroy: 2: sleeping 3s. done, mode=%d\n", mode_old);
+	if (mode_old == HVUTIL_TRANSPORT_CHARDEV) {
+		printk("cdx: hvutil_transport_destroy: 3\n");
 		wait_for_completion(&hvt->release);
+		printk("cdx: hvutil_transport_destroy: 4\n");
+	}
 
 	hvt_transport_free(hvt);
 }
