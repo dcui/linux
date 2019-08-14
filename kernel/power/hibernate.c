@@ -556,7 +556,9 @@ int hibernation_platform_enter(void)
 
 	entering_platform_hibernation = true;
 	suspend_console();
+	printk("cdx: hibernation_platform_enter: 1: \n");
 	error = dpm_suspend_start(PMSG_HIBERNATE);
+	printk("cdx: hibernation_platform_enter: 2: err=%d\n", error);
 	if (error) {
 		if (hibernation_ops->recover)
 			hibernation_ops->recover();

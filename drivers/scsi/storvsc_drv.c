@@ -629,12 +629,14 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
 	struct vmstorage_channel_properties props;
 	int ret;
 
+	printk("cdx: handle_sc_creation: 1\n");
 	stor_device = get_out_stor_device(device);
 	if (!stor_device)
 		return;
 
 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
 
+	printk("cdx: handle_sc_creation: 2\n");
 	ret = vmbus_open(new_sc,
 			 storvsc_ringbuffer_size,
 			 storvsc_ringbuffer_size,
@@ -642,6 +644,7 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
 			 sizeof(struct vmstorage_channel_properties),
 			 storvsc_on_channel_callback, new_sc);
 
+	printk("cdx: handle_sc_creation: 3, ret=%d\n", ret);
 	/* In case vmbus_open() fails, we don't use the sub-channel. */
 	if (ret != 0) {
 		dev_err(dev, "Failed to open sub-channel: err=%d\n", ret);
@@ -651,6 +654,7 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
 	/* Add the sub-channel to the array of available channels. */
 	stor_device->stor_chns[new_sc->target_cpu] = new_sc;
 	cpumask_set_cpu(new_sc->target_cpu, &stor_device->alloced_cpus);
+	printk("cdx: handle_sc_creation: 4, ret=%d\n", ret);
 }
 
 static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
@@ -1949,11 +1953,14 @@ static int storvsc_suspend(struct hv_device *hv_dev)
 	struct Scsi_Host *host = stor_device->host;
 	struct hv_host_device *host_dev = shost_priv(host);
 
+	printk("cdx: storvsc_suspend: 1\n ");
 	storvsc_wait_to_drain(stor_device);
 
 	drain_workqueue(host_dev->handle_error_wq);
 
+	printk("cdx: storvsc_suspend: 2\n ");
 	vmbus_close(hv_dev->channel);
+	printk("cdx: storvsc_suspend: 3\n ");
 
 	memset(stor_device->stor_chns, 0,
 	       num_possible_cpus() * sizeof(void *));
@@ -1962,6 +1969,7 @@ static int storvsc_suspend(struct hv_device *hv_dev)
 	stor_device->stor_chns = NULL;
 
 	cpumask_clear(&stor_device->alloced_cpus);
+	printk("cdx: storvsc_suspend: 4\n ");
 
 	return 0;
 }
@@ -1970,8 +1978,10 @@ static int storvsc_resume(struct hv_device *hv_dev)
 {
 	int ret;
 
+	printk("cdx: storvsc_resume: 1\n ");
 	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
 				     hv_dev_is_fc(hv_dev));
+	printk("cdx: storvsc_resume: 2\n ");
 	return ret;
 }
 
