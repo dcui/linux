@@ -1067,6 +1067,30 @@ msg_handled:
 	vmbus_signal_eom(msg, message_type);
 }
 
+static void vmbus_force_channel_rescinded(struct vmbus_channel *channel)
+{
+	struct onmessage_work_context *ctx;
+	struct vmbus_channel_rescind_offer *rescind;
+
+	WARN_ON(!is_hvsock_channel(channel));
+
+	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL | __GFP_NOFAIL);
+
+	ctx->msg.header.message_type = 1;
+	ctx->msg.header.payload_size = sizeof(*rescind);
+
+	rescind = (struct vmbus_channel_rescind_offer *)ctx->msg.u.payload;
+	rescind->header.msgtype = CHANNELMSG_RESCIND_CHANNELOFFER;
+	rescind->child_relid = channel->offermsg.child_relid;
+
+	INIT_WORK(&ctx->work, vmbus_onmessage_work);
+
+	printk("cdx: vmbus_force_channel_rescinded: relid=%d\n", rescind->child_relid);
+	queue_work_on(vmbus_connection.connect_cpu,
+		      vmbus_connection.handle_rescind_chan_wq,
+		      &ctx->work);
+	printk("cdx: vmbus_force_channel_rescinded: relid=%d, queued!\n", rescind->child_relid);
+}
 
 /*
  * Direct callback for channels using other deferred processing
@@ -2103,6 +2127,15 @@ static int vmbus_bus_suspend(struct device *dev)
 		 */
 		msleep(1);
 	}
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		if (!is_hvsock_channel(channel))
+			continue;
+
+		vmbus_force_channel_rescinded(channel);
+	}
+	mutex_unlock(&vmbus_connection.channel_mutex);
 
 	//init_completion(&vmbus_connection.suspend_event);
 	printk("cdx: vmbus_bus_suspend: waiting!!!\n");
