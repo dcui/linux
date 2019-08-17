@@ -1045,13 +1045,18 @@ void vmbus_on_msg_dpc(unsigned long data)
 		 */
 		switch (hdr->msgtype) {
 		case CHANNELMSG_RESCIND_CHANNELOFFER:
-			queue_work_on(vmbus_connection.connect_cpu,
-				      vmbus_connection.handle_rescind_chan_wq,
-				      &ctx->work);
+			/*
+			 * If we are handling the rescind message;
+			 * schedule the work on the global work queue.
+			 */
+			printk("cdx: vmbus_on_msg_dpc: offer_ip=%d, -----------\n", atomic_read(&vmbus_connection.offer_in_progress));
+			schedule_work_on(vmbus_connection.connect_cpu,
+					 &ctx->work);
 			break;
 
 		case CHANNELMSG_OFFERCHANNEL:
 			atomic_inc(&vmbus_connection.offer_in_progress);
+			printk("cdx: vmbus_on_msg_dpc: offer_ip=%d, +++++++++++\n", atomic_read(&vmbus_connection.offer_in_progress));
 			queue_work_on(vmbus_connection.connect_cpu,
 				      vmbus_connection.work_queue,
 				      &ctx->work);
@@ -1087,7 +1092,7 @@ static void vmbus_force_channel_rescinded(struct vmbus_channel *channel)
 
 	printk("cdx: vmbus_force_channel_rescinded: relid=%d\n", rescind->child_relid);
 	queue_work_on(vmbus_connection.connect_cpu,
-		      vmbus_connection.handle_rescind_chan_wq,
+		      vmbus_connection.work_queue,
 		      &ctx->work);
 	printk("cdx: vmbus_force_channel_rescinded: relid=%d, queued!\n", rescind->child_relid);
 }
@@ -2120,6 +2125,7 @@ static int vmbus_bus_suspend(struct device *dev)
 
 	WARN_ON(atomic_read(&vmbus_connection.resume_offer_in_progress) != 0);
 
+	printk("cdx: vmbus_bus_suspend: 1: offer_in_progress=%d\n", atomic_read(&vmbus_connection.offer_in_progress));
 	while (atomic_read(&vmbus_connection.offer_in_progress) != 0) {
 		/*
 		 * We wait here until any channel offer is currently
@@ -2128,6 +2134,7 @@ static int vmbus_bus_suspend(struct device *dev)
 		msleep(1);
 	}
 
+	printk("cdx: vmbus_bus_suspend: 2: offer_in_progress=%d\n", atomic_read(&vmbus_connection.offer_in_progress));
 	mutex_lock(&vmbus_connection.channel_mutex);
 	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
 		if (!is_hvsock_channel(channel))
@@ -2137,6 +2144,7 @@ static int vmbus_bus_suspend(struct device *dev)
 	}
 	mutex_unlock(&vmbus_connection.channel_mutex);
 
+	printk("cdx: vmbus_bus_suspend: 3: offer_in_progress=%d\n", atomic_read(&vmbus_connection.offer_in_progress));
 	//init_completion(&vmbus_connection.suspend_event);
 	printk("cdx: vmbus_bus_suspend: waiting!!!\n");
 	wait_for_completion(&vmbus_connection.suspend_event);
@@ -2154,11 +2162,13 @@ static int vmbus_bus_suspend(struct device *dev)
 		/* cdx: nianke */
 		channel->offermsg.child_relid = U32_MAX;
 
+#if 1
 		if (is_hvsock_channel(channel)) {
-			pr_err("hvsock channel not deleted!\n");
-			WARN_ON_ONCE(1);
+			//pr_err("hvsock channel not deleted!\n");
+			//WARN_ON_ONCE(1);
 			continue;
 		}
+#endif
 
 		spin_lock_irqsave(&channel->lock, flags);
 

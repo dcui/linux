@@ -368,12 +368,14 @@ static void vmbus_release_relid(u32 relid)
 	ret = vmbus_post_msg(&msg, sizeof(struct vmbus_channel_relid_released),
 			     true);
 
+	printk("cdx: vmbus_release_relid: offer_ip=%d, released relid=%d\n", atomic_read(&vmbus_connection.offer_in_progress), relid);
 	trace_vmbus_release_relid(&msg, ret);
 }
 
 void hv_process_channel_removal(struct vmbus_channel *channel)
 {
 	struct vmbus_channel *primary_channel;
+	//bool complete_suspend_event;
 	unsigned long flags;
 
 	BUG_ON(!mutex_is_locked(&vmbus_connection.channel_mutex));
@@ -407,7 +409,20 @@ void hv_process_channel_removal(struct vmbus_channel *channel)
 		cpumask_clear_cpu(channel->target_cpu,
 				  &primary_channel->alloced_cpus_in_node);
 
-	vmbus_release_relid(channel->offermsg.child_relid);
+	if (channel->offermsg.child_relid != U32_MAX)
+		vmbus_release_relid(channel->offermsg.child_relid);
+
+#if 0
+	//nianke
+	complete_suspend_event = is_hvsock_channel(channel) || channel->offermsg.offer.sub_channel_index > 0;
+	if (complete_suspend_event) {
+		printk("cdx: hv_process_channel_removal: suspend_offer_in_progress=%d, inst=%pUl\n", atomic_read(&vmbus_connection.suspend_offer_in_progress), &channel->offermsg.offer.if_instance);
+		if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress)) {
+			printk("cdx: hv_process_channel_removal: completing!!!\n");
+			complete(&vmbus_connection.suspend_event);
+		}
+	}
+#endif
 
 	free_channel(channel);
 }
@@ -991,7 +1006,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	 * point where the channel is discoverable.
 	 */
 
-	printk("cdx: vmbus_onoffer_rescind: 1: relid=%d\n", rescind->child_relid);
+	printk("cdx: vmbus_onoffer_rescind: 1: relid=%d, offer_ip=%d\n", rescind->child_relid, atomic_read(&vmbus_connection.offer_in_progress));
 	while (atomic_read(&vmbus_connection.offer_in_progress) != 0) {
 		/*
 		 * We wait here until any channel offer is currently
@@ -999,7 +1014,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 		 */
 		msleep(1);
 	}
-	printk("cdx: vmbus_onoffer_rescind: 2: relid=%d\n", rescind->child_relid);
+	printk("cdx: vmbus_onoffer_rescind: 2: relid=%d, offer_ip=%d\n", rescind->child_relid, atomic_read(&vmbus_connection.offer_in_progress));
 
 	mutex_lock(&vmbus_connection.channel_mutex);
 	channel = relid2channel(rescind->child_relid);
@@ -1045,7 +1060,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 			printk("cdx: vmbus_onoffer_rescind: 6.0: relid=%d\n", rescind->child_relid);
 			channel->chn_rescind_callback(channel);
 			if (complete_suspend_event) {
-				WARN_ON(1);
+				//WARN_ON(1);
 				if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress))
 					complete(&vmbus_connection.suspend_event);
 			}
@@ -1110,7 +1125,7 @@ void vmbus_hvsock_device_unregister(struct vmbus_channel *channel)
 
 	printk("cdx: vmbus_hvsock_device_unregister: 2: relid=%d\n", child_relid);
 	vmbus_device_unregister(channel->device_obj);
-	printk("cdx: vmbus_hvsock_device_unregister: 1: relid=%d\n", child_relid);
+	printk("cdx: vmbus_hvsock_device_unregister: 3: relid=%d\n", child_relid);
 }
 EXPORT_SYMBOL_GPL(vmbus_hvsock_device_unregister);
 

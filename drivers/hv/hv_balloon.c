@@ -12,7 +12,6 @@
 #include <linux/jiffies.h>
 #include <linux/mman.h>
 #include <linux/delay.h>
-#include <linux/freezer.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -506,9 +505,7 @@ struct hv_dynmem_device {
 	struct hv_device *dev;
 	enum hv_dm_state state;
 	struct completion host_event;
-
-	unsigned long post_status_requested;
-	wait_queue_head_t config_event_wq;
+	struct completion config_event;
 
 	/*
 	 * Number of pages we have currently ballooned out.
@@ -1372,9 +1369,7 @@ static void balloon_down(struct hv_dynmem_device *dm,
 
 	for (i = 0; i < range_count; i++) {
 		free_balloon_pages(dm, &range_array[i]);
-		set_bit(0, &dm_device.post_status_requested);
-		if (waitqueue_active(&dm_device.config_event_wq))
-			wake_up(&dm_device.config_event_wq);
+		complete(&dm_device.config_event);
 	}
 
 	pr_debug("Freed %u ballooned pages.\n",
@@ -1402,17 +1397,14 @@ static int dm_thread_func(void *dm_dev)
 {
 	struct hv_dynmem_device *dm = dm_dev;
 
-	set_freezable();
 	while (!kthread_should_stop()) {
-		wait_event_freezable_timeout(dm_device.config_event_wq,
-					     dm_device.post_status_requested,
-					     HZ);
+		wait_for_completion_interruptible_timeout(
+						&dm_device.config_event, 1*HZ);
 		/*
 		 * The host expects us to post information on the memory
 		 * pressure every second.
 		 */
-		clear_bit(0, &dm_device.post_status_requested);
-
+		reinit_completion(&dm_device.config_event);
 		post_status(dm);
 	}
 
@@ -1589,7 +1581,7 @@ static void balloon_onchannelcallback(void *context)
 
 }
 
-static int balloon_connect_vsp(struct hv_device *dev)
+static int balloon_connect_vsp(struct hv_device *dev, bool hb)
 {
 	struct dm_version_request version_req;
 	struct dm_capabilities cap_msg;
@@ -1620,6 +1612,12 @@ static int balloon_connect_vsp(struct hv_device *dev)
 			       (unsigned long)NULL, VM_PKT_DATA_INBAND, 0);
 	if (ret)
 		goto out;
+
+	if (hb) {
+	ret = -ETIMEDOUT;
+	goto out;
+	}
+	//return ret;
 
 	t = wait_for_completion_timeout(&dm_device.host_event, 5*HZ);
 	if (t == 0) {
@@ -1715,7 +1713,7 @@ static int balloon_probe(struct hv_device *dev,
 	dm_device.state = DM_INITIALIZING;
 	dm_device.next_version = DYNMEM_PROTOCOL_VERSION_WIN8;
 	init_completion(&dm_device.host_event);
-	init_waitqueue_head(&dm_device.config_event_wq);
+	init_completion(&dm_device.config_event);
 	INIT_LIST_HEAD(&dm_device.ha_region_list);
 	spin_lock_init(&dm_device.ha_lock);
 	INIT_WORK(&dm_device.balloon_wrk.wrk, balloon_up);
@@ -1729,7 +1727,7 @@ static int balloon_probe(struct hv_device *dev,
 
 	hv_set_drvdata(dev, &dm_device);
 
-	ret = balloon_connect_vsp(dev);
+	ret = balloon_connect_vsp(dev, 0);
 	if (ret != 0)
 		return ret;
 
@@ -1745,6 +1743,8 @@ static int balloon_probe(struct hv_device *dev,
 	return 0;
 
 probe_error:
+	dm_device.state = DM_INIT_ERROR;
+	dm_device.thread  = NULL;
 	vmbus_close(dev->channel);
 #ifdef CONFIG_MEMORY_HOTPLUG
 	unregister_memory_notifier(&hv_memory_nb);
@@ -1790,14 +1790,29 @@ static int balloon_suspend(struct hv_device *hv_dev)
 {
 	struct hv_dynmem_device *dm = hv_get_drvdata(hv_dev);
 
+	printk("cdx: balloon_suspend: 1\n");
 	tasklet_disable(&hv_dev->channel->callback_event);
+	printk("cdx: balloon_suspend: 2\n");
 
 	cancel_work_sync(&dm->balloon_wrk.wrk);
+	printk("cdx: balloon_suspend: 3\n");
 	cancel_work_sync(&dm->ha_wrk.wrk);
+	printk("cdx: balloon_suspend: 4, thread=%px\n", dm->thread);
 
-	vmbus_close(hv_dev->channel);
+	if (dm->thread) {
+		printk("cdx: balloon_suspend: 5\n");
+		kthread_stop(dm->thread);
+		dm->thread = NULL;
+		printk("cdx: balloon_suspend: 6\n");
+		vmbus_close(hv_dev->channel);
+		printk("cdx: balloon_suspend: 7\n");
+	}
+	else
+		WARN_ON(1);
 
+	printk("cdx: balloon_suspend: 8\n");
 	tasklet_enable(&hv_dev->channel->callback_event);
+	printk("cdx: balloon_suspend: 9\n");
 
 	return 0;
 
@@ -1805,7 +1820,35 @@ static int balloon_suspend(struct hv_device *hv_dev)
 
 static int balloon_resume(struct hv_device *dev)
 {
-	return balloon_connect_vsp(dev);
+	int ret;
+
+	dm_device.state = DM_INITIALIZING;
+
+	ret = balloon_connect_vsp(dev, 1);
+
+	if (ret != 0)
+		goto out;
+
+	dm_device.state = DM_INITIALIZED;
+
+	dm_device.thread =
+		 kthread_run(dm_thread_func, &dm_device, "hv_balloon");
+	if (IS_ERR(dm_device.thread)) {
+		ret = PTR_ERR(dm_device.thread);
+		dm_device.thread = NULL;
+		goto close_channel;
+	}
+
+	return 0;
+close_channel:
+	vmbus_close(dev->channel);
+out:
+	dm_device.state = DM_INIT_ERROR;
+#ifdef CONFIG_MEMORY_HOTPLUG
+	unregister_memory_notifier(&hv_memory_nb);
+	restore_online_page_callback(&hv_online_page);
+#endif
+	return ret;
 }
 
 static const struct hv_vmbus_device_id id_table[] = {

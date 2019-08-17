@@ -258,7 +258,6 @@ struct vmbus_connection {
 	struct workqueue_struct *work_queue;
 	struct workqueue_struct *handle_primary_chan_wq;
 	struct workqueue_struct *handle_sub_chan_wq;
-	struct workqueue_struct *handle_rescind_chan_wq;
 
 	atomic_t suspend_offer_in_progress;
 	atomic_t resume_offer_in_progress;

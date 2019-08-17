@@ -542,7 +542,7 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
 	struct vmbus_channel_gpadl_teardown *msg;
 	struct vmbus_channel_msginfo *info;
 	unsigned long flags;
-	int ret;
+	int ret = 0;
 
 	info = kmalloc(sizeof(*info) +
 		       sizeof(struct vmbus_channel_gpadl_teardown), GFP_KERNEL);
@@ -563,11 +563,13 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
 		      &vmbus_connection.chn_msg_list);
 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
 
+	printk("cdx: vmbus_teardown_gpadl: 1: yicheng601:, relid=0x%x, ret=%d\n", msg->child_relid, ret);
 	if (channel->rescind)
 		goto post_msg_err;
 
 	ret = vmbus_post_msg(msg, sizeof(struct vmbus_channel_gpadl_teardown),
 			     true);
+	printk("cdx: vmbus_teardown_gpadl: 2: yicheng601:, relid=0x%x, ret=%d\n", msg->child_relid, ret);
 
 	trace_vmbus_teardown_gpadl(msg, ret);
 
@@ -658,6 +660,7 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
 			     true);
 
 	trace_vmbus_close_internal(msg, ret);
+	printk("cdx: vmbus_close_internal: yicheng601:, relid=0x%x, ret=%d\n", msg->child_relid, ret);
 
 	if (ret) {
 		pr_err("Close failed: close post msg return is %d\n", ret);

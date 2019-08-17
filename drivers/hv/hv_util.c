@@ -13,6 +13,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/sysctl.h>
+//#include <linux/delay.h>
 #include <linux/reboot.h>
 #include <linux/hyperv.h>
 #include <linux/clockchips.h>
@@ -511,9 +512,12 @@ static int util_remove(struct hv_device *dev)
 
 	if (srv->util_deinit)
 		srv->util_deinit();
+	printk("cdx: util_remove: 1: relid=%d, !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", dev->channel->offermsg.child_relid);
 	vmbus_close(dev->channel);
+	printk("cdx: util_remove: 2: relid=%d, !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", dev->channel->offermsg.child_relid);
 	kfree(srv->recv_buffer);
 
+	//WARN_ON_ONCE(1);
 	return 0;
 }
 
@@ -524,7 +528,10 @@ static int util_suspend(struct hv_device *dev)
 	if (srv->util_cancel_work)
 		srv->util_cancel_work();
 
+	printk("cdx: util_suspend: 1: relid=%d, 11111111111111111111111111111111\n", dev->channel->offermsg.child_relid);
 	vmbus_close(dev->channel);
+	//ssleep(3);
+	printk("cdx: util_suspend: 2: relid=%d, 22222222222222222222222222222222\n", dev->channel->offermsg.child_relid);
 
 	return 0;
 }

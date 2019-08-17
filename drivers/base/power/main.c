@@ -1374,18 +1374,22 @@ int dpm_noirq_suspend_devices(pm_message_t state)
 	ktime_t starttime = ktime_get();
 	int error = 0;
 
+	printk("cdx: dpm_noirq_suspend_devices: 1: event=%d, err=%d\n", state.event, error);
 	trace_suspend_resume(TPS("dpm_suspend_noirq"), state.event, true);
 	mutex_lock(&dpm_list_mtx);
 	pm_transition = state;
 	async_error = 0;
 
+	printk("cdx: dpm_noirq_suspend_devices: 2: event=%d, err=%d\n", state.event, error);
 	while (!list_empty(&dpm_late_early_list)) {
 		struct device *dev = to_device(dpm_late_early_list.prev);
 
 		get_device(dev);
 		mutex_unlock(&dpm_list_mtx);
 
+		printk("cdx: dpm_noirq_suspend_devices: 3.1: event=%d, err=%d, dev=%s\n", state.event, error, dev_name(dev));
 		error = device_suspend_noirq(dev);
+		printk("cdx: dpm_noirq_suspend_devices: 3.2: event=%d, err=%d, dev=%s\n", state.event, error, dev_name(dev));
 
 		mutex_lock(&dpm_list_mtx);
 		if (error) {
@@ -1401,17 +1405,24 @@ int dpm_noirq_suspend_devices(pm_message_t state)
 		if (async_error)
 			break;
 	}
+	printk("cdx: dpm_noirq_suspend_devices: 4: event=%d, err=%d\n", state.event, error);
 	mutex_unlock(&dpm_list_mtx);
+	printk("cdx: dpm_noirq_suspend_devices: 5: event=%d, err=%d\n", state.event, error);
 	async_synchronize_full();
+	printk("cdx: dpm_noirq_suspend_devices: 6: event=%d, err=%d\n", state.event, error);
 	if (!error)
 		error = async_error;
 
+	printk("cdx: dpm_noirq_suspend_devices: 7: event=%d, err=%d\n", state.event, error);
 	if (error) {
 		suspend_stats.failed_suspend_noirq++;
 		dpm_save_failed_step(SUSPEND_SUSPEND_NOIRQ);
 	}
+	printk("cdx: dpm_noirq_suspend_devices: 8: event=%d, err=%d\n", state.event, error);
 	dpm_show_time(starttime, state, error, "noirq");
+	printk("cdx: dpm_noirq_suspend_devices: 9: event=%d, err=%d\n", state.event, error);
 	trace_suspend_resume(TPS("dpm_suspend_noirq"), state.event, false);
+	printk("cdx: dpm_noirq_suspend_devices: 10: event=%d, err=%d\n", state.event, error);
 	return error;
 }
 
@@ -1426,8 +1437,11 @@ int dpm_suspend_noirq(pm_message_t state)
 {
 	int ret;
 
+	printk("cdx: dpm_suspend_noirq: 1: event=%d, err=%d\n", state.event, 0);
 	dpm_noirq_begin();
+	printk("cdx: dpm_suspend_noirq: 2: event=%d, err=%d\n", state.event, 0);
 	ret = dpm_noirq_suspend_devices(state);
+	printk("cdx: dpm_suspend_noirq: 3: event=%d, err=%d\n", state.event, ret);
 	if (ret)
 		dpm_resume_noirq(resume_event(state));
 
@@ -1619,18 +1633,23 @@ int dpm_suspend_late(pm_message_t state)
 int dpm_suspend_end(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
-	int error;
+	int error = 0;
 
+	printk("cdx: dpm_suspend_end: 1: event=%d, err=%d\n", state.event, error);
 	error = dpm_suspend_late(state);
+	printk("cdx: dpm_suspend_end: 2: event=%d, err=%d\n", state.event, error);
 	if (error)
 		goto out;
 
 	error = dpm_suspend_noirq(state);
+	printk("cdx: dpm_suspend_end: 3: event=%d, err=%d\n", state.event, error);
 	if (error)
 		dpm_resume_early(resume_event(state));
 
 out:
+	printk("cdx: dpm_suspend_end: 4: event=%d, err=%d\n", state.event, error);
 	dpm_show_time(starttime, state, error, "end");
+	printk("cdx: dpm_suspend_end: 5: event=%d, err=%d\n", state.event, error);
 	return error;
 }
 EXPORT_SYMBOL_GPL(dpm_suspend_end);
@@ -1973,7 +1992,9 @@ int dpm_prepare(pm_message_t state)
 	 * disable probing of devices. This sync point is important at least
 	 * at boot time + hibernation restore.
 	 */
+	printk("cdx: dpm_prepare:1: state=%d\n", state.event);
 	wait_for_device_probe();
+	printk("cdx: dpm_prepare:2: state=%d\n", state.event);
 	/*
 	 * It is unsafe if probing of devices will happen during suspend or
 	 * hibernation and system behavior will be unpredictable in this case.
@@ -1981,6 +2002,7 @@ int dpm_prepare(pm_message_t state)
 	 * instead. The normal behavior will be restored in dpm_complete().
 	 */
 	device_block_probing();
+	printk("cdx: dpm_prepare:3: state=%d\n", state.event);
 
 	mutex_lock(&dpm_list_mtx);
 	while (!list_empty(&dpm_list)) {
@@ -2025,14 +2047,19 @@ int dpm_prepare(pm_message_t state)
 int dpm_suspend_start(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
-	int error;
+	int error = 0;
 
+	printk("cdx: dpm_suspend_start: 1: state=%d, error=%d\n", state.event, error);
 	error = dpm_prepare(state);
+	printk("cdx: dpm_suspend_start: 2: state=%d, error=%d\n", state.event, error);
 	if (error) {
 		suspend_stats.failed_prepare++;
 		dpm_save_failed_step(SUSPEND_PREPARE);
-	} else
+	} else {
+		printk("cdx: dpm_suspend_start: 3: state=%d, error=%d\n", state.event, error);
 		error = dpm_suspend(state);
+		printk("cdx: dpm_suspend_start: 4: state=%d, error=%d\n", state.event, error);
+	}
 	dpm_show_time(starttime, state, error, "start");
 	return error;
 }
