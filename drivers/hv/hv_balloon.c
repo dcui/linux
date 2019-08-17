@@ -1581,7 +1581,7 @@ static void balloon_onchannelcallback(void *context)
 
 }
 
-static int balloon_connect_vsp(struct hv_device *dev, bool hb)
+static int balloon_connect_vsp(struct hv_device *dev)
 {
 	struct dm_version_request version_req;
 	struct dm_capabilities cap_msg;
@@ -1612,12 +1612,6 @@ static int balloon_connect_vsp(struct hv_device *dev, bool hb)
 			       (unsigned long)NULL, VM_PKT_DATA_INBAND, 0);
 	if (ret)
 		goto out;
-
-	if (hb) {
-	ret = -ETIMEDOUT;
-	goto out;
-	}
-	//return ret;
 
 	t = wait_for_completion_timeout(&dm_device.host_event, 5*HZ);
 	if (t == 0) {
@@ -1727,7 +1721,7 @@ static int balloon_probe(struct hv_device *dev,
 
 	hv_set_drvdata(dev, &dm_device);
 
-	ret = balloon_connect_vsp(dev, 0);
+	ret = balloon_connect_vsp(dev);
 	if (ret != 0)
 		return ret;
 
@@ -1807,8 +1801,6 @@ static int balloon_suspend(struct hv_device *hv_dev)
 		vmbus_close(hv_dev->channel);
 		printk("cdx: balloon_suspend: 7\n");
 	}
-	else
-		WARN_ON(1);
 
 	printk("cdx: balloon_suspend: 8\n");
 	tasklet_enable(&hv_dev->channel->callback_event);
@@ -1824,12 +1816,10 @@ static int balloon_resume(struct hv_device *dev)
 
 	dm_device.state = DM_INITIALIZING;
 
-	ret = balloon_connect_vsp(dev, 1);
+	ret = balloon_connect_vsp(dev);
 
 	if (ret != 0)
 		goto out;
-
-	dm_device.state = DM_INITIALIZED;
 
 	dm_device.thread =
 		 kthread_run(dm_thread_func, &dm_device, "hv_balloon");
@@ -1839,6 +1829,7 @@ static int balloon_resume(struct hv_device *dev)
 		goto close_channel;
 	}
 
+	dm_device.state = DM_INITIALIZED;
 	return 0;
 close_channel:
 	vmbus_close(dev->channel);
