@@ -530,6 +530,9 @@ err_deq_chan:
 	vmbus_release_relid(newchannel->offermsg.child_relid);
 
 	free_channel(newchannel);
+
+	// if hv-such or sub-channel: complete???
+	//atomic_dec(&vmbus_connection.suspend_offer_in_progress); //FIXME
 }
 
 /*
@@ -544,6 +547,10 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 	bool fnew = true;
 
 	mutex_lock(&vmbus_connection.channel_mutex);
+
+	if (is_hvsock_channel(newchannel) || newchannel->offermsg.offer.sub_channel_index > 0) {
+		atomic_inc(&vmbus_connection.suspend_offer_in_progress);
+	}
 
 	/*
 	 * Now that we have acquired the channel_mutex,
@@ -575,6 +582,8 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 			 * is not initialized yet.
 			 */
 			kfree(newchannel);
+			// if hv-such or sub-channel: complete???
+			//atomic_dec(&vmbus_connection.suspend_offer_in_progress); //FIXME
 			WARN_ON_ONCE(1);
 			return;
 		}
@@ -925,6 +934,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	struct vmbus_channel_rescind_offer *rescind;
 	struct vmbus_channel *channel;
 	struct device *dev;
+	bool complete_suspend_event;
 
 	rescind = (struct vmbus_channel_rescind_offer *)hdr;
 
@@ -964,6 +974,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 		return;
 	}
 
+	complete_suspend_event = is_hvsock_channel(channel) || channel->offermsg.offer.sub_channel_index > 0;
 	/*
 	 * Before setting channel->rescind in vmbus_rescind_cleanup(), we
 	 * should make sure the channel callback is not running any more.
@@ -989,6 +1000,11 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	if (channel->device_obj) {
 		if (channel->chn_rescind_callback) {
 			channel->chn_rescind_callback(channel);
+			if (complete_suspend_event) {
+				//WARN_ON(1);
+				if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress))
+					complete(&vmbus_connection.suspend_event);
+			}
 			return;
 		}
 		/*
@@ -1020,6 +1036,12 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 			complete(&channel->rescind_event);
 		}
 		mutex_unlock(&vmbus_connection.channel_mutex);
+	}
+
+	if (complete_suspend_event) {
+		if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress)) {
+			complete(&vmbus_connection.suspend_event);
+		}
 	}
 }
 

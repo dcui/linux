@@ -2116,7 +2116,8 @@ acpi_walk_err:
 
 static int vmbus_bus_suspend(struct device *dev)
 {
-	struct vmbus_channel *channel;
+	struct vmbus_channel *channel, *sc;
+	unsigned long flags;
 
 	while (atomic_read(&vmbus_connection.offer_in_progress) != 0) {
 		/*
@@ -2133,6 +2134,30 @@ static int vmbus_bus_suspend(struct device *dev)
 
 		vmbus_force_channel_rescinded(channel);
 	}
+	mutex_unlock(&vmbus_connection.channel_mutex);
+
+	 //init_completion(&vmbus_connection.suspend_event);
+	wait_for_completion(&vmbus_connection.suspend_event);
+
+	mutex_lock(&vmbus_connection.channel_mutex);
+
+	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		if (is_hvsock_channel(channel)) {
+			//pr_err("hvsock channel not deleted!\n");
+			//WARN_ON_ONCE(1);
+			continue;
+		}
+
+		spin_lock_irqsave(&channel->lock, flags);
+
+		list_for_each_entry(sc, &channel->sc_list, sc_list) {
+			pr_err("subchannel not deleted!\n");
+			WARN_ON_ONCE(1);
+		}
+
+		spin_unlock_irqrestore(&channel->lock, flags);
+	}
+
 	mutex_unlock(&vmbus_connection.channel_mutex);
 
 	vmbus_initiate_unload(false);
@@ -2174,6 +2199,8 @@ static int vmbus_bus_resume(struct device *dev)
 		return ret;
 
 	vmbus_request_offers();
+
+	reinit_completion(&vmbus_connection.suspend_event);
 
 	return 0;
 }
