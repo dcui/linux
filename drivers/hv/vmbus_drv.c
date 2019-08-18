@@ -2119,6 +2119,8 @@ static int vmbus_bus_suspend(struct device *dev)
 	struct vmbus_channel *channel, *sc;
 	unsigned long flags;
 
+	WARN_ON(atomic_read(&vmbus_connection.resume_offer_in_progress) != 0);
+
 	while (atomic_read(&vmbus_connection.offer_in_progress) != 0) {
 		/*
 		 * We wait here until any channel offer is currently
@@ -2142,6 +2144,9 @@ static int vmbus_bus_suspend(struct device *dev)
 	mutex_lock(&vmbus_connection.channel_mutex);
 
 	list_for_each_entry(channel, &vmbus_connection.chn_list, listentry) {
+		/* Set the id to -1 so vmbus_chan_sched() can not find the channel by mistake*/
+		channel->offermsg.child_relid = U32_MAX;
+
 		if (is_hvsock_channel(channel)) {
 			//pr_err("hvsock channel not deleted!\n");
 			//WARN_ON_ONCE(1);
@@ -2156,6 +2161,8 @@ static int vmbus_bus_suspend(struct device *dev)
 		}
 
 		spin_unlock_irqrestore(&channel->lock, flags);
+
+		atomic_inc(&vmbus_connection.resume_offer_in_progress);
 	}
 
 	mutex_unlock(&vmbus_connection.channel_mutex);
@@ -2163,6 +2170,8 @@ static int vmbus_bus_suspend(struct device *dev)
 	vmbus_initiate_unload(false);
 
 	vmbus_connection.conn_state = DISCONNECTED;
+
+	reinit_completion(&vmbus_connection.resume_event);
 
 	return 0;
 }
@@ -2199,6 +2208,8 @@ static int vmbus_bus_resume(struct device *dev)
 		return ret;
 
 	vmbus_request_offers();
+
+	wait_for_completion(&vmbus_connection.resume_event);
 
 	reinit_completion(&vmbus_connection.suspend_event);
 

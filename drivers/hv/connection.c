@@ -27,6 +27,7 @@ struct vmbus_connection vmbus_connection = {
 	.conn_state		= DISCONNECTED,
 	.next_gpadl_handle	= ATOMIC_INIT(0xE1E10),
 	.suspend_event		= COMPLETION_INITIALIZER(vmbus_connection.suspend_event),
+	.resume_event		= COMPLETION_INITIALIZER(vmbus_connection.resume_event),
 };
 EXPORT_SYMBOL_GPL(vmbus_connection);
 
