@@ -407,7 +407,8 @@ void hv_process_channel_removal(struct vmbus_channel *channel)
 		cpumask_clear_cpu(channel->target_cpu,
 				  &primary_channel->alloced_cpus_in_node);
 
-	vmbus_release_relid(channel->offermsg.child_relid);
+	if (channel->offermsg.child_relid != U32_MAX)
+		vmbus_release_relid(channel->offermsg.child_relid);
 
 	free_channel(channel);
 }
@@ -881,9 +882,15 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 		 * We're resuming from hibernation: we expect the host to send
 		 * exactly the same offers that we had before the hibernation.
 		 */
+		WARN_ON(oldchannel->offermsg.child_relid != U32_MAX);
+		oldchannel->offermsg.child_relid = offer->child_relid;
+
 		offer_sz = sizeof(*offer);
-		if (memcmp(offer, &oldchannel->offermsg, offer_sz) == 0)
+		if (memcmp(offer, &oldchannel->offermsg, offer_sz) == 0) {
+			if (atomic_dec_and_test(&vmbus_connection.resume_offer_in_progress))
+				complete(&vmbus_connection.resume_event);
 			return;
+		}
 
 		pr_err("Mismatched offer from the host (relid=%d)!!!8/9 22:57\n",
 		       offer->child_relid);
@@ -893,6 +900,25 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 				     false);
 		print_hex_dump(KERN_ERR,"New offer: ", DUMP_PREFIX_OFFSET,
 				     16, 4, offer, offer_sz, false);
+		/*
+		 * Setup state for signalling the host.
+		 */
+		oldchannel->sig_event = VMBUS_EVENT_CONNECTION_ID;
+
+		if (vmbus_proto_version != VERSION_WS2008) {
+			oldchannel->is_dedicated_interrupt =
+					(offer->is_dedicated_interrupt != 0);
+			oldchannel->sig_event = offer->connection_id;
+		}
+
+		memcpy(&oldchannel->offermsg, offer,
+		       sizeof(struct vmbus_channel_offer_channel));
+		oldchannel->monitor_grp = (u8)offer->monitorid / 32;
+		oldchannel->monitor_bit = (u8)offer->monitorid % 32;
+
+		if (atomic_dec_and_test(&vmbus_connection.resume_offer_in_progress))
+			complete(&vmbus_connection.resume_event);
+
 		return;
 	}
 
@@ -1037,6 +1063,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 		}
 		mutex_unlock(&vmbus_connection.channel_mutex);
 	}
+
 
 	if (complete_suspend_event) {
 		if (atomic_dec_and_test(&vmbus_connection.suspend_offer_in_progress)) {

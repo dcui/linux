@@ -260,7 +260,9 @@ struct vmbus_connection {
 	struct workqueue_struct *handle_sub_chan_wq;
 
 	atomic_t suspend_offer_in_progress;
+	atomic_t resume_offer_in_progress;
 	struct completion suspend_event;
+	struct completion resume_event;
 };
 
 
