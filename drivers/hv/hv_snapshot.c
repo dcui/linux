@@ -378,10 +378,17 @@ hv_vss_init(struct hv_util_service *srv)
 	return 0;
 }
 
+void hv_vss_cancel_work(void)
+{
+	cancel_delayed_work_sync(&vss_timeout_work);
+	cancel_work_sync(&vss_handle_request_work);
+}
+
 void hv_vss_deinit(void)
 {
 	vss_transaction.state = HVUTIL_DEVICE_DYING;
-	cancel_delayed_work_sync(&vss_timeout_work);
-	cancel_work_sync(&vss_handle_request_work);
+
+	hv_vss_cancel_work();
+
 	hvutil_transport_destroy(hvt);
 }
