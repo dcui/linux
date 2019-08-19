@@ -638,6 +638,37 @@ struct sock *__vsock_create(struct net *net,
 }
 EXPORT_SYMBOL_GPL(__vsock_create);
 
+static void __vsock_release2(struct sock *sk)
+{
+	if (sk) {
+		struct sk_buff *skb;
+		struct vsock_sock *vsk;
+
+		vsk = vsock_sk(sk);
+
+		/* The release call is supposed to use lock_sock_nested()
+		 * rather than lock_sock(), if a lock should be acquired.
+		 */
+		transport->release(vsk);
+
+		/* Use the nested version to avoid the warning
+		 * "possible recursive locking detected".
+		 */
+		lock_sock_nested(sk, SINGLE_DEPTH_NESTING);
+		sock_orphan(sk);
+		sk->sk_shutdown = SHUTDOWN_MASK;
+
+		while ((skb = skb_dequeue(&sk->sk_receive_queue)))
+			kfree_skb(skb);
+
+		/* This sk can not be a listener, so it's unnecessary
+		 * to call vsock_dequeue_accept().
+		 */
+		release_sock(sk);
+		sock_put(sk);
+	}
+}
+
 static void __vsock_release(struct sock *sk)
 {
 	if (sk) {
@@ -659,7 +690,7 @@ static void __vsock_release(struct sock *sk)
 
 		/* Clean up any sockets that never were accepted. */
 		while ((pending = vsock_dequeue_accept(sk)) != NULL) {
-			__vsock_release(pending);
+			__vsock_release2(pending);
 			sock_put(pending);
 		}
 
