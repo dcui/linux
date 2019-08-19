@@ -310,6 +310,9 @@ void vmbus_remove_channel_attr_group(struct vmbus_channel *channel);
 
 struct vmbus_channel *relid2channel(u32 relid);
 
+struct vmbus_channel *
+find_primary_channel_by_offer(const struct vmbus_channel_offer_channel *offer);
+
 void vmbus_free_channels(void);
 
 /* Connection interface */
