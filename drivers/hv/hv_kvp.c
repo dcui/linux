@@ -757,11 +757,18 @@ hv_kvp_init(struct hv_util_service *srv)
 	return 0;
 }
 
-void hv_kvp_deinit(void)
+void hv_kvp_cancel_work(void)
 {
-	kvp_transaction.state = HVUTIL_DEVICE_DYING;
 	cancel_delayed_work_sync(&kvp_host_handshake_work);
 	cancel_delayed_work_sync(&kvp_timeout_work);
 	cancel_work_sync(&kvp_sendkey_work);
+}
+
+void hv_kvp_deinit(void)
+{
+	kvp_transaction.state = HVUTIL_DEVICE_DYING;
+
+	hv_kvp_cancel_work();
+
 	hvutil_transport_destroy(hvt);
 }
