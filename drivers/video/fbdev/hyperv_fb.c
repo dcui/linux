@@ -266,10 +266,10 @@ struct hvfb_par {
 	unsigned long mmio_pp;
 	spinlock_t docopy_lock; /* Lock to protect memory copy */
 
-	/* Dirty rectangle, protected by delayed_refresh_lock */
+	/* Dirty rectangle, protected by need_refresh_lock */
 	int x1, y1, x2, y2;
-	bool delayed_refresh;
-	spinlock_t delayed_refresh_lock;
+	bool need_refresh;
+	spinlock_t need_refresh_lock;
 };
 
 static uint screen_width = HVFB_WIDTH;
@@ -735,9 +735,9 @@ static void hvfb_update_work(struct work_struct *w)
 	int x1, x2, y1, y2;
 	int j;
 
-	spin_lock_irqsave(&par->delayed_refresh_lock, flags);
-	/* Reset the request flag */
-	par->delayed_refresh = false;
+	spin_lock_irqsave(&par->need_refresh_lock, flags);
+	if (par->need_refresh == false)
+		goto out;
 
 	/* Store the dirty rectangle to local variables */
 	x1 = par->x1;
@@ -749,7 +749,7 @@ static void hvfb_update_work(struct work_struct *w)
 	par->x1 = par->y1 = INT_MAX;
 	par->x2 = par->y2 = 0;
 
-	spin_unlock_irqrestore(&par->delayed_refresh_lock, flags);
+	spin_unlock_irqrestore(&par->need_refresh_lock, flags);
 
 	if (x1 > info->var.xres || x2 > info->var.xres ||
 	    y1 > info->var.yres || y2 > info->var.yres || x2 <= x1)
@@ -768,6 +768,15 @@ static void hvfb_update_work(struct work_struct *w)
 	/* Refresh */
 	if (par->fb_ready)
 		synthvid_update(info, x1, y1, x2, y2);
+
+	spin_lock_irqsave(&par->need_refresh_lock, flags);
+	/* Reset the request flag */
+	par->need_refresh = false;
+out:
+	spin_unlock_irqrestore(&par->need_refresh_lock, flags);
+
+	schedule_delayed_work(&par->dwork,
+			      HVFB_ONDEMAND_THROTTLE);
 }
 
 /*
@@ -781,7 +790,7 @@ static void hvfb_ondemand_refresh_throttle(struct hvfb_par *par,
 	int x2 = x1 + w;
 	int y2 = y1 + h;
 
-	spin_lock_irqsave(&par->delayed_refresh_lock, flags);
+	spin_lock_irqsave(&par->need_refresh_lock, flags);
 
 	/* Merge dirty rectangle */
 	par->x1 = min_t(int, par->x1, x1);
@@ -789,14 +798,9 @@ static void hvfb_ondemand_refresh_throttle(struct hvfb_par *par,
 	par->x2 = max_t(int, par->x2, x2);
 	par->y2 = max_t(int, par->y2, y2);
 
-	/* Schedule a delayed screen update if not yet */
-	if (par->delayed_refresh == false) {
-		schedule_delayed_work(&par->dwork,
-				      HVFB_ONDEMAND_THROTTLE);
-		par->delayed_refresh = true;
-	}
+	par->need_refresh = true;
 
-	spin_unlock_irqrestore(&par->delayed_refresh_lock, flags);
+	spin_unlock_irqrestore(&par->need_refresh_lock, flags);
 }
 
 static int hvfb_on_panic(struct notifier_block *nb,
@@ -1072,8 +1076,8 @@ static int hvfb_probe(struct hv_device *hdev,
 	init_completion(&par->wait);
 	INIT_DELAYED_WORK(&par->dwork, hvfb_update_work);
 
-	par->delayed_refresh = false;
-	spin_lock_init(&par->delayed_refresh_lock);
+	par->need_refresh = false;
+	spin_lock_init(&par->need_refresh_lock);
 	spin_lock_init(&par->docopy_lock);
 	par->x1 = par->y1 = INT_MAX;
 	par->x2 = par->y2 = 0;
