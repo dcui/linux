@@ -251,7 +251,7 @@ static void suspend_hv_clock_tsc(struct clocksource *arg)
 
 static void resume_hv_clock_tsc(struct clocksource *arg)
 {
-	phys_addr_t phys_addr = virt_to_phys(&tsc_pg);
+	phys_addr_t phys_addr = page_to_phys(vmalloc_to_page(tsc_pg));
 	u64 tsc_msr;
 
 	/* Re-enable the TSC page */
