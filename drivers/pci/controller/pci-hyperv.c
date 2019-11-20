@@ -46,6 +46,7 @@
 #include <asm/irqdomain.h>
 #include <asm/apic.h>
 #include <linux/irq.h>
+#include <linux/kmemleak.h>
 #include <linux/msi.h>
 #include <linux/hyperv.h>
 #include <linux/refcount.h>
@@ -2907,6 +2908,16 @@ static int hv_pci_probe(struct hv_device *hdev,
 	hbus = (struct hv_pcibus_device *)get_zeroed_page(GFP_KERNEL);
 	if (!hbus)
 		return -ENOMEM;
+
+	/*
+	 * kmemleak doesn't track page allocations as they are not commonly
+	 * used for kernel data structures, but here hbus->children indeed
+	 * contains pointers to hv_pci_dev structs, which are dynamically
+	 * created in new_pcichild_device(). Allow kmemleak to scan the page
+	 * so we don't get a false warning of memory leak.
+	 */
+	kmemleak_alloc(hbus, PAGE_SIZE, 1, GFP_KERNEL);
+
 	hbus->state = hv_pcibus_init;
 
 	/*
@@ -3133,6 +3144,8 @@ static int hv_pci_remove(struct hv_device *hdev)
 
 	hv_put_dom_num(hbus->sysdata.domain);
 
+	/* Remove kmemleak object previously allocated in hv_pci_probe() */
+	kmemleak_free(hbus);
 	free_page((unsigned long)hbus);
 	return ret;
 }
