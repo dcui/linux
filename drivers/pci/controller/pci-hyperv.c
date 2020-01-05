@@ -2922,7 +2922,7 @@ static int hv_pci_probe(struct hv_device *hdev,
 	 * positive by using kmemleak_alloc() and kmemleak_free() to ask
 	 * kmemleak to track and scan the hbus buffer.
 	 */
-	hbus = (struct hv_pcibus_device *)kzalloc(HV_HYP_PAGE_SIZE, GFP_KERNEL);
+	hbus = kzalloc(HV_HYP_PAGE_SIZE, GFP_KERNEL);
 	if (!hbus)
 		return -ENOMEM;
 	hbus->state = hv_pcibus_init;
@@ -3058,7 +3058,7 @@ destroy_wq:
 free_dom:
 	hv_put_dom_num(hbus->sysdata.domain);
 free_bus:
-	free_page((unsigned long)hbus);
+	kfree(hbus);
 	return ret;
 }
 
