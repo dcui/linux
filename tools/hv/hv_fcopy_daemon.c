@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 
-static int target_fd;
+static int target_fd = -1;
 static char target_fname[PATH_MAX];
 static unsigned long long filesize;
 
@@ -80,6 +80,8 @@ static int hv_start_fcopy(struct hv_start_fcopy *smsg)
 
 	error = 0;
 done:
+	if (error)
+		memset(target_fname, 0, sizeof(target_fname));
 	return error;
 }
 
@@ -111,12 +113,16 @@ static int hv_copy_data(struct hv_do_fcopy *cpmsg)
 static int hv_copy_finished(void)
 {
 	close(target_fd);
+	target_fd = -1;
+	memset(target_fname, 0, sizeof(target_fname));
 	return 0;
 }
 static int hv_copy_cancel(void)
 {
 	close(target_fd);
+	target_fd = -1;
 	unlink(target_fname);
+	memset(target_fname, 0, sizeof(target_fname));
 	return 0;
 
 }
@@ -141,7 +147,7 @@ int main(int argc, char *argv[])
 		struct hv_do_fcopy copy;
 		__u32 kernel_modver;
 	} buffer = { };
-	int in_handshake = 1;
+	int in_handshake;
 
 	static struct option long_options[] = {
 		{"help",	no_argument,	   0,  'h' },
@@ -170,6 +176,9 @@ int main(int argc, char *argv[])
 	openlog("HV_FCOPY", 0, LOG_USER);
 	syslog(LOG_INFO, "starting; pid is:%d", getpid());
 
+reopen_fcopy_fd:
+	hv_copy_cancel();
+	in_handshake = 1;
 	fcopy_fd = open("/dev/vmbus/hv_fcopy", O_RDWR);
 
 	if (fcopy_fd < 0) {
@@ -196,7 +205,8 @@ int main(int argc, char *argv[])
 		len = pread(fcopy_fd, &buffer, sizeof(buffer), 0);
 		if (len < 0) {
 			syslog(LOG_ERR, "pread failed: %s", strerror(errno));
-			exit(EXIT_FAILURE);
+			close(fcopy_fd);
+			goto reopen_fcopy_fd;
 		}
 
 		if (in_handshake) {
@@ -233,7 +243,8 @@ int main(int argc, char *argv[])
 
 		if (pwrite(fcopy_fd, &error, sizeof(int), 0) != sizeof(int)) {
 			syslog(LOG_ERR, "pwrite failed: %s", strerror(errno));
-			exit(EXIT_FAILURE);
+			close(fcopy_fd);
+			goto reopen_fcopy_fd;
 		}
 	}
 }

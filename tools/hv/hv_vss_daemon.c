@@ -28,6 +28,8 @@
 #include <stdbool.h>
 #include <dirent.h>
 
+static bool fs_frozen;
+
 /* Don't use syslog() in the function since that can cause write to disk */
 static int vss_do_freeze(char *dir, unsigned int cmd)
 {
@@ -155,8 +157,11 @@ static int vss_operate(int operation)
 			continue;
 		}
 		error |= vss_do_freeze(ent->mnt_dir, cmd);
-		if (error && operation == VSS_OP_FREEZE)
-			goto err;
+		if (operation == VSS_OP_FREEZE) {
+			if (error)
+				goto err;
+			fs_frozen = true;
+		}
 	}
 
 	endmntent(mounts);
@@ -167,6 +172,9 @@ static int vss_operate(int operation)
 			goto err;
 	}
 
+	if (operation == VSS_OP_THAW && !error)
+		fs_frozen = false;
+
 	goto out;
 err:
 	save_errno = errno;
@@ -175,6 +183,7 @@ err:
 		endmntent(mounts);
 	}
 	vss_operate(VSS_OP_THAW);
+	fs_frozen = false;
 	/* Call syslog after we thaw all filesystems */
 	if (ent)
 		syslog(LOG_ERR, "FREEZE of %s failed; error:%d %s",
@@ -202,7 +211,7 @@ int main(int argc, char *argv[])
 	int	op;
 	struct hv_vss_msg vss_msg[1];
 	int daemonize = 1, long_index = 0, opt;
-	int in_handshake = 1;
+	int in_handshake;
 	__u32 kernel_modver;
 
 	static struct option long_options[] = {
@@ -232,6 +241,10 @@ int main(int argc, char *argv[])
 	openlog("Hyper-V VSS", 0, LOG_USER);
 	syslog(LOG_INFO, "VSS starting; pid is:%d", getpid());
 
+reopen_vss_fd:
+	if (fs_frozen)
+		vss_operate(VSS_OP_THAW);
+	in_handshake = 1;
 	vss_fd = open("/dev/vmbus/hv_vss", O_RDWR);
 	if (vss_fd < 0) {
 		syslog(LOG_ERR, "open /dev/vmbus/hv_vss failed; error: %d %s",
@@ -285,7 +298,7 @@ int main(int argc, char *argv[])
 			syslog(LOG_ERR, "read failed; error:%d %s",
 			       errno, strerror(errno));
 			close(vss_fd);
-			return EXIT_FAILURE;
+			goto reopen_vss_fd;
 		}
 
 		op = vss_msg->vss_hdr.operation;
@@ -318,8 +331,8 @@ int main(int argc, char *argv[])
 			syslog(LOG_ERR, "write failed; error: %d %s", errno,
 			       strerror(errno));
 
-			if (op == VSS_OP_FREEZE)
-				vss_operate(VSS_OP_THAW);
+			close(vss_fd);
+			goto reopen_vss_fd;
 		}
 	}
 

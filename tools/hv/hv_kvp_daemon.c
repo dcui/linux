@@ -76,7 +76,7 @@ enum {
 	DNS
 };
 
-static int in_hand_shake = 1;
+static int in_hand_shake;
 
 static char *os_name = "";
 static char *os_major = "";
@@ -1400,14 +1400,6 @@ int main(int argc, char *argv[])
 	openlog("KVP", 0, LOG_USER);
 	syslog(LOG_INFO, "KVP starting; pid is:%d", getpid());
 
-	kvp_fd = open("/dev/vmbus/hv_kvp", O_RDWR | O_CLOEXEC);
-
-	if (kvp_fd < 0) {
-		syslog(LOG_ERR, "open /dev/vmbus/hv_kvp failed; error: %d %s",
-			errno, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
 	/*
 	 * Retrieve OS release information.
 	 */
@@ -1420,6 +1412,16 @@ int main(int argc, char *argv[])
 
 	if (kvp_file_init()) {
 		syslog(LOG_ERR, "Failed to initialize the pools");
+		exit(EXIT_FAILURE);
+	}
+
+reopen_kvp_fd:
+	in_hand_shake = 1;
+	kvp_fd = open("/dev/vmbus/hv_kvp", O_RDWR | O_CLOEXEC);
+
+	if (kvp_fd < 0) {
+		syslog(LOG_ERR, "open /dev/vmbus/hv_kvp failed; error: %d %s",
+		       errno, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -1458,7 +1460,7 @@ int main(int argc, char *argv[])
 			       errno, strerror(errno));
 
 			close(kvp_fd);
-			return EXIT_FAILURE;
+			goto reopen_kvp_fd;
 		}
 
 		/*
@@ -1623,7 +1625,8 @@ kvp_done:
 		if (len != sizeof(struct hv_kvp_msg)) {
 			syslog(LOG_ERR, "write failed; error: %d %s", errno,
 			       strerror(errno));
-			exit(EXIT_FAILURE);
+			close(kvp_fd);
+			goto reopen_kvp_fd;
 		}
 	}
 
