@@ -500,6 +500,15 @@ static ssize_t channel_vp_mapping_show(struct device *dev,
 	tot_written = snprintf(buf, buf_size, "%u:%u\n",
 		channel->offermsg.child_relid, channel->target_cpu);
 
+	if (channel->inbound.ring_buffer)
+		printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+			channel->offermsg.child_relid,
+			channel->offermsg.offer.sub_channel_index,
+			&channel->offermsg.offer.if_type,
+			&channel->offermsg.offer.if_instance,
+			channel->inbound.ring_buffer->feature_bits.value,
+			channel->outbound.ring_buffer->feature_bits.value);
+
 	spin_lock_irqsave(&channel->lock, flags);
 
 	list_for_each(cur, &channel->sc_list) {
@@ -513,6 +522,14 @@ static ssize_t channel_vp_mapping_show(struct device *dev,
 				     cur_sc->offermsg.child_relid,
 				     cur_sc->target_cpu);
 		tot_written += n_written;
+		printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+			cur_sc->offermsg.child_relid,
+			cur_sc->offermsg.offer.sub_channel_index,
+			&cur_sc->offermsg.offer.if_type,
+			&cur_sc->offermsg.offer.if_instance,
+			cur_sc->inbound.ring_buffer->feature_bits.value,
+			cur_sc->outbound.ring_buffer->feature_bits.value);
+
 	}
 
 	spin_unlock_irqrestore(&channel->lock, flags);

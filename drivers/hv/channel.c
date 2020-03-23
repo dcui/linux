@@ -200,6 +200,13 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 		goto error_clean_msglist;
 
 	wait_for_completion(&open_info->waitevent);
+	printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+		newchannel->offermsg.child_relid,
+		newchannel->offermsg.offer.sub_channel_index,
+		&newchannel->offermsg.offer.if_type,
+		&newchannel->offermsg.offer.if_instance,
+		newchannel->inbound.ring_buffer->feature_bits.value,
+		newchannel->outbound.ring_buffer->feature_bits.value);
 
 	spin_lock_irqsave(&vmbus_connection.channelmsg_lock, flags);
 	list_del(&open_info->msglistentry);
