@@ -237,6 +237,55 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
 	return 0;
 }
 
+/* Initialize the ring buffer. */
+int hv_ringbuffer_init2(struct hv_ring_buffer_info *ring_info,
+		       struct page *pages, u32 page_cnt)
+{
+	int i;
+	struct page **pages_wraparound;
+
+	BUILD_BUG_ON((sizeof(struct hv_ring_buffer) != PAGE_SIZE));
+
+	/*
+	 * First page holds struct hv_ring_buffer, do wraparound mapping for
+	 * the rest.
+	 */
+	pages_wraparound = kcalloc(page_cnt * 2 - 1, sizeof(struct page *),
+				   GFP_KERNEL);
+	if (!pages_wraparound)
+		return -ENOMEM;
+
+	pages_wraparound[0] = pages;
+	for (i = 0; i < 2 * (page_cnt - 1); i++)
+		pages_wraparound[i + 1] = &pages[i % (page_cnt - 1) + 1];
+
+	ring_info->ring_buffer = (struct hv_ring_buffer *)
+		vmap(pages_wraparound, page_cnt * 2 - 1, VM_MAP, PAGE_KERNEL);
+
+	kfree(pages_wraparound);
+
+
+	if (!ring_info->ring_buffer)
+		return -ENOMEM;
+
+	ring_info->ring_buffer->read_index =
+		ring_info->ring_buffer->write_index = 0;
+
+	/* Set the feature bit for enabling flow control. */
+	//ring_info->ring_buffer->feature_bits.value = 1;
+
+	ring_info->ring_size = page_cnt << PAGE_SHIFT;
+	ring_info->ring_size_div10_reciprocal =
+		reciprocal_value(ring_info->ring_size / 10);
+	ring_info->ring_datasize = ring_info->ring_size -
+		sizeof(struct hv_ring_buffer);
+	ring_info->priv_read_index = 0;
+
+	spin_lock_init(&ring_info->ring_lock);
+
+	return 0;
+}
+
 /* Cleanup the ring buffer. */
 void hv_ringbuffer_cleanup(struct hv_ring_buffer_info *ring_info)
 {

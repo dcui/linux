@@ -501,7 +501,7 @@ static ssize_t channel_vp_mapping_show(struct device *dev,
 		channel->offermsg.child_relid, channel->target_cpu);
 
 	if (channel->inbound.ring_buffer)
-		printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+		printk("Relid==%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
 			channel->offermsg.child_relid,
 			channel->offermsg.offer.sub_channel_index,
 			&channel->offermsg.offer.if_type,
@@ -522,7 +522,7 @@ static ssize_t channel_vp_mapping_show(struct device *dev,
 				     cur_sc->offermsg.child_relid,
 				     cur_sc->target_cpu);
 		tot_written += n_written;
-		printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+		printk("Relid==%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
 			cur_sc->offermsg.child_relid,
 			cur_sc->offermsg.offer.sub_channel_index,
 			&cur_sc->offermsg.offer.if_type,

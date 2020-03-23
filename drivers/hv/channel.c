@@ -143,7 +143,7 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 	if (err)
 		goto error_clean_ring;
 
-	err = hv_ringbuffer_init(&newchannel->inbound,
+	err = hv_ringbuffer_init2(&newchannel->inbound,
 				 &page[send_pages], recv_pages);
 	if (err)
 		goto error_clean_ring;
@@ -200,7 +200,7 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 		goto error_clean_msglist;
 
 	wait_for_completion(&open_info->waitevent);
-	printk("Relid=%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
+	printk("Relid==%d.%d, %pUl:%pUl, P.i=%d,o=%d\n",
 		newchannel->offermsg.child_relid,
 		newchannel->offermsg.offer.sub_channel_index,
 		&newchannel->offermsg.offer.if_type,

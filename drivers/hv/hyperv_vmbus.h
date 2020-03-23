@@ -182,6 +182,9 @@ void hv_ringbuffer_pre_init(struct vmbus_channel *channel);
 int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
 		       struct page *pages, u32 pagecnt);
 
+int hv_ringbuffer_init2(struct hv_ring_buffer_info *ring_info,
+		       struct page *pages, u32 pagecnt);
+
 void hv_ringbuffer_cleanup(struct hv_ring_buffer_info *ring_info);
 
 int hv_ringbuffer_write(struct vmbus_channel *channel,
