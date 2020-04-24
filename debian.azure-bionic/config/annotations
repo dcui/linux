@@ -94,9 +94,6 @@ CONFIG_VBOXGUEST                                   mark<ENFORCED> note<LP:#17966
 CONFIG_XEN_ACPI_PROCESSOR                          policy<{'amd64': '-'}>
 CONFIG_XEN_ACPI_PROCESSOR                          mark<ENFORCED> note<LP:#1671203>
 
-CONFIG_USB_XHCI_HCD                                policy<{'amd64': '-'}>
-CONFIG_USB_XHCI_HCD                                mark<ENFORCED> note<kernel reduction>
-
 CONFIG_USB_XHCI_HCD                                policy<{'amd64': 'y'}>
 CONFIG_USB_XHCI_HCD                                mark<ENFORCED> note<LP:#1867002> note<Enable xHCI for PCI passthrough>
 
@@ -206,17 +203,32 @@ CONFIG_SND_SOC_SOF_NOCODEC_SUPPORT                 note<Unnecessary for Azure>
 CONFIG_NETWORK_PHY_TIMESTAMPING                    policy<{'amd64': 'n'}>
 CONFIG_NETWORK_PHY_TIMESTAMPING                    note<Unnecessary for Azure>
 
-CONFIG_SND_SOC_SOF_HDA_COMMON_HDMI_CODEC           policy<{'amd64': 'n'}>
-CONFIG_SND_SOC_SOF_HDA_COMMON_HDMI_CODEC           note<Unnecessary for Azure>
+CONFIG_SND_SOC_INTEL_CML_H                         policy<{'amd64': '-'}>
+CONFIG_SND_SOC_INTEL_CML_H                         note<Not selectable for Azure>
 
-CONFIG_SOUNDWIRE                                   policy<{'amd64': 'n'}>
-CONFIG_SOUNDWIRE                                   note<Unnecessary for Azure>
+CONFIG_SND_SOC_SOF_HDA_COMMON_HDMI_CODEC           policy<{'amd64': '-'}>
+CONFIG_SND_SOC_SOF_HDA_COMMON_HDMI_CODEC           note<Not selectable for Azure>
 
-CONFIG_USB_OHCI_HCD                                policy<{'amd64': 'n'}>
-CONFIG_USB_OHCI_HCD                                note<Unnecessary for Azure>
+CONFIG_SND_SOC_INTEL_CML_LP                        policy<{'amd64': '-'}>
+CONFIG_SND_SOC_INTEL_CML_LP                        note<Not selectable for Azure>
+
+CONFIG_SND_SOC_INTEL_CFL                           policy<{'amd64': '-'}>
+CONFIG_SND_SOC_INTEL_CFL                           note<Not selectable for Azure>
+
+CONFIG_LATENCYTOP                                  policy<{'amd64': '-'}>
+CONFIG_LATENCYTOP                                  note<Unnecessary for Azure>
+
+CONFIG_USB_OHCI_HCD                                policy<{'amd64': '-'}>
+CONFIG_USB_OHCI_HCD                                note<Not selectable for Azure>
 
 CONFIG_SND_SOC_INTEL_SKYLAKE                       policy<{'amd64': '-'}>
-CONFIG_SND_SOC_INTEL_SKYLAKE                       note<Unnecessary for Azure>
+CONFIG_SND_SOC_INTEL_SKYLAKE                       note<Not selectable for Azure>
 
 CONFIG_SND_SOC_INTEL_SKYLAKE_HDAUDIO_CODEC         policy<{'amd64': '-'}>
-CONFIG_SND_SOC_INTEL_SKYLAKE_HDAUDIO_CODEC         note<Unnecessary for Azure>
+CONFIG_SND_SOC_INTEL_SKYLAKE_HDAUDIO_CODEC         note<Not selectable for Azure>
+
+CONFIG_SND_SOC_INTEL_CNL                           policy<{'amd64': '-'}>
+CONFIG_SND_SOC_INTEL_CNL                           note<Not selectable for Azure>
+
+CONFIG_X86_UV                                      policy<{'amd64': 'n'}>
+CONFIG_X86_UV                                      note<Unnecessary for Azure>
