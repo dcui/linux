@@ -1,0 +1,8 @@
+#!/bin/bash -eu
+
+# shellcheck disable=SC1091
+. debian/debian.env
+
+# Use gzip instead of lz4 for amd64
+sed -i '/CONFIG_KERNEL_LZ4/d' ${DEBIAN}/config/amd64/config.common.amd64
+sed -i '3aCONFIG_KERNEL_GZIP=y\n# CONFIG_KERNEL_LZ4 is not set' ${DEBIAN}/config/amd64/config.common.amd64

@@ -1,0 +1,5 @@
+linux-azure-5.4 (5.4.0-1000.0) bionic; urgency=medium
+
+  * Initial azure-5.4 packaging
+
+ -- Stefan Bader <stefan.bader@canonical.com>  Fri, 24 Apr 2020 09:50:17 +0200
