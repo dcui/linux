@@ -209,8 +209,12 @@ static int serial_link_irq_chain(struct uart_8250_port *up)
 		INIT_LIST_HEAD(&up->list);
 		i->head = &up->list;
 		spin_unlock_irq(&i->lock);
+		printk("cdx1: serial_link_irq_chain: irq=%d, name=%s, flag=0x%lx, i = %px\n",
+			up->port.irq, up->port.name, up->port.irqflags, i);
 		ret = request_irq(up->port.irq, serial8250_interrupt,
 				  up->port.irqflags, up->port.name, i);
+		printk("cdx2: serial_link_irq_chain: irq=%d, ret=%d, name=%s, flag=0x%lx, i = %px\n",
+			up->port.irq, ret, up->port.name, up->port.irqflags, i);
 		if (ret < 0)
 			serial_do_unlink(i, up);
 	}
@@ -241,8 +245,11 @@ static void serial_unlink_irq_chain(struct uart_8250_port *up)
 	BUG_ON(n == NULL);
 	BUG_ON(i->head == NULL);
 
-	if (list_empty(i->head))
+	if (list_empty(i->head)) {
+		printk("cdx1: serial_unlink_irq_chain:, irq = %d, i = %px\n", up->port.irq, i);
 		free_irq(up->port.irq, i);
+		printk("cdx2: serial_unlink_irq_chain:, irq = %d, i = %px\n", up->port.irq, i);
+	}
 
 	serial_do_unlink(i, up);
 	mutex_unlock(&hash_mutex);

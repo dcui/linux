@@ -336,6 +336,9 @@ static void __ioapic_write_entry(int apic, int pin, struct IO_APIC_route_entry e
 {
 	union entry_union eu = {{0, 0}};
 
+	printk("cdx: __ioapic_write_entry: %d:%d, M=%d, v=0x%x, dest=0x%x, deliM/S=0x%x:%d, DM=%d,p=%d,irr=%d,trig=%d", apic, pin, e.mask, e.vector, e.dest, e.delivery_mode, e.delivery_status, e.dest_mode,
+	e.polarity, e.irr, e.trigger);
+
 	eu.entry = e;
 	io_apic_write(apic, 0x11 + 2*pin, eu.w2);
 	io_apic_write(apic, 0x10 + 2*pin, eu.w1);
@@ -1873,12 +1876,19 @@ static void ioapic_configure_entry(struct irq_data *irqd)
 	 * if the parent is the remapping domain. Check the installed
 	 * ioapic chip to verify that.
 	 */
+	printk("cdx:1: ioapic_configure_entry: cfg:dest_apic=0x%x,v=0x%x, irqd:irq=%d, hw_irq=%ld\n",
+		cfg->dest_apicid, cfg->vector, irqd->irq, irqd->hwirq);
 	if (irqd->chip == &ioapic_chip) {
+		printk("cdx:2: ioapic_configure_entry:\n");
 		mpd->entry.dest = cfg->dest_apicid;
 		mpd->entry.vector = cfg->vector;
 	}
-	for_each_irq_pin(entry, mpd->irq_2_pin)
+	for_each_irq_pin(entry, mpd->irq_2_pin) {
+		printk("cdx:3.1: ioapic_configure_entry: ioapic=%d, pin=%d\n", entry->apic, entry->pin);
 		__ioapic_write_entry(entry->apic, entry->pin, mpd->entry);
+		printk("cdx:3.2: ioapic_configure_entry: ioapic=%d, pin=%d\n", entry->apic, entry->pin);
+	}
+	printk("cdx:4: ioapic_configure_entry:\n");
 }
 
 static int ioapic_set_affinity(struct irq_data *irq_data,
@@ -1890,8 +1900,11 @@ static int ioapic_set_affinity(struct irq_data *irq_data,
 
 	ret = parent->chip->irq_set_affinity(parent, mask, force);
 	raw_spin_lock_irqsave(&ioapic_lock, flags);
-	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE)
+	if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+		printk("cdx: ioapic_set_affinity: 1\n");
 		ioapic_configure_entry(irq_data);
+		printk("cdx: ioapic_set_affinity: 2\n");
+	}
 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
 
 	return ret;
@@ -3053,7 +3066,9 @@ int mp_irqdomain_activate(struct irq_domain *domain,
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&ioapic_lock, flags);
+	printk("cdx: mp_irqdomain_activate: 1\n");
 	ioapic_configure_entry(irq_data);
+	printk("cdx: mp_irqdomain_activate: 2\n");
 	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
 	return 0;
 }
@@ -3062,6 +3077,8 @@ void mp_irqdomain_deactivate(struct irq_domain *domain,
 			     struct irq_data *irq_data)
 {
 	/* It won't be called for IRQ with multiple IOAPIC pins associated */
+	printk("cdx: ioapic: mp_irqdomain_deactivate: ioapic %d, hw_irq=%ld\n",
+		mp_irqdomain_ioapic_idx(domain), irq_data->hwirq);
 	ioapic_mask_entry(mp_irqdomain_ioapic_idx(domain),
 			  (int)irq_data->hwirq);
 }

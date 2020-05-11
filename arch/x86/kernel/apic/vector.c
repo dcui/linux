@@ -363,6 +363,8 @@ static void x86_vector_deactivate(struct irq_domain *dom, struct irq_data *irqd)
 
 	trace_vector_deactivate(irqd->irq, apicd->is_managed,
 				apicd->can_reserve, false);
+	printk("cdx: x86_vector_deactivate: irq=%d, hw_irq=%ld, managed=%d, reserve=%d\n",
+		irqd->irq, irqd->hwirq, apicd->is_managed, apicd->can_reserve);
 
 	/* Regular fixed assigned interrupt */
 	if (!apicd->is_managed && !apicd->can_reserve)
@@ -445,6 +447,9 @@ static int x86_vector_activate(struct irq_domain *dom, struct irq_data *irqd,
 
 	trace_vector_activate(irqd->irq, apicd->is_managed,
 			      apicd->can_reserve, reserve);
+	printk("cdx1: x86_vector_activate: (vec=0x%x, cpu=%d, irq=%d), irq=%d, hwirq=%ld, managed=%d, reserve=%d, reserve=%d\n",
+		apicd->vector, apicd->cpu, apicd->irq,
+		irqd->irq,  irqd->hwirq, apicd->is_managed, apicd->can_reserve, reserve);
 
 	/* Nothing to do for fixed assigned vectors */
 	if (!apicd->can_reserve && !apicd->is_managed)
@@ -458,6 +463,10 @@ static int x86_vector_activate(struct irq_domain *dom, struct irq_data *irqd,
 	else if (apicd->has_reserved)
 		ret = activate_reserved(irqd);
 	raw_spin_unlock_irqrestore(&vector_lock, flags);
+	printk("cdx2: x86_vector_activate: (vec=0x%x, cpu=%d, irq=%d), irq=%d, hwirq=%ld, managed=%d, reserve=%d, reserve=%d\n",
+		apicd->vector, apicd->cpu, apicd->irq,
+		irqd->irq,  irqd->hwirq, apicd->is_managed, apicd->can_reserve, reserve);
+
 	return ret;
 }
 
