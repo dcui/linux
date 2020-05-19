@@ -103,6 +103,9 @@ CONFIG_USB_XHCI_PCI                                mark<ENFORCED> note<LP:#18670
 CONFIG_USB_XHCI_PLATFORM                           policy<{'amd64': 'm'}>
 CONFIG_USB_XHCI_PLATFORM                           mark<ENFORCED> note<LP:#1867002> note<Enable xHCI for PCI passthrough>
 
+CONFIG_CONTEXT_TRACKING_FORCE                      policy<{'amd64': 'n'}>
+CONFIG_CONTEXT_TRACKING_FORCE                      flag<REVIEW> note<Likely VIRT_CPU_ACCOUNTING_GEN should be disabled>
+
 # From linux-azure initial packaging
 
 CONFIG_POWERCAP                                    policy<{'amd64': 'n'}>
