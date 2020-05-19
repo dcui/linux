@@ -9,6 +9,7 @@ Build-Depends:
  cpio,
  kernel-wedge,
  kmod <!stage1>,
+ libcap-dev <!stage1>,
  makedumpfile [amd64 i386] <!stage1>,
  libelf-dev <!stage1>,
  libnewt-dev <!stage1>,
