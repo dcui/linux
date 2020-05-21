@@ -2116,10 +2116,20 @@ static int netvsc_probe(struct hv_device *dev,
 	struct net_device_context *net_device_ctx;
 	struct netvsc_device_info *device_info = NULL;
 	struct netvsc_device *nvdev;
+	struct vmbus_channel *newchannel = dev->channel;
 	int ret = -ENOMEM;
+
+	trace_printk("cdx: 1: id=%d:%d class=%pUl, device=%pUl\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index,
+		&newchannel->offermsg.offer.if_type, &newchannel->offermsg.offer.if_instance);
 
 	net = alloc_etherdev_mq(sizeof(struct net_device_context),
 				VRSS_CHANNEL_MAX);
+	trace_printk("cdx: 2: id=%d:%d, net=%px, name=%s, name_type=%d, class=%pUl, device=%pUl\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index,
+		net, net->name, net->name_assign_type,
+		&newchannel->offermsg.offer.if_type, &newchannel->offermsg.offer.if_instance);
+
 	if (!net)
 		goto no_net;
 
@@ -2206,6 +2216,11 @@ static int netvsc_probe(struct hv_device *dev,
 		net->max_mtu = ETH_DATA_LEN;
 
 	ret = register_netdevice(net);
+	trace_printk("cdx: 3: id=%d:%d, net=%px, name=%s, name_type=%d, class=%pUl, device=%pUl\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index,
+		net, net->name, net->name_assign_type,
+		&newchannel->offermsg.offer.if_type, &newchannel->offermsg.offer.if_instance);
+
 	if (ret != 0) {
 		pr_err("Unable to register netdev.\n");
 		goto register_failed;
@@ -2237,6 +2252,7 @@ static int netvsc_remove(struct hv_device *dev)
 	struct net_device *vf_netdev, *net;
 	struct netvsc_device *nvdev;
 
+	trace_printk("cdx: netvsc_remove: 1\n");
 	net = hv_get_drvdata(dev);
 	if (net == NULL) {
 		dev_err(&dev->device, "No net device to remove\n");
@@ -2272,6 +2288,7 @@ static int netvsc_remove(struct hv_device *dev)
 
 	free_percpu(ndev_ctx->vf_stats);
 	free_netdev(net);
+	trace_printk("cdx: netvsc_remove: 2\n");
 	return 0;
 }
 
@@ -2338,8 +2355,11 @@ static struct notifier_block netvsc_netdev_notifier = {
 
 static void __exit netvsc_drv_exit(void)
 {
+	trace_printk("cdx: netvsc_drv_exit: 1\n");
 	unregister_netdevice_notifier(&netvsc_netdev_notifier);
+	trace_printk("cdx: netvsc_drv_exit: 2\n");
 	vmbus_driver_unregister(&netvsc_drv);
+	trace_printk("cdx: netvsc_drv_exit: 3\n");
 }
 
 static int __init netvsc_drv_init(void)
@@ -2353,11 +2373,14 @@ static int __init netvsc_drv_init(void)
 	}
 	netvsc_ring_bytes = ring_size * PAGE_SIZE;
 
+	trace_printk("cdx: netvsc_drv_init: 1\n");
 	ret = vmbus_driver_register(&netvsc_drv);
+	trace_printk("cdx: netvsc_drv_init: 2\n");
 	if (ret)
 		return ret;
 
 	register_netdevice_notifier(&netvsc_netdev_notifier);
+	trace_printk("cdx: netvsc_drv_init: 3\n");
 	return 0;
 }
 

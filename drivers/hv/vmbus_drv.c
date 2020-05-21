@@ -843,6 +843,8 @@ void vmbus_on_msg_dpc(unsigned long data)
 	struct hv_message *msg = (struct hv_message *)page_addr +
 				  VMBUS_MESSAGE_SINT;
 	struct vmbus_channel_message_header *hdr;
+	struct vmbus_channel_offer_channel *offer;
+	struct vmbus_channel_rescind_offer *rescind;
 	const struct vmbus_channel_message_table_entry *entry;
 	struct onmessage_work_context *ctx;
 	u32 message_type = msg->header.message_type;
@@ -877,6 +879,8 @@ void vmbus_on_msg_dpc(unsigned long data)
 		 */
 		switch (hdr->msgtype) {
 		case CHANNELMSG_RESCIND_CHANNELOFFER:
+			rescind = (struct vmbus_channel_rescind_offer *)hdr;
+			trace_printk("cdx: rescind: id=%d\n", rescind->child_relid);
 			/*
 			 * If we are handling the rescind message;
 			 * schedule the work on the global work queue.
@@ -886,6 +890,10 @@ void vmbus_on_msg_dpc(unsigned long data)
 			break;
 
 		case CHANNELMSG_OFFERCHANNEL:
+			offer = (struct vmbus_channel_offer_channel *)hdr;
+			trace_printk("cdx: offer: id=%d, class=%pUl, device=%pUl\n",
+				offer->child_relid, &offer->offer.if_type,
+				&offer->offer.if_instance);
 			atomic_inc(&vmbus_connection.offer_in_progress);
 			queue_work_on(vmbus_connection.connect_cpu,
 				      vmbus_connection.work_queue,
