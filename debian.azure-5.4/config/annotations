@@ -235,3 +235,9 @@ CONFIG_SND_SOC_INTEL_CNL                           note<Not selectable for Azure
 
 CONFIG_X86_UV                                      policy<{'amd64': 'n'}>
 CONFIG_X86_UV                                      note<Unnecessary for Azure>
+
+CONFIG_SND_SOC_AMD_RENOIR                          policy<{'amd64': '-'}>
+CONFIG_SND_SOC_AMD_RENOIR                          note<Unnecessary for Azure>
+
+CONFIG_SND_SOC_AMD_RENOIR_MACH                     policy<{'amd64': '-'}>
+CONFIG_SND_SOC_AMD_RENOIR_MACH                     note<Unnecessary for Azure>

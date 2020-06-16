@@ -10,7 +10,6 @@
 8250_lpss
 8250_men_mcb
 8250_mid
-8250_moxa
 842
 842_compress
 842_decompress
@@ -57,6 +56,7 @@ adc128d818
 adcxx
 adfs
 adiantum
+adin
 adm1021
 adm1025
 adm1026
@@ -64,7 +64,6 @@ adm1029
 adm1031
 adm9240
 adp5061
-ads1015
 ads7828
 ads7871
 adt7310
@@ -79,11 +78,6 @@ advansys
 advantechwdt
 aegis128
 aegis128-aesni
-aegis128l
-aegis128l-aesni
-aegis256
-aegis256-aesni
-aes-x86_64
 aesni-intel
 af_alg
 af_key
@@ -137,6 +131,7 @@ arizona-spi
 arp_tables
 arpt_mangle
 arptable_filter
+as370-hwmon
 asb100
 asc7621
 aspeed-pwm-tacho
@@ -226,6 +221,7 @@ can
 can-bcm
 can-dev
 can-gw
+can-j1939
 can-raw
 capmode
 capsule-loader
@@ -287,6 +283,7 @@ cpcihp_generic
 cpcihp_zt5550
 cpu5wdt
 cpuid
+cpuidle-haltpoll
 cramfs
 crc-itu-t
 crc32-pclmul
@@ -298,6 +295,7 @@ crc8
 crct10dif-pclmul
 cryptd
 crypto_engine
+crypto_safexcel
 crypto_simd
 crypto_user
 cryptoloop
@@ -337,6 +335,7 @@ dm-bio-prison
 dm-bufio
 dm-cache
 dm-cache-smq
+dm-clone
 dm-crypt
 dm-delay
 dm-era
@@ -372,14 +371,13 @@ dptf_power
 drbd
 drm
 drm_kms_helper
+drm_mipi_dbi
 drm_panel_orientation_quirks
 drm_vram_helper
-drop_monitor
 ds1621
 ds1682
 ds620
 dsa_core
-dscc4
 dummy
 dummy-irq
 dw-edma
@@ -452,15 +450,18 @@ esp4_offload
 esp6
 esp6_offload
 esp_scsi
+essiv
 et131x
 ethoc
 eurotechwdt
 evbug
+exfat
 f2fs
 f71805f
 f71808e_wdt
 f71882fg
 f75375s
+f81601
 failover
 fam15h_power
 farsync
@@ -483,6 +484,7 @@ fou6
 freevxfs
 fscache
 fschmd
+fsl_linflexuart
 fsl_lpuart
 ftsteutates
 g760a
@@ -612,6 +614,7 @@ hv_sock
 hv_utils
 hwmon-vid
 hwpoison-inject
+hx8357d
 hyperv-keyboard
 hyperv_fb
 i10nm_edac
@@ -704,6 +707,8 @@ igb
 igbvf
 igc
 ila
+ili9225
+ili9341
 img-ascii-lcd
 imm
 ina209
@@ -748,7 +753,7 @@ intel_telemetry_debugfs
 intel_telemetry_pltdrv
 intelfb
 ioatdma
-ioc4
+ionic
 ip6_gre
 ip6_tables
 ip6_tunnel
@@ -844,7 +849,6 @@ ir-sharp-decoder
 ir-sony-decoder
 ir-xmp-decoder
 irq-madera
-irqbypass
 iscsi_boot_sysfs
 iscsi_ibft
 iscsi_target_mod
@@ -885,10 +889,14 @@ kpc2000_i2c
 kpc2000_spi
 kpc_dma
 ks0108
+ksz8795
+ksz8795_spi
 ksz9477
+ksz9477_i2c
 ksz9477_spi
 ksz_common
 kvaser_pci
+kvaser_pciefd
 kvm
 kvm-amd
 kvm-intel
@@ -927,6 +935,7 @@ libahci_platform
 libarc4
 libceph
 libcrc32c
+libdes
 libiscsi
 libiscsi_tcp
 libsas
@@ -1049,6 +1058,7 @@ menf21bmc
 menf21bmc_hwmon
 menf21bmc_wdt
 menz69_wdt
+mi0283qt
 michael_mic
 microchip_t1
 microread
@@ -1074,13 +1084,6 @@ mlxsw_pci
 mlxsw_spectrum
 mlxsw_switchib
 mlxsw_switchx2
-morus1280
-morus1280-avx2
-morus1280-sse2
-morus1280_glue
-morus640
-morus640-sse2
-morus640_glue
 most_cdev
 most_core
 most_i2c
@@ -1389,6 +1392,7 @@ pcf50633-adc
 pcf50633-gpio
 pcf8591
 pci-hyperv
+pci-hyperv-intf
 pci-pf-stub
 pci-stub
 pci200syn
@@ -1453,6 +1457,7 @@ qcom_glink_rpm
 qla1280
 qla2xxx
 qla4xxx
+qlge
 qnx4
 qnx6
 qt1050
@@ -1533,6 +1538,7 @@ rc-iodata-bctv7e
 rc-it913x-v1
 rc-it913x-v2
 rc-kaiomy
+rc-khadas
 rc-kworld-315u
 rc-kworld-pc150u
 rc-kworld-plus-tv-analog
@@ -1551,6 +1557,7 @@ rc-nebula
 rc-nec-terratec-cinergy-xs
 rc-norwood
 rc-npgtech
+rc-odroid
 rc-pctv-sedna
 rc-pinnacle-color
 rc-pinnacle-grey
@@ -1570,6 +1577,8 @@ rc-snapstream-firefly
 rc-streamzap
 rc-su3000
 rc-tango
+rc-tanix-tx3mini
+rc-tanix-tx5max
 rc-tbs-nec
 rc-technisat-ts35
 rc-technisat-usb2
@@ -1589,8 +1598,12 @@ rc-twinhan1027
 rc-videomate-m1f
 rc-videomate-s350
 rc-videomate-tv-pvr
+rc-videostrong-kii-pro
+rc-wetek-hub
+rc-wetek-play2
 rc-winfast
 rc-winfast-usbii-deluxe
+rc-x96max
 rc-xbox-dvd
 rc-zx-irdec
 rcuperf
@@ -1605,6 +1618,7 @@ realtek-smi
 reed_solomon
 regmap-i2c
 reiserfs
+repaper
 reset-ti-syscon
 retu-mfd
 retu_wdt
@@ -1755,6 +1769,7 @@ smsc47m192
 snic
 softdog
 solos-pci
+soundwire-bus
 sp5100_tco
 sparse-keymap
 spi-altera
@@ -1784,6 +1799,8 @@ spidev
 spl
 ssb
 st
+st7586
+st7735r
 stex
 stp
 streebog_generic
@@ -1904,11 +1921,7 @@ usnic_verbs
 vboxvideo
 vcan
 veth
-vfio
-vfio-pci
-vfio_iommu_type1
 vfio_mdev
-vfio_virqfd
 vhost
 vhost_net
 vhost_scsi
@@ -1929,6 +1942,7 @@ virtio_net
 virtio_pmem
 virtio_rpmsg_bus
 virtio_scsi
+virtiofs
 vkms
 vmac
 vme_ca91cx42
@@ -1970,6 +1984,7 @@ wd719x
 wdat_wdt
 wdt_pci
 winbond-cir
+wireguard
 wm831x-hwmon
 wm831x_wdt
 wm8994
