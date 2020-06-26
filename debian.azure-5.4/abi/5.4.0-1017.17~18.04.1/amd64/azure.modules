@@ -1644,6 +1644,7 @@ rpmsg_char
 rpmsg_core
 rt5033
 rtc-ab-eoz9
+rtc-am1805
 rtc-ftrtc010
 rtc-pcf85363
 rtc-rv3028
