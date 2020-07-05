@@ -365,3 +365,4 @@ void hv_synic_cleanup(void *arg)
 	sctrl.enable = 0;
 	hv_set_synic_state(sctrl.as_uint64);
 }
+

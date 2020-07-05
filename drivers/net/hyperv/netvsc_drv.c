@@ -495,6 +495,148 @@ static int netvsc_vf_xmit(struct net_device *net, struct net_device *vf_netdev,
 
 	return rc;
 }
+static void cdx_check_udp_data(const char *dir, struct iphdr *ip, struct udphdr *udp)
+{
+	u16 data_len = ntohs(udp->len) - 8;
+	u8 *udp_data = (u8 *)(udp + 1);
+	unsigned int udp_data_end = data_len - 1;
+	unsigned int i;
+
+	if (ntohs(udp->source) < 1000 || ntohs(udp->source) > 1010)
+		return;
+
+	if (ntohs(udp->dest) < 1000 || ntohs(udp->dest) > 1010)
+		return;
+
+	if (udp_data[udp_data_end] == (u8)udp_data_end)
+		return;
+
+	//found a corrupt udp message
+	pr_err("cdx: %s: %pI4:%hu -> %pI4:%hu, udp_len = 0x%hx (data_len=0x%hx), csum=0x%hx\n",
+		dir, &ip->saddr, ntohs(udp->source), &ip->daddr, ntohs(udp->dest),
+		ntohs(udp->len), data_len, ntohs(udp->check));
+
+	for (i = 0; i < data_len; i++) {
+		if (udp_data[i] == (u8)i)
+			continue;
+
+		pr_err("cdx: %s: offset = 0x%x, expected 0x%hhx, but got 0x%hhx\n",
+			dir, i, (u8)i, udp_data[i]);
+	}
+
+	pr_err("cdx:\n");
+}
+
+//skb->data points to the IP header
+static void cdx_check_skb_rx(struct sk_buff *skb)
+{
+	struct iphdr *ip;
+	struct udphdr *udp;
+	unsigned int udp_len;
+	unsigned int headlen;
+
+	if (skb->protocol != htons(ETH_P_IP))
+		return;
+
+	ip = (struct iphdr *)skb->data;
+	if (ip->protocol != IPPROTO_UDP)
+		return;
+
+	if (WARN_ON_ONCE(ip->ihl != 5))
+		return;
+
+	headlen = skb_headlen(skb);
+	if (headlen != 20 && headlen < 28) {
+		WARN_ONCE(1, "cdx: rx, headlen=%d\n", headlen);
+		return;
+	}
+
+	//headlen == 20, or headlen == 28, or headlen > 28
+
+	if (headlen >= 28) {
+		udp = (struct udphdr *)(skb->data + 20);
+		udp_len = ntohs(udp->len);
+		if (WARN_ON_ONCE(udp_len <= 8))
+			return;
+		if (WARN_ON_ONCE(skb_is_nonlinear(skb)))
+			return;
+		if (WARN_ON_ONCE(headlen != 20 + udp_len))
+			return;
+
+		cdx_check_udp_data("rx", ip, udp);
+
+		return;
+	}
+
+	//hedlen == 20
+	if (WARN_ON_ONCE(skb_shinfo(skb)->nr_frags != 1)) {
+		return;
+	} else {
+		skb_frag_t *frag = &skb_shinfo(skb)->frags[0];
+		u32 p_len = frag->size;
+
+		if (WARN_ON_ONCE(p_len <= 8))
+			return;
+
+		udp = (struct udphdr *)skb_frag_address(frag);
+		udp_len = ntohs(udp->len);
+		if (WARN_ON(udp_len <= 8))
+			return;
+		if (WARN_ON(udp_len != p_len))
+			return;
+
+		cdx_check_udp_data("rx", ip, udp);
+
+		return;
+	}
+}
+
+//skb->data points to the Ethernet header
+static void cdx_check_skb_tx(struct sk_buff *skb)
+{
+	struct iphdr *ip;
+	struct udphdr *udp;
+	unsigned int udp_len;
+	unsigned int headlen;
+
+	BUILD_BUG_ON(sizeof(*ip) != 20);
+
+	if (skb->protocol != htons(ETH_P_IP))
+		return;
+
+	headlen = skb_headlen(skb);
+	if (headlen <= 14 + 20 + 8)
+		return;
+
+	ip = (struct iphdr *)(skb->data + 14);
+	if (ip->protocol != IPPROTO_UDP)
+		return;
+
+	if (WARN_ON_ONCE(skb_is_nonlinear(skb))) {
+#if 0
+		static bool printed;
+		if (!printed) {
+			printed = true;
+			skb_dump(KERN_ERR, skb, true);
+		}
+#endif
+		return;
+	}
+
+	if (WARN_ON_ONCE(ip->ihl != 5))
+		return;
+
+	udp = (struct udphdr *)(ip + 1);
+	udp_len = ntohs(udp->len);
+	if (WARN_ON_ONCE(udp_len <= 8))
+		return;
+
+	if (WARN_ON_ONCE(headlen != 14 + 20 + udp_len))
+		return;
+
+	//skb_dump(KERN_ERR, skb, true);
+	cdx_check_udp_data("tx", ip, udp);
+}
 
 static int netvsc_start_xmit(struct sk_buff *skb, struct net_device *net)
 {
@@ -507,6 +649,8 @@ static int netvsc_start_xmit(struct sk_buff *skb, struct net_device *net)
 	u32 rndis_msg_size;
 	u32 hash;
 	struct hv_page_buffer pb[MAX_PAGE_BUFFER_COUNT];
+
+	cdx_check_skb_tx(skb);
 
 	/* if VF is present and up then redirect packets
 	 * already called with rcu_read_lock_bh
@@ -1792,6 +1936,7 @@ static rx_handler_result_t netvsc_vf_handle_frame(struct sk_buff **pskb)
 		 = this_cpu_ptr(ndev_ctx->vf_stats);
 
 	skb->dev = ndev;
+	cdx_check_skb_rx(skb);
 
 	u64_stats_update_begin(&pcpu_stats->syncp);
 	pcpu_stats->rx_packets++;
