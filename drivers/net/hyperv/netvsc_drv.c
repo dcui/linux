@@ -645,16 +645,24 @@ static void cdx_check_udp_data_with_frag(const char *dir, struct sk_buff *skb,
 	unsigned int udp_len = ntohs(udp->len);
 	unsigned int udp_data_len_1 = headlen - 20 - 8;
 	//unsigned int udp_data_len_2 = udp_len - 8 - udp_data_len_1;
-	unsigned int udp_data_end = udp_len - 8 - 1;
+	//unsigned int udp_data_end = udp_len - 8 - 1;
 
 	u8 *udp_data_1 = (u8 *)(udp + 1);
 
-	unsigned int i, j, k, offset;
-	unsigned int nr_frags = skb_shinfo(skb)->nr_frags;
-	skb_frag_t *frag = &skb_shinfo(skb)->frags[nr_frags - 1];
-	u8 *udp_data = skb_frag_address(frag);
-	u32 p_len = frag->size;
+	//unsigned int i, j, k, offset;
+	//unsigned int nr_frags = skb_shinfo(skb)->nr_frags;
+	skb_frag_t *frag = &skb_shinfo(skb)->frags[0];
+	u8 *udp_data;
+	//u32 p_len = frag->size;
 
+	if (udp_data_len_1 == 0)
+		udp_data = skb_frag_address(frag);
+	else if (udp_data_len_1 >= 4)
+		udp_data = udp_data_1;
+	else {
+		WARN_ON_ONCE(1);
+		return;
+	}
 #if 0
 	if (WARN_ON_ONCE(skb_shinfo(skb)->nr_frags != 1)) {
 		static int cnt = 10;
@@ -667,16 +675,21 @@ static void cdx_check_udp_data_with_frag(const char *dir, struct sk_buff *skb,
 
 	if (WARN_ON(udp_data_len_2 != p_len))
 		return;
-#endif
 
 	if (udp_data[p_len - 1] == (u8)udp_data_end)
+#else
+	if (*((unsigned int *)udp_data) == udp_len - 8)
+#endif
 		return;
 
 	//found a corrupt UDP message
 	pr_err("cdx: %s-frag: %pI4:%hu -> %pI4:%hu, udp_len = 0x%hx (data_len=0x%hx), csum=0x%hx\n",
 		dir, &ip->saddr, ntohs(udp->source), &ip->daddr, ntohs(udp->dest),
-		ntohs(udp->len), udp_data_end + 1, ntohs(udp->check));
+		ntohs(udp->len), udp_len - 8, ntohs(udp->check));
 
+#if 1
+	skb_dump(KERN_ERR, skb, true);
+#else
 	for (i = 0; i < udp_data_len_1; i++) {
 		if (udp_data_1[i] == (u8)i)
 			continue;
@@ -708,14 +721,16 @@ static void cdx_check_udp_data_with_frag(const char *dir, struct sk_buff *skb,
 	}
 
 	pr_err("cdx:\n");
+#endif
 }
 
-static void cdx_check_udp_data(const char *dir, struct iphdr *ip, struct udphdr *udp)
+static void cdx_check_udp_data(const char *dir, struct sk_buff *skb,
+				struct iphdr *ip, struct udphdr *udp)
 {
 	u16 data_len = ntohs(udp->len) - 8;
 	u8 *udp_data = (u8 *)(udp + 1);
-	unsigned int udp_data_end = data_len - 1;
-	unsigned int i;
+	//unsigned int udp_data_end = data_len - 1;
+	//unsigned int i;
 
 	if (ntohs(udp->source) < 1000 || ntohs(udp->source) > 1010)
 		return;
@@ -723,7 +738,11 @@ static void cdx_check_udp_data(const char *dir, struct iphdr *ip, struct udphdr 
 	if (ntohs(udp->dest) < 1000 || ntohs(udp->dest) > 1010)
 		return;
 
+#if 1
+	if (*((unsigned int *)udp_data) == data_len)
+#else
 	if (udp_data[udp_data_end] == (u8)udp_data_end)
+#endif
 		return;
 
 	//found a corrupt udp message
@@ -731,6 +750,9 @@ static void cdx_check_udp_data(const char *dir, struct iphdr *ip, struct udphdr 
 		dir, &ip->saddr, ntohs(udp->source), &ip->daddr, ntohs(udp->dest),
 		ntohs(udp->len), data_len, ntohs(udp->check));
 
+#if 1
+	skb_dump(KERN_ERR, skb, true);
+#else
 	for (i = 0; i < data_len; i++) {
 		if (udp_data[i] == (u8)i)
 			continue;
@@ -740,6 +762,7 @@ static void cdx_check_udp_data(const char *dir, struct iphdr *ip, struct udphdr 
 	}
 
 	pr_err("cdx:\n");
+#endif
 }
 
 //skb->data points to the IP header
@@ -775,7 +798,7 @@ static void cdx_check_skb_rx(struct sk_buff *skb)
 			return;
 
 		if (skb_is_nonlinear(skb)) {
-			cdx_check_udp_data_with_frag("rx", skb, ip, udp);
+			cdx_check_udp_data_with_frag("rx:1", skb, ip, udp);
 			return;
 		}
 
@@ -788,7 +811,7 @@ static void cdx_check_skb_rx(struct sk_buff *skb)
 			return;
 		}
 
-		cdx_check_udp_data("rx", ip, udp);
+		cdx_check_udp_data("rx:2", skb, ip, udp);
 
 		return;
 	}
@@ -810,7 +833,7 @@ static void cdx_check_skb_rx(struct sk_buff *skb)
 		if (WARN_ON(udp_len != p_len))
 			return;
 
-		cdx_check_udp_data("rx", ip, udp);
+		cdx_check_udp_data("rx:3", skb, ip, udp);
 
 		return;
 	}
@@ -860,7 +883,7 @@ static void cdx_check_skb_tx(struct sk_buff *skb)
 		return;
 
 	//skb_dump(KERN_ERR, skb, true);
-	cdx_check_udp_data("tx", ip, udp);
+	cdx_check_udp_data("tx", skb, ip, udp);
 }
 
 static int netvsc_start_xmit(struct sk_buff *skb, struct net_device *net)
