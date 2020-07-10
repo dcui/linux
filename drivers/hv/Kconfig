@@ -16,12 +16,6 @@ config HYPERV_UTILS
 	help
 	  Select this option to enable the Hyper-V Utilities.
 
-config HYPERV_SKB
-	tristate "Test skb for corruption"
-	depends on HYPERV
-	help
-	  Select this option to enable the test.
-
 config HYPERV_BALLOON
 	tristate "Microsoft Hyper-V Balloon driver"
 	depends on HYPERV
