@@ -389,12 +389,12 @@ test_recv(void *arg)
                 src_len--;
                 copied++;
             }
+
+            printk(KERN_ERR "\n");
         }
 
         UDP_INC_STATS_USER(sock_net(sock->sk),UDP_MIB_INDATAGRAMS,0);
         skb_free_datagram_locked(sock->sk,fskb);
-
-        printk(KERN_ERR "\n");
     }
 
     sock_release(sock);
