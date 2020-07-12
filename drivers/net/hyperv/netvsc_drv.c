@@ -572,12 +572,12 @@ static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt
         has_mac = skb_mac_header_was_set(skb);
         has_trans = skb_transport_header_was_set(skb);
 
-        printk("%sskb len=%u headroom=%u headlen=%u tailroom=%u\n"
+        printk("%sskb len=%u (0x%x) headroom=%u headlen=%u tailroom=%u\n"
                "mac=(%d,%d) net=(%d,%d) trans=%d\n"
                "shinfo(txflags=%u nr_frags=%u gso(size=%hu type=%u segs=%hu))\n"
                "csum(0x%x ip_summed=%u complete_sw=%u valid=%u level=%u)\n"
                "hash(0x%x sw=%u l4=%u) proto=0x%04x pkttype=%u iif=%d\n",
-               level, skb->len, headroom, skb_headlen(skb), tailroom,
+               level, skb->len, skb->len, headroom, skb_headlen(skb), tailroom,
                has_mac ? skb->mac_header : -1,
                has_mac ? skb_mac_header_len(skb) : -1,
                skb->network_header,
@@ -617,6 +617,9 @@ static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt
                 struct page *p;
                 u8 *vaddr;
 
+                printk(KERN_ERR "cdx: skb frag: a: i = %d, sz = %d, len =%d, seg_l=%d\n",
+			i, skb_frag_size(frag), len, seg_len);
+
                 skb_frag_foreach_page(frag, skb_frag_off(frag),
                                       skb_frag_size(frag), p, p_off, p_len,
                                       copied) {
@@ -627,9 +630,15 @@ static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt
                                        16, 1, vaddr + p_off, seg_len, false);
                         kunmap_atomic(vaddr);
                         len -= seg_len;
+			printk(KERN_ERR "cdx: skb frag: b: i = %d, sz = %d, len =%d, seg_l=%d\n",
+				i, skb_frag_size(frag), len, seg_len);
                         if (!len)
                                 break;
                 }
+
+                printk(KERN_ERR "cdx: skb frag: c: i = %d, sz = %d, len =%d, seg_l=%d\n",
+			i, skb_frag_size(frag), len, seg_len);
+
         }
 
         if (full_pkt && skb_has_frag_list(skb)) {
@@ -791,6 +800,7 @@ static void test_recv_ip(struct sk_buff *skb)
     }
 }
 
+/* skb->data points to an ethernet frame */
 static void test_send_mac(struct sk_buff *skb)
 {
     int len, off, frag_index, src_len, copied;
@@ -804,7 +814,9 @@ static void test_send_mac(struct sk_buff *skb)
     if (skb->protocol != htons(ETH_P_IP))
 	return;
 
-    iph = (struct iphdr *)skb->data;
+    BUILD_BUG_ON(sizeof(struct ethhdr) != ETH_HLEN);
+
+    iph = (struct iphdr *)(skb->data + sizeof(struct ethhdr));
     if (iph->protocol != IPPROTO_UDP)
 	return;
 
@@ -2492,11 +2504,13 @@ static int netvsc_probe(struct hv_device *dev,
 
 	memcpy(net->dev_addr, device_info.mac_adr, ETH_ALEN);
 
+#if 0
 	/* hw_features computed in rndis_filter_device_add */
 	net->features = net->hw_features |
 		NETIF_F_HIGHDMA | NETIF_F_SG |
 		NETIF_F_HW_VLAN_CTAG_TX | NETIF_F_HW_VLAN_CTAG_RX;
 	net->vlan_features = net->features;
+#endif
 
 	netif_set_real_num_tx_queues(net, nvdev->num_chn);
 	netif_set_real_num_rx_queues(net, nvdev->num_chn);
