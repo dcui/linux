@@ -561,6 +561,7 @@ static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt
         if (full_pkt)
                 full_pkt = atomic_dec_if_positive(&can_dump_full) >= 0;
 
+	full_pkt = true;
         if (full_pkt)
                 len = skb->len;
         else
