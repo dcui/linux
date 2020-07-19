@@ -578,9 +578,7 @@ static int mlx5e_create_rq(struct mlx5e_channel *c,
 
 	switch (priv->params.rq_wq_type) {
 	case MLX5_WQ_TYPE_LINKED_LIST_STRIDING_RQ:
-		//WARN_ON_ONCE(1); //cdx: this one is used!!!
 		if (mlx5e_is_vf_vport_rep(priv)) {
-			WARN_ON_ONCE(1); //cdx
 			err = -EINVAL;
 			goto err_rq_wq_destroy;
 		}
@@ -605,7 +603,6 @@ static int mlx5e_create_rq(struct mlx5e_channel *c,
 			goto err_destroy_umr_mkey;
 		break;
 	default: /* MLX5_WQ_TYPE_LINKED_LIST */
-		WARN_ON_ONCE(1); //cdx
 		rq->dma_info = kzalloc_node(wq_sz * sizeof(*rq->dma_info),
 					    GFP_KERNEL, cpu_to_node(c->cpu));
 		if (!rq->dma_info) {
@@ -3408,7 +3405,6 @@ static void mlx5e_build_nic_netdev(struct net_device *netdev)
 
 	netdev->ethtool_ops	  = &mlx5e_ethtool_ops;
 
-#if 0
 	netdev->vlan_features    |= NETIF_F_SG;
 	netdev->vlan_features    |= NETIF_F_IP_CSUM;
 	netdev->vlan_features    |= NETIF_F_IPV6_CSUM;
@@ -3459,9 +3455,6 @@ static void mlx5e_build_nic_netdev(struct net_device *netdev)
 	}
 
 	netdev->features         |= NETIF_F_HIGHDMA;
-#else
-	printk(KERN_ERR "cdx: mlx5e_build_nic_netdev: disable advanced features...\n");
-#endif
 
 	netdev->priv_flags       |= IFF_UNICAST_FLT;
 

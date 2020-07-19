@@ -28,9 +28,6 @@
 #include <linux/clockchips.h>
 #include <linux/hyperv.h>
 
-DEFINE_SPINLOCK(cdx);
-EXPORT_SYMBOL_GPL(cdx);
-
 #ifdef CONFIG_HYPERV_TSCPAGE
 
 static struct ms_hyperv_tsc_page *tsc_pg;

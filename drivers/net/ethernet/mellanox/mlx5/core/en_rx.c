@@ -705,305 +705,6 @@ struct sk_buff *skb_from_cqe(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe,
 	return skb;
 }
 
-static inline u32 skb_mac_header_len(const struct sk_buff *skb)
-{
-        return skb->network_header - skb->mac_header;
-}
-
-/**
- * skb_frag_must_loop - Test if %p is a high memory page
- * @p: fragment's page
- */
-static inline bool skb_frag_must_loop(struct page *p)
-{
-#if defined(CONFIG_HIGHMEM)
-#error faillllllllllllllllllllllll
-        if (PageHighMem(p))
-                return true;
-#endif
-        return false;
-}
-
-static inline unsigned int skb_frag_off(const skb_frag_t *frag)
-{
-        return frag->page_offset;
-}
-
-/**
- *      skb_frag_foreach_page - loop over pages in a fragment
- *
- *      @f:             skb frag to operate on
- *      @f_off:         offset from start of f->bv_page
- *      @f_len:         length from f_off to loop over
- *      @p:             (temp var) current page
- *      @p_off:         (temp var) offset from start of current page,
- *                                 non-zero only on first page.
- *      @p_len:         (temp var) length in current page,
- *                                 < PAGE_SIZE only on first and last page.
- *      @copied:        (temp var) length so far, excluding current p_len.
- *
- *      A fragment can hold a compound page, in which case per-page
- *      operations, notably kmap_atomic, must be called for each
- *      regular page.
- */
-#define skb_frag_foreach_page(f, f_off, f_len, p, p_off, p_len, copied) \
-        for (p = skb_frag_page(f) + ((f_off) >> PAGE_SHIFT),            \
-             p_off = (f_off) & (PAGE_SIZE - 1),                         \
-             p_len = skb_frag_must_loop(p) ?                            \
-             min_t(u32, f_len, PAGE_SIZE - p_off) : f_len,              \
-             copied = 0;                                                \
-             copied < f_len;                                            \
-             copied += p_len, p++, p_off = 0,                           \
-             p_len = min_t(u32, f_len - copied, PAGE_SIZE))             \
-
-static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt)
-{
-        static atomic_t can_dump_full = ATOMIC_INIT(5);
-        struct skb_shared_info *sh = skb_shinfo(skb);
-        struct net_device *dev = skb->dev;
-        struct sock *sk = skb->sk;
-        struct sk_buff *list_skb;
-        bool has_mac, has_trans;
-        int headroom, tailroom;
-        int i, len, seg_len;
-
-        if (full_pkt)
-                full_pkt = atomic_dec_if_positive(&can_dump_full) >= 0;
-
-	full_pkt = true;
-        if (full_pkt)
-                len = skb->len;
-        else
-                len = min_t(int, skb->len, MAX_HEADER + 128);
-
-        headroom = skb_headroom(skb);
-        tailroom = skb_tailroom(skb);
-
-        has_mac = skb_mac_header_was_set(skb);
-        has_trans = skb_transport_header_was_set(skb);
-
-        printk("%s skb=%p skb len=%u headroom=%u headlen=%u tailroom=%u\n"
-               "mac=(%d,%d) net=(%d,%d) trans=%d\n"
-               "shinfo(txflags=%u nr_frags=%u gso(size=%hu type=%u segs=%hu))\n"
-               "csum(0x%x ip_summed=%u complete_sw=%u valid=%u level=%u)\n"
-               "hash(0x%x sw=%u l4=%u) proto=0x%04x pkttype=%u iif=%d\n",
-               level, skb, skb->len, headroom, skb_headlen(skb), tailroom,
-               has_mac ? skb->mac_header : -1,
-               has_mac ? skb_mac_header_len(skb) : -1,
-               skb->network_header,
-               has_trans ? skb_network_header_len(skb) : -1,
-               has_trans ? skb->transport_header : -1,
-               sh->tx_flags, sh->nr_frags,
-               sh->gso_size, sh->gso_type, sh->gso_segs,
-               skb->csum, skb->ip_summed, skb->csum_complete_sw,
-               skb->csum_valid, skb->csum_level,
-               skb->hash, skb->sw_hash, skb->l4_hash,
-               ntohs(skb->protocol), skb->pkt_type, skb->skb_iif);
-
-        if (dev)
-                printk("%sdev name=%s feat=0x%pNF\n",
-                       level, dev->name, &dev->features);
-        if (sk)
-                printk("%ssk family=%hu type=%u proto=%u\n",
-                       level, sk->sk_family, sk->sk_type, sk->sk_protocol);
-
-        if (full_pkt && headroom)
-                print_hex_dump(level, "skb headroom: ", DUMP_PREFIX_OFFSET,
-                               16, 1, skb->head, headroom, false);
-
-        seg_len = min_t(int, skb_headlen(skb), len);
-        if (seg_len)
-                print_hex_dump(level, "skb linear:   ", DUMP_PREFIX_OFFSET,
-                               16, 1, skb->data, seg_len, false);
-        len -= seg_len;
-
-        if (full_pkt && tailroom)
-                print_hex_dump(level, "skb tailroom: ", DUMP_PREFIX_OFFSET,
-                               16, 1, skb_tail_pointer(skb), tailroom, false);
-
-        for (i = 0; len && i < skb_shinfo(skb)->nr_frags; i++) {
-                skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
-                u32 p_off, p_len, copied;
-                struct page *p;
-                u8 *vaddr;
-
-                skb_frag_foreach_page(frag, skb_frag_off(frag),
-                                      skb_frag_size(frag), p, p_off, p_len,
-                                      copied) {
-                        seg_len = min_t(int, p_len, len);
-                        vaddr = kmap_atomic(p);
-                        print_hex_dump(level, "skb frag:     ",
-                                       DUMP_PREFIX_OFFSET,
-                                       16, 1, vaddr + p_off, seg_len, false);
-                        kunmap_atomic(vaddr);
-                        len -= seg_len;
-                        if (!len)
-                                break;
-                }
-        }
-
-        if (full_pkt && skb_has_frag_list(skb)) {
-                printk("skb fraglist:\n");
-                skb_walk_frags(skb, list_skb)
-                        skb_dump(level, list_skb, true);
-        }
-}
-
-static void test_recv_ip(struct sk_buff *skb)
-{
-    int len, off, frag_index, src_len, copied;
-    struct sk_buff *fskb = skb;
-    unsigned char *src_vbuf;
-    skb_frag_t *frag;
-    struct iphdr *iph;
-    struct udphdr *udph;
-    unsigned short dport;
-
-    if (skb->protocol != htons(ETH_P_IP))
-	return; 
-
-    iph = (struct iphdr *)skb->data;
-    if (iph->protocol != IPPROTO_UDP)
-	return;
-
-    if (WARN_ON_ONCE(iph->ihl != 5))
-	return;
-
-    off = sizeof(struct udphdr) + sizeof(struct iphdr);
-    len = skb->len - off;
-
-    if (len <= 0 || len > 1400)
-        return;
-
-    if (WARN_ON_ONCE(skb_headlen(skb) < off))
-	return;
-
-    udph = (struct udphdr *)(iph + 1);
-    dport = ntohs(udph->dest);
-    if (dport < 1000 || dport > 1010)
-        return;
-
-    frag_index = 0;
-    src_vbuf = skb->data;
-    src_len = skb->len - skb->data_len;
-    copied = 0;
-    while (likely(copied < len))
-    {
-        while (unlikely(src_len == 0))
-        {
-            if (frag_index < skb_shinfo(skb)->nr_frags)
-            {
-                frag = &skb_shinfo(skb)->frags[frag_index++];
-                src_vbuf = skb_frag_address(frag);
-                src_len = frag->size;
-            }
-            else
-            {
-                if (skb_shinfo(skb)->frag_list != NULL)
-                    skb = skb_shinfo(skb)->frag_list;
-                else
-                    skb = skb->next;
-                frag_index = 0;
-                src_vbuf = skb->data;
-                src_len = skb->len - skb->data_len;
-            }
-        }
-
-        if (unlikely(off != 0))
-        {
-            if (off < src_len)
-            {
-                src_vbuf += off;
-                src_len -= off;
-                off = 0;
-            }
-            else
-            {
-                off -= src_len;
-                src_len = 0;
-            }
-            continue;
-        }
-
-        if (unlikely(*src_vbuf != (copied & 255)))
-            break;
-
-        src_vbuf++;
-        src_len--;
-        copied++;
-    }
-
-    if (copied < len)
-    {
-	extern spinlock_t cdx; unsigned long flags; spin_lock_irqsave(&cdx, flags);
-
-        printk(KERN_ERR "cdx: mlx rx: DEBUG: receive data mismatch detected "
-               "skb=%p %pI4:%hu -> %pI4:%hu, len = 0x%x\n", skb,
-               &iph->saddr, ntohs(udph->source), &iph->daddr, ntohs(udph->dest),len);
-
-        skb_dump(KERN_ERR, fskb, true);
-
-        skb = fskb;
-	off = sizeof(struct udphdr) + sizeof(struct iphdr);
-        frag_index = 0;
-        src_vbuf = skb->data;
-        src_len = skb->len - skb->data_len;
-        copied = 0;
-        while (copied < len)
-        {
-            while (src_len == 0)
-            {
-                if (frag_index < skb_shinfo(skb)->nr_frags)
-                {
-                    frag = &skb_shinfo(skb)->frags[frag_index++];
-                    src_vbuf = skb_frag_address(frag);
-                    src_len = frag->size;
-                }
-                else
-                {
-                    if (skb_shinfo(skb)->frag_list != NULL)
-                        skb = skb_shinfo(skb)->frag_list;
-                    else
-                        skb = skb->next;
-                    frag_index = 0;
-                    src_vbuf = skb->data;
-                    src_len = skb->len - skb->data_len;
-                }
-            }
-
-            if (off != 0)
-            {
-                if (off < src_len)
-                {
-                    src_vbuf += off;
-                    src_len -= off;
-                    off = 0;
-                }
-                else
-                {
-                    off -= src_len;
-                    src_len = 0;
-                }
-                continue;
-            }
-
-            if (*src_vbuf != (copied & 255))
-            {
-                printk(KERN_ERR "cdx: mlx rx: DEBUG: receive:  buf[0x%x] = 0x%02hhx"
-                       " [expected 0x%02x]\n",
-                       copied,*src_vbuf,(copied & 255));
-            }
-
-            src_vbuf++;
-            src_len--;
-            copied++;
-        }
-
-        printk(KERN_ERR "\n");
-	spin_unlock_irqrestore(&cdx, flags);
-    }
-}
-
 void mlx5e_handle_rx_cqe(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 {
 	struct mlx5e_rx_wqe *wqe;
@@ -1012,7 +713,6 @@ void mlx5e_handle_rx_cqe(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 	u16 wqe_counter;
 	u32 cqe_bcnt;
 
-	WARN_ON_ONCE(1); //cdx
 	wqe_counter_be = cqe->wqe_counter;
 	wqe_counter    = be16_to_cpu(wqe_counter_be);
 	wqe            = mlx5_wq_ll_get_wqe(&rq->wq, wqe_counter);
@@ -1023,16 +723,6 @@ void mlx5e_handle_rx_cqe(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 		goto wq_ll_pop;
 
 	mlx5e_complete_rx_cqe(rq, cqe, cqe_bcnt, skb);
-
-	{
-		static int printed;
-		if (!printed) {
-			printed = 1;
-			skb_dump(KERN_ERR, skb, true);
-		}
-	}
-	test_recv_ip(skb); //cdx
-
 	napi_gro_receive(rq->cq.napi, skb);
 
 wq_ll_pop:
@@ -1051,7 +741,6 @@ void mlx5e_handle_rx_cqe_rep(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 	u16 wqe_counter;
 	u32 cqe_bcnt;
 
-	WARN_ON_ONCE(1); //cdx
 	wqe_counter_be = cqe->wqe_counter;
 	wqe_counter    = be16_to_cpu(wqe_counter_be);
 	wqe            = mlx5_wq_ll_get_wqe(&rq->wq, wqe_counter);
@@ -1120,7 +809,6 @@ void mlx5e_handle_rx_cqe_mpwrq(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 	struct sk_buff *skb;
 	u16 cqe_bcnt;
 
-	//WARN_ON_ONCE(1); //cdx: this one is used!!!
 	wi->consumed_strides += cstrides;
 
 	if (unlikely((cqe->op_own >> 4) != MLX5_CQE_RESP_SEND)) {
@@ -1146,20 +834,6 @@ void mlx5e_handle_rx_cqe_mpwrq(struct mlx5e_rq *rq, struct mlx5_cqe64 *cqe)
 
 	mlx5e_mpwqe_fill_rx_skb(rq, cqe, wi, cqe_bcnt, skb);
 	mlx5e_complete_rx_cqe(rq, cqe, cqe_bcnt, skb);
-
-#if 0
-	{
-		static int printed;
-
-		//WARN_ON_ONCE(1); //cdx: this one is used!!!
-		if (!printed) {
-			printed = 1;
-			skb_dump(KERN_ERR, skb, true);
-		}
-	}
-#endif
-	test_recv_ip(skb); //cdx
-
 	napi_gro_receive(rq->cq.napi, skb);
 
 mpwrq_cqe_out:

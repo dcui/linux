@@ -657,7 +657,6 @@ cleanup:
 	return ret;
 }
 
-#if 0
 static int
 rndis_filter_set_offload_params(struct net_device *ndev,
 				struct netvsc_device *nvdev,
@@ -715,7 +714,6 @@ cleanup:
 	put_rndis_request(rdev, request);
 	return ret;
 }
-#endif
 
 int rndis_filter_set_rss_param(struct rndis_device *rdev,
 			       const u8 *rss_key)
@@ -1067,7 +1065,7 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 				      struct netvsc_device_info *device_info)
 {
 	struct net_device *net = hv_get_drvdata(dev);
-	//struct net_device_context *net_device_ctx = netdev_priv(net);
+	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct netvsc_device *net_device;
 	struct rndis_device *rndis_device;
 	struct ndis_offload hwcaps;
@@ -1075,7 +1073,7 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 	struct nvsp_message *init_packet;
 	struct ndis_recv_scale_cap rsscap;
 	u32 rsscap_size = sizeof(struct ndis_recv_scale_cap);
-	//unsigned int gso_max_size = GSO_MAX_SIZE;
+	unsigned int gso_max_size = GSO_MAX_SIZE;
 	u32 mtu, size, num_rss_qs;
 	const struct cpumask *node_cpu_mask;
 	u32 num_possible_rss_qs;
@@ -1137,7 +1135,6 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 	offloads.ip_v4_csum = NDIS_OFFLOAD_PARAMETERS_TX_RX_DISABLED;
 
 	/* Compute tx offload settings based on hw capabilities */
-#if 0
 	net->hw_features = NETIF_F_RXCSUM;
 
 	if ((hwcaps.csum.ip4_txcsum & NDIS_TXCSUM_ALL_TCP4) == NDIS_TXCSUM_ALL_TCP4) {
@@ -1187,7 +1184,6 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 	ret = rndis_filter_set_offload_params(net, net_device, &offloads);
 	if (ret)
 		goto err_dev_remv;
-#endif
 
 	rndis_filter_query_device_link_status(rndis_device, net_device);
 
