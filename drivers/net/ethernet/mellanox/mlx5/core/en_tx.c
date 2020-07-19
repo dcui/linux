@@ -297,12 +297,12 @@ static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt
         has_mac = skb_mac_header_was_set(skb);
         has_trans = skb_transport_header_was_set(skb);
 
-        printk("%sskb len=%u headroom=%u headlen=%u tailroom=%u\n"
+        printk("%s skb=%p skb len=%u headroom=%u headlen=%u tailroom=%u\n"
                "mac=(%d,%d) net=(%d,%d) trans=%d\n"
                "shinfo(txflags=%u nr_frags=%u gso(size=%hu type=%u segs=%hu))\n"
                "csum(0x%x ip_summed=%u complete_sw=%u valid=%u level=%u)\n"
                "hash(0x%x sw=%u l4=%u) proto=0x%04x pkttype=%u iif=%d\n",
-               level, skb->len, headroom, skb_headlen(skb), tailroom,
+               level, skb, skb->len, headroom, skb_headlen(skb), tailroom,
                has_mac ? skb->mac_header : -1,
                has_mac ? skb_mac_header_len(skb) : -1,
                skb->network_header,
@@ -453,8 +453,9 @@ static void test_send_mac(struct sk_buff *skb)
 
     if (copied < len)
     {
-        printk(KERN_ERR "cdx: mlx tx nic: DEBUG: send data mismatch detected "
-               "%pI4:%hu -> %pI4:%hu, len = 0x%x\n",
+	extern spinlock_t cdx; unsigned long flags; spin_lock_irqsave(&cdx, flags);
+        printk(KERN_ERR "cdx: mlx tx: DEBUG: send data mismatch detected "
+               "skb=%p %pI4:%hu -> %pI4:%hu, len = 0x%x\n", skb,
                &iph->saddr, ntohs(udph->source), &iph->daddr, ntohs(udph->dest),len);
 
         skb_dump(KERN_ERR, fskb, true);
@@ -505,7 +506,7 @@ static void test_send_mac(struct sk_buff *skb)
 
             if (*src_vbuf != (copied & 255))
             {
-                printk(KERN_ERR "cdx: mlx tx nic: DEBUG: send:  buf[0x%x] = 0x%02hhx"
+                printk(KERN_ERR "cdx: mlx tx: DEBUG: send:  buf[0x%x] = 0x%02hhx"
                        " [expected 0x%02x]\n",
                        copied,*src_vbuf,(copied & 255));
             }
@@ -516,6 +517,7 @@ static void test_send_mac(struct sk_buff *skb)
         }
 
         printk(KERN_ERR "\n");
+	spin_unlock_irqrestore(&cdx, flags);
     }
 }
 

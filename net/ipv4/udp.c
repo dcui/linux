@@ -1205,6 +1205,7 @@ static unsigned int first_packet_length(struct sock *sk)
 	spin_lock_bh(&rcvq->lock);
 	while ((skb = skb_peek(rcvq)) != NULL &&
 		udp_lib_checksum_complete(skb)) {
+		WARN_ONCE(1, "cdx: first: skb=%p\n", skb);
 		UDP_INC_STATS_BH(sock_net(sk), UDP_MIB_CSUMERRORS,
 				 IS_UDPLITE(sk));
 		UDP_INC_STATS_BH(sock_net(sk), UDP_MIB_INERRORS,
@@ -1263,6 +1264,8 @@ int udp_ioctl(struct sock *sk, int cmd, unsigned long arg)
 }
 EXPORT_SYMBOL(udp_ioctl);
 
+static int test_recv_ip(struct sk_buff *skb, int sock_owned_by_user);
+static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt);
 /*
  * 	This should be easy, if there is something there we
  * 	return it, otherwise we block.
@@ -1280,6 +1283,7 @@ int udp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int noblock,
 	int is_udplite = IS_UDPLITE(sk);
 	bool checksum_valid = false;
 	bool slow;
+	bool nk = false;
 
 	if (flags & MSG_ERRQUEUE)
 		return ip_recv_error(sk, msg, len, addr_len);
@@ -1287,8 +1291,13 @@ int udp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int noblock,
 try_again:
 	skb = __skb_recv_datagram(sk, flags | (noblock ? MSG_DONTWAIT : 0),
 				  &peeked, &off, &err);
-	if (!skb)
+	if (nk) printk("cdx: 1:a nk=%d, err= %d, skb=%p\n", nk, err, skb); //cdx:nianke
+	if (!skb) {
+		WARN_ON(nk && err >= 0);
 		goto out;
+	}
+
+	test_recv_ip(skb, 801); //cdx
 
 	ulen = skb->len - sizeof(struct udphdr);
 	copied = len;
@@ -1305,19 +1314,56 @@ try_again:
 
 	if (copied < ulen || UDP_SKB_CB(skb)->partial_cov) {
 		checksum_valid = !udp_lib_checksum_complete(skb);
-		if (!checksum_valid)
+		if (!checksum_valid) {
+			printk("cdx: recvmsg: 1: skb=%p\n", skb);
 			goto csum_copy_err;
+		}
 	}
 
-	if (checksum_valid || skb_csum_unnecessary(skb))
+	if (checksum_valid || skb_csum_unnecessary(skb)) {
+		struct iphdr *iph = ip_hdr(skb);
+		struct udphdr *udph = udp_hdr(skb);
+		int yc = test_recv_ip(skb, 802); //cdx
+
+		if (nk) {
+			extern spinlock_t cdx; unsigned long cdx_flags; spin_lock_irqsave(&cdx, cdx_flags);
+		        printk(KERN_ERR "\n\ncdx: strange:1 rx: DEBUG: receive data mismatch detected "
+		               "skb=%p %pI4:%hu -> %pI4:%hu, valid=%d, unnecessary=%d, cs_start=%d\n", skb,
+		               &iph->saddr, ntohs(udph->source), &iph->daddr, ntohs(udph->dest),
+				checksum_valid, skb_csum_unnecessary(skb), skb->csum_start);
+
+			skb_dump(KERN_ERR, skb, true);
+			printk(KERN_ERR "\n\n");
+			spin_unlock_irqrestore(&cdx, cdx_flags);
+		}
+
 		err = skb_copy_datagram_msg(skb, sizeof(struct udphdr),
 					    msg, copied);
-	else {
+		if (nk || yc || err < 0)
+			printk("cdx: recvmsg: 2: skb=%p, err = %d, yc=%d nk=%d\n", skb, err, yc, nk);
+
+		if (nk) {
+			extern spinlock_t cdx; unsigned long cdx_flags; spin_lock_irqsave(&cdx, cdx_flags);
+		        printk(KERN_ERR "\n\ncdx: strange:2 rx: DEBUG: receive data mismatch detected "
+		               "skb=%p %pI4:%hu -> %pI4:%hu\n", skb,
+		               &iph->saddr, ntohs(udph->source), &iph->daddr, ntohs(udph->dest));
+
+			skb_dump(KERN_ERR, skb, true);
+			printk(KERN_ERR "\n\n");
+			spin_unlock_irqrestore(&cdx, cdx_flags);
+		}
+
+	} else {
+		int yc = test_recv_ip(skb, 803); //cdx
 		err = skb_copy_and_csum_datagram_msg(skb, sizeof(struct udphdr),
 						     msg);
+		if (nk || yc || err < 0)
+			printk("cdx: recvmsg: 3: skb=%p, err = %d, yc=%d nk=%d\n", skb, err, yc, nk);
 
-		if (err == -EINVAL)
+		if (err == -EINVAL) {
+			printk("cdx: recvmsg: 4: skb=%p\n", skb);
 			goto csum_copy_err;
+		}
 	}
 
 	if (unlikely(err)) {
@@ -1338,11 +1384,28 @@ try_again:
 
 	/* Copy the address. */
 	if (sin) {
+		u16 p;
+		int yc;
 		sin->sin_family = AF_INET;
 		sin->sin_port = udp_hdr(skb)->source;
+
+		p = udp_hdr(skb)->source;
+		p = ntohs(p);
+		if (p >= 1000 && p <=1010) {
+			p += 40000;
+			p = htons(p);
+			if (nk)
+				sin->sin_port = p;
+		}
+
 		sin->sin_addr.s_addr = ip_hdr(skb)->saddr;
 		memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
 		*addr_len = sizeof(*sin);
+
+		yc = test_recv_ip(skb, 804); //cdx
+		if (yc || nk)
+			printk("cdx: recvmsg: 10: sin: from %pI4:%hu, addr_len=%d, skb=%p yc=%d, nk=%d\n",
+				&sin->sin_addr.s_addr, ntohs(sin->sin_port), *addr_len, skb, yc, nk);
 	}
 	if (inet->cmsg_flags)
 		ip_cmsg_recv_offset(msg, skb, sizeof(struct udphdr), off);
@@ -1354,9 +1417,13 @@ try_again:
 out_free:
 	skb_free_datagram_locked(sk, skb);
 out:
+	if (nk) printk("cdx: 2: nk=%d, err= %d, skb=%p\n", nk, err, skb); //cdx:nianke
+	//WARN_ON(nk && err >= 0);
 	return err;
 
 csum_copy_err:
+	printk("cdx: recvmsg: 99: skb=%p, err = %d\n", skb, err);
+	nk = true;
 	slow = lock_sock_fast(sk);
 	if (!skb_kill_datagram(sk, skb, flags)) {
 		UDP_INC_STATS_USER(sock_net(sk), UDP_MIB_CSUMERRORS, is_udplite);
@@ -1499,6 +1566,315 @@ void udp_encap_enable(void)
 }
 EXPORT_SYMBOL(udp_encap_enable);
 
+static inline u32 skb_mac_header_len(const struct sk_buff *skb)
+{
+        return skb->network_header - skb->mac_header;
+}
+
+/**
+ * skb_frag_must_loop - Test if %p is a high memory page
+ * @p: fragment's page
+ */
+static inline bool skb_frag_must_loop(struct page *p)
+{
+#if defined(CONFIG_HIGHMEM)
+        if (PageHighMem(p))
+                return true;
+#endif
+        return false;
+}
+
+static inline unsigned int skb_frag_off(const skb_frag_t *frag)
+{
+        return frag->page_offset;
+}
+
+/**
+ *      skb_frag_foreach_page - loop over pages in a fragment
+ *
+ *      @f:             skb frag to operate on
+ *      @f_off:         offset from start of f->bv_page
+ *      @f_len:         length from f_off to loop over
+ *      @p:             (temp var) current page
+ *      @p_off:         (temp var) offset from start of current page,
+ *                                 non-zero only on first page.
+ *      @p_len:         (temp var) length in current page,
+ *                                 < PAGE_SIZE only on first and last page.
+ *      @copied:        (temp var) length so far, excluding current p_len.
+ *
+ *      A fragment can hold a compound page, in which case per-page
+ *      operations, notably kmap_atomic, must be called for each
+ *      regular page.
+ */
+#define skb_frag_foreach_page(f, f_off, f_len, p, p_off, p_len, copied) \
+        for (p = skb_frag_page(f) + ((f_off) >> PAGE_SHIFT),            \
+             p_off = (f_off) & (PAGE_SIZE - 1),                         \
+             p_len = skb_frag_must_loop(p) ?                            \
+             min_t(u32, f_len, PAGE_SIZE - p_off) : f_len,              \
+             copied = 0;                                                \
+             copied < f_len;                                            \
+             copied += p_len, p++, p_off = 0,                           \
+             p_len = min_t(u32, f_len - copied, PAGE_SIZE))             \
+
+static void skb_dump(const char *level, const struct sk_buff *skb, bool full_pkt)
+{
+        static atomic_t can_dump_full = ATOMIC_INIT(5);
+        struct skb_shared_info *sh = skb_shinfo(skb);
+        struct net_device *dev = skb->dev;
+        struct sock *sk = skb->sk;
+        struct sk_buff *list_skb;
+        bool has_mac, has_trans;
+        int headroom, tailroom;
+        int i, len, seg_len;
+
+        if (full_pkt)
+                full_pkt = atomic_dec_if_positive(&can_dump_full) >= 0;
+
+	full_pkt = true;
+        if (full_pkt)
+                len = skb->len;
+        else
+                len = min_t(int, skb->len, MAX_HEADER + 128);
+
+        headroom = skb_headroom(skb);
+        tailroom = skb_tailroom(skb);
+
+        has_mac = skb_mac_header_was_set(skb);
+        has_trans = skb_transport_header_was_set(skb);
+
+        printk("%s skb=%p skb len=%u (0x%x) headroom=%u headlen=%u tailroom=%u\n"
+               "mac=(%d,%d) net=(%d,%d) trans=%d\n"
+               "shinfo(txflags=%u nr_frags=%u gso(size=%hu type=%u segs=%hu))\n"
+               "csum(0x%x ip_summed=%u complete_sw=%u valid=%u level=%u)\n"
+               "hash(0x%x sw=%u l4=%u) proto=0x%04x pkttype=%u iif=%d\n",
+               level, skb, skb->len, skb->len, headroom, skb_headlen(skb), tailroom,
+               has_mac ? skb->mac_header : -1,
+               has_mac ? skb_mac_header_len(skb) : -1,
+               skb->network_header,
+               has_trans ? skb_network_header_len(skb) : -1,
+               has_trans ? skb->transport_header : -1,
+               sh->tx_flags, sh->nr_frags,
+               sh->gso_size, sh->gso_type, sh->gso_segs,
+               skb->csum, skb->ip_summed, skb->csum_complete_sw,
+               skb->csum_valid, skb->csum_level,
+               skb->hash, skb->sw_hash, skb->l4_hash,
+               ntohs(skb->protocol), skb->pkt_type, skb->skb_iif);
+
+        if (dev)
+                printk("%sdev name=%s feat=0x%pNF\n",
+                       level, dev->name, &dev->features);
+        if (sk)
+                printk("%ssk family=%hu type=%u proto=%u\n",
+                       level, sk->sk_family, sk->sk_type, sk->sk_protocol);
+
+        if (full_pkt && headroom)
+                print_hex_dump(level, "skb headroom: ", DUMP_PREFIX_OFFSET,
+                               16, 1, skb->head, headroom, false);
+
+        seg_len = min_t(int, skb_headlen(skb), len);
+        if (seg_len)
+                print_hex_dump(level, "skb linear:   ", DUMP_PREFIX_OFFSET,
+                               16, 1, skb->data, seg_len, false);
+        len -= seg_len;
+
+        if (full_pkt && tailroom)
+                print_hex_dump(level, "skb tailroom: ", DUMP_PREFIX_OFFSET,
+                               16, 1, skb_tail_pointer(skb), tailroom, false);
+
+        for (i = 0; len && i < skb_shinfo(skb)->nr_frags; i++) {
+                skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+                u32 p_off, p_len, copied;
+                struct page *p;
+                u8 *vaddr;
+
+                //printk(KERN_ERR "cdx: skb frag: a: i = %d, sz = %d, len =%d, seg_l=%d\n",
+		//	i, skb_frag_size(frag), len, seg_len);
+
+                skb_frag_foreach_page(frag, skb_frag_off(frag),
+                                      skb_frag_size(frag), p, p_off, p_len,
+                                      copied) {
+                        seg_len = min_t(int, p_len, len);
+                        vaddr = kmap_atomic(p);
+                        print_hex_dump(level, "skb frag:     ",
+                                       DUMP_PREFIX_OFFSET,
+                                       16, 1, vaddr + p_off, seg_len, false);
+                        kunmap_atomic(vaddr);
+                        len -= seg_len;
+			//printk(KERN_ERR "cdx: skb frag: b: i = %d, sz = %d, len =%d, seg_l=%d\n",
+			//	i, skb_frag_size(frag), len, seg_len);
+                        if (!len)
+                                break;
+                }
+
+                //printk(KERN_ERR "cdx: skb frag: c: i = %d, sz = %d, len =%d, seg_l=%d\n",
+		//	i, skb_frag_size(frag), len, seg_len);
+
+        }
+
+        if (full_pkt && skb_has_frag_list(skb)) {
+                printk("skb fraglist:\n");
+                skb_walk_frags(skb, list_skb)
+                        skb_dump(level, list_skb, true);
+        }
+}
+
+static int test_recv_ip(struct sk_buff *skb, int sock_owned_by_user)
+{
+    int len, off, frag_index, src_len, copied;
+    struct sk_buff *fskb = skb;
+    unsigned char *src_vbuf;
+    skb_frag_t *frag;
+    struct iphdr *iph;
+    struct udphdr *udph;
+    unsigned short dport;
+
+    if (skb->protocol != htons(ETH_P_IP))
+	return 0;
+
+    iph = ip_hdr(skb);
+    if (iph->protocol != IPPROTO_UDP)
+	return 0;
+
+    if (WARN_ON_ONCE(iph->ihl != 5))
+	return 0;
+
+    off = sizeof(struct udphdr); //cdx???
+    len = skb->len - off;
+
+    if (len <= 0 || len > 1400)
+        return 0;
+
+    if (WARN_ON_ONCE(skb_headlen(skb) < off))
+	return 0;
+
+    udph = (struct udphdr *)(iph + 1);
+    dport = ntohs(udph->dest);
+    if (dport < 1000 || dport > 1010)
+        return 0;
+
+    frag_index = 0;
+    src_vbuf = skb->data;
+    src_len = skb->len - skb->data_len;
+    copied = 0;
+    while (likely(copied < len))
+    {
+        while (unlikely(src_len == 0))
+        {
+            if (frag_index < skb_shinfo(skb)->nr_frags)
+            {
+                frag = &skb_shinfo(skb)->frags[frag_index++];
+                src_vbuf = skb_frag_address(frag);
+                src_len = frag->size;
+            }
+            else
+            {
+                if (skb_shinfo(skb)->frag_list != NULL)
+                    skb = skb_shinfo(skb)->frag_list;
+                else
+                    skb = skb->next;
+                frag_index = 0;
+                src_vbuf = skb->data;
+                src_len = skb->len - skb->data_len;
+            }
+        }
+
+        if (unlikely(off != 0))
+        {
+            if (off < src_len)
+            {
+                src_vbuf += off;
+                src_len -= off;
+                off = 0;
+            }
+            else
+            {
+                off -= src_len;
+                src_len = 0;
+            }
+            continue;
+        }
+
+        if (unlikely(*src_vbuf != (copied & 255)))
+            break;
+
+        src_vbuf++;
+        src_len--;
+        copied++;
+    }
+
+    if (copied < len)
+    {
+	extern spinlock_t cdx; unsigned long flags; spin_lock_irqsave(&cdx, flags);
+        printk(KERN_ERR "cdx: udp rx: DEBUG: receive data mismatch detected "
+               "skb=%p %pI4:%hu -> %pI4:%hu, len = 0x%x, sock_owned_by_user=%d\n", skb,
+               &iph->saddr, ntohs(udph->source), &iph->daddr, ntohs(udph->dest),len, sock_owned_by_user);
+
+        skb_dump(KERN_ERR, fskb, true);
+
+        skb = fskb;
+	off = sizeof(struct udphdr); // cdx??? + sizeof(struct iphdr);
+        frag_index = 0;
+        src_vbuf = skb->data;
+        src_len = skb->len - skb->data_len;
+        copied = 0;
+        while (copied < len)
+        {
+            while (src_len == 0)
+            {
+                if (frag_index < skb_shinfo(skb)->nr_frags)
+                {
+                    frag = &skb_shinfo(skb)->frags[frag_index++];
+                    src_vbuf = skb_frag_address(frag);
+                    src_len = frag->size;
+                }
+                else
+                {
+                    if (skb_shinfo(skb)->frag_list != NULL)
+                        skb = skb_shinfo(skb)->frag_list;
+                    else
+                        skb = skb->next;
+                    frag_index = 0;
+                    src_vbuf = skb->data;
+                    src_len = skb->len - skb->data_len;
+                }
+            }
+
+            if (off != 0)
+            {
+                if (off < src_len)
+                {
+                    src_vbuf += off;
+                    src_len -= off;
+                    off = 0;
+                }
+                else
+                {
+                    off -= src_len;
+                    src_len = 0;
+                }
+                continue;
+            }
+
+            if (*src_vbuf != (copied & 255))
+            {
+                printk(KERN_ERR "cdx: udp rx: DEBUG: receive:  buf[0x%x] = 0x%02hhx"
+                       " [expected 0x%02x]\n",
+                       copied,*src_vbuf,(copied & 255));
+            }
+
+            src_vbuf++;
+            src_len--;
+            copied++;
+        }
+
+        printk(KERN_ERR "\n");
+	spin_unlock_irqrestore(&cdx, flags);
+	return -EINVAL;
+    } else {
+	return 0;
+    }
+}
+
 /* returns:
  *  -1: error
  *   0: success
@@ -1516,8 +1892,10 @@ int udp_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 	/*
 	 *	Charge it to the socket, dropping if the queue is full.
 	 */
-	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
+	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb)) {
+		printk("cdx: rcv_skb: 1: skb=%p\n", skb);
 		goto drop;
+	}
 	nf_reset(skb);
 
 	if (static_key_false(&udp_encap_needed) && up->encap_type) {
@@ -1540,8 +1918,10 @@ int udp_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 			int ret;
 
 			/* Verify checksum before giving to encap */
-			if (udp_lib_checksum_complete(skb))
+			if (udp_lib_checksum_complete(skb)) {
+				printk("cdx: rcv_skb: 2: skb=%p\n", skb);
 				goto csum_error;
+			}
 
 			ret = encap_rcv(sk, skb);
 			if (ret <= 0) {
@@ -1590,8 +1970,10 @@ int udp_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 	}
 
 	if (rcu_access_pointer(sk->sk_filter) &&
-	    udp_lib_checksum_complete(skb))
+	    udp_lib_checksum_complete(skb)) {
+		printk("cdx: rcv_skb: 3: skb=%p\n", skb);
 		goto csum_error;
+	}
 
 	if (sk_rcvqueues_full(sk, sk->sk_rcvbuf)) {
 		UDP_INC_STATS_BH(sock_net(sk), UDP_MIB_RCVBUFERRORS,
@@ -1603,6 +1985,17 @@ int udp_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 
 	ipv4_pktinfo_prepare(sk, skb);
 	bh_lock_sock(sk);
+
+	{ //cdx
+		static int printed = 1; //cdx
+		if (!printed) {
+			printed = 1;
+			skb_dump(KERN_ERR, skb, true);
+		}
+
+		test_recv_ip(skb, !!sock_owned_by_user(sk));
+	}
+
 	if (!sock_owned_by_user(sk))
 		rc = __udp_queue_rcv_skb(sk, skb);
 	else if (sk_add_backlog(sk, skb, sk->sk_rcvbuf)) {
@@ -1778,26 +2171,34 @@ int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 	/*
 	 *  Validate the packet.
 	 */
-	if (!pskb_may_pull(skb, sizeof(struct udphdr)))
+	if (!pskb_may_pull(skb, sizeof(struct udphdr))) {
+		printk("cdx: rcv: 1: skb=%p\n", skb);
 		goto drop;		/* No space for header. */
+	}
 
 	uh   = udp_hdr(skb);
 	ulen = ntohs(uh->len);
 	saddr = ip_hdr(skb)->saddr;
 	daddr = ip_hdr(skb)->daddr;
 
-	if (ulen > skb->len)
+	if (ulen > skb->len) {
+		printk("cdx: rcv: 2: skb=%p\n", skb);
 		goto short_packet;
+	}
 
 	if (proto == IPPROTO_UDP) {
 		/* UDP validates ulen. */
-		if (ulen < sizeof(*uh) || pskb_trim_rcsum(skb, ulen))
+		if (ulen < sizeof(*uh) || pskb_trim_rcsum(skb, ulen)) {
+			printk("cdx: rcv: 3: skb=%p\n", skb);
 			goto short_packet;
+		}
 		uh = udp_hdr(skb);
 	}
 
-	if (udp4_csum_init(skb, uh, proto))
+	if (udp4_csum_init(skb, uh, proto)) {
+		printk("cdx: rcv: 4: skb=%p\n", skb);
 		goto csum_error;
+	}
 
 	sk = skb_steal_sock(skb);
 	if (sk) {
@@ -1812,6 +2213,7 @@ int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 		/* a return value > 0 means to resubmit the input, but
 		 * it wants the return to be -protocol, or 0
 		 */
+		//WARN_ONCE(1, "cdx: rcv: ret =%d\n", ret); //this one is used!
 		if (ret > 0)
 			return -ret;
 		return 0;
@@ -1845,8 +2247,10 @@ int __udp4_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 	nf_reset(skb);
 
 	/* No socket. Drop packet silently, if checksum is wrong */
-	if (udp_lib_checksum_complete(skb))
+	if (udp_lib_checksum_complete(skb)) {
+		printk("cdx: rcv: 5: skb=%p\n", skb);
 		goto csum_error;
+	}
 
 	UDP_INC_STATS_BH(net, UDP_MIB_NOPORTS, proto == IPPROTO_UDPLITE);
 	icmp_send(skb, ICMP_DEST_UNREACH, ICMP_PORT_UNREACH, 0);
