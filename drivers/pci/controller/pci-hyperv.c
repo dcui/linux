@@ -1213,6 +1213,7 @@ static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
 
 static void hv_irq_mask(struct irq_data *data)
 {
+	printk("cdx: hv_irq_mask, irq=%d\n", data->irq);
 	pci_msi_mask_irq(data);
 }
 
@@ -1292,7 +1293,10 @@ static void hv_irq_unmask(struct irq_data *data)
 		}
 
 		cpumask_and(tmp, dest, cpu_online_mask);
+		printk("cdx: 2:33: hv_irq_unmask: tmp=%*pbl, dest=%*pbl, online=%*pbl\n",
+			cpumask_pr_args(tmp),cpumask_pr_args(dest), cpumask_pr_args(cpu_online_mask) );
 		nr_bank = cpumask_to_vpset(&params->int_target.vp_set, tmp);
+		printk("cdx: 2:33: hv_irq_unmask: nr_bank = %d\n", nr_bank);
 		free_cpumask_var(tmp);
 
 		if (nr_bank <= 0) {
@@ -1307,6 +1311,7 @@ static void hv_irq_unmask(struct irq_data *data)
 		 */
 		var_size = 1 + nr_bank;
 	} else {
+		BUG_ON(1);
 		for_each_cpu_and(cpu, dest, cpu_online_mask) {
 			params->int_target.vp_mask |=
 				(1ULL << hv_cpu_number_to_vp_number(cpu));
@@ -1321,7 +1326,8 @@ exit_unlock:
 
 	if (res) {
 		dev_err(&hbus->hdev->device,
-			"%s() failed: %#llx", __func__, res);
+			"%s() cdx: 2:33: failed %#llx", __func__, res);
+		WARN_ON(1);
 		return;
 	}
 
@@ -1540,6 +1546,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	msg->data = comp.int_desc.data;
 
 	put_pcichild(hpdev);
+	printk("cdx: hv_compose_msi_msg: irq = %d\n", data->irq);
 	return;
 
 free_int_desc:

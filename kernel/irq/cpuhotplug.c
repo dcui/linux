@@ -57,6 +57,7 @@ static bool migrate_one_irq(struct irq_desc *desc)
 	const struct cpumask *affinity;
 	bool brokeaff = false;
 	int err;
+	int p = d->irq == 24;
 
 	/*
 	 * IRQ chip might be already torn down, but the irq descriptor is
@@ -100,20 +101,31 @@ static bool migrate_one_irq(struct irq_desc *desc)
 	 * there is no move pending or the pending mask does not contain
 	 * any online CPU, use the current affinity mask.
 	 */
-	if (irq_fixup_move_pending(desc, true))
+	if (irq_fixup_move_pending(desc, true)) {
 		affinity = irq_desc_get_pending_mask(desc);
-	else
+		if (p && affinity) printk("cdx: migrate_one_irq: 1: affi=%*pbl\n", cpumask_pr_args(affinity));
+	} else {
 		affinity = irq_data_get_affinity_mask(d);
+		if (p && affinity) printk("cdx: migrate_one_irq: 2: affi=%*pbl\n", cpumask_pr_args(affinity));
+	}
 
 	/* Mask the chip for interrupts which cannot move in process context */
-	if (maskchip && chip->irq_mask)
+	if (p && affinity) printk("cdx: migrate_one_irq: 3: %d, %px, online=%*pbl\n", maskchip, chip->irq_mask,
+		cpumask_pr_args(cpu_online_mask));
+	if (maskchip && chip->irq_mask) {
 		chip->irq_mask(d);
+		if (p && affinity) printk("cdx: migrate_one_irq: 4: %d, %px\n", maskchip, chip->irq_mask);
+	}
 
 	if (cpumask_any_and(affinity, cpu_online_mask) >= nr_cpu_ids) {
 		/*
 		 * If the interrupt is managed, then shut it down and leave
 		 * the affinity untouched.
 		 */
+		if (p && affinity) printk("cdx: migrate_one_irq: 5: on cpu %d: %d, %d, %*pbl, %*pbl\n",
+			raw_smp_processor_id(), nr_cpu_ids, irqd_affinity_is_managed(d),
+			cpumask_pr_args(affinity), cpumask_pr_args(cpu_online_mask));
+
 		if (irqd_affinity_is_managed(d)) {
 			irqd_set_managed_shutdown(d);
 			irq_shutdown_and_deactivate(desc);
@@ -129,14 +141,18 @@ static bool migrate_one_irq(struct irq_desc *desc)
 	 * CPU.
 	 */
 	err = irq_do_set_affinity(d, affinity, false);
+	if (p) printk("cdx: migrate_one_irq: 6: %d\n", err);
+
 	if (err) {
 		pr_warn_ratelimited("IRQ%u: set affinity failed(%d).\n",
 				    d->irq, err);
 		brokeaff = false;
 	}
 
-	if (maskchip && chip->irq_unmask)
+	if (maskchip && chip->irq_unmask) {
+		if (p) printk("cdx: migrate_one_irq: 7: %d\n", err);
 		chip->irq_unmask(d);
+	}
 
 	return brokeaff;
 }
