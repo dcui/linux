@@ -251,9 +251,6 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
  */
 void pci_msi_mask_irq(struct irq_data *data)
 {
-	printk("cdx: pci_msi_MASK_irq: irq = %u, hwirq=%lu, mask = 0x%x\n",
-		data->irq, data->hwirq, data->mask);
-
 	msi_set_mask_bit(data, 1);
 }
 EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
@@ -264,9 +261,6 @@ EXPORT_SYMBOL_GPL(pci_msi_mask_irq);
  */
 void pci_msi_unmask_irq(struct irq_data *data)
 {
-	printk("cdx: pci_msi_UNmask_irq: irq = %u, hwirq=%lu, mask = 0x%x\n",
-		 data->irq, data->hwirq, data->mask);
-
 	msi_set_mask_bit(data, 0);
 }
 EXPORT_SYMBOL_GPL(pci_msi_unmask_irq);

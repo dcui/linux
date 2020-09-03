@@ -1162,8 +1162,6 @@ static void hv_int_desc_free(struct hv_pci_dev *hpdev,
 	int_pkt->int_desc = *int_desc;
 	vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt, sizeof(*int_pkt),
 			 (unsigned long)&ctxt.pkt, VM_PKT_DATA_INBAND, 0);
-	printk("cdx: hv_int_desc_free: vector_count=%u, data = 0x%x, addr=0x%llx\n",
-		int_desc->vector_count, int_desc->data, int_desc->address);
 	kfree(int_desc);
 }
 
@@ -1201,9 +1199,6 @@ static void hv_msi_free(struct irq_domain *domain, struct msi_domain_info *info,
 		return;
 	}
 
-	//cdx: WARN_ON(1);
-	printk("cdx: hv_msi_free: vector_count=%u, data = 0x%x, addr=0x%llx\n",
-		int_desc->vector_count, int_desc->data, int_desc->address);
 	hv_int_desc_free(hpdev, int_desc);
 	put_pcichild(hpdev);
 }
@@ -1213,17 +1208,12 @@ static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
 {
 	struct irq_data *parent = data->parent_data;
 
-	//cdx: WARN_ON(1);
-	printk("cdx: hv_set_affinity: irq %d, hwirq=%ld, force=%d, dest=%*pbl\n",
-		data->irq, data->hwirq, force, cpumask_pr_args(dest));
 	return parent->chip->irq_set_affinity(parent, dest, force);
 }
 
 static void hv_irq_mask(struct irq_data *data)
 {
-	//cdx: WARN_ON(1);
 	pci_msi_mask_irq(data);
-	printk("cdx: hv_irq_mask: irq %d, hwirq=%ld\n", data->irq, data->hwirq);
 }
 
 /**
@@ -1251,14 +1241,13 @@ static void hv_irq_unmask(struct irq_data *data)
 	int cpu, nr_bank;
 	u64 res;
 
-	//cdx: WARN_ON(1);
-	printk("cdx: hv_irq_unmask: 1: irq %d, hwirq=%ld\n", data->irq, data->hwirq);
 	dest = irq_data_get_effective_affinity_mask(data);
 	pdev = msi_desc_to_pci_dev(msi_desc);
 	pbus = pdev->bus;
 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
 
-	if (hbus->state == hv_pcibus_removing || hbus->state == hv_pcibus_removed) {
+	if (hbus->state == hv_pcibus_removing ||
+	    hbus->state == hv_pcibus_removed) {
 		//update desc->masked
 		pci_msi_unmask_irq(data);
 		return;
@@ -1304,9 +1293,6 @@ static void hv_irq_unmask(struct irq_data *data)
 
 		cpumask_and(tmp, dest, cpu_online_mask);
 		nr_bank = cpumask_to_vpset(&params->int_target.vp_set, tmp);
-		printk("cdx: hv_irq_unmask: 2: irq %d, hwirq=%ld, tmp=%*pbl, dest=%*pbl, online=%*pbl\n",
-			data->irq, data->hwirq, cpumask_pr_args(tmp), cpumask_pr_args(dest),
-			cpumask_pr_args(cpu_online_mask));
 		free_cpumask_var(tmp);
 
 		if (nr_bank <= 0) {
@@ -1329,7 +1315,6 @@ static void hv_irq_unmask(struct irq_data *data)
 
 	res = hv_do_hypercall(HVCALL_RETARGET_INTERRUPT | (var_size << 17),
 			      params, NULL);
-	printk("cdx: hv_irq_unmask: 3: irq %d, hwirq=%ld, res=%lld\n", data->irq, data->hwirq, res);
 
 exit_unlock:
 	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
@@ -1444,14 +1429,10 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	if (!hpdev)
 		goto return_null_message;
 
-	//cdx: WARN_ON(1);
 	/* Free any previous message that might have already been composed. */
 	if (data->chip_data) {
 		int_desc = data->chip_data;
 		data->chip_data = NULL;
-		//cdx: WARN_ON(1);
-		printk("cdx: hv_compose_msi_msg: free: vector_count=%u, data = 0x%x, addr=0x%llx\n",
-			int_desc->vector_count, int_desc->data, int_desc->address);
 		hv_int_desc_free(hpdev, int_desc);
 	}
 
@@ -1557,8 +1538,6 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	msg->address_hi = comp.int_desc.address >> 32;
 	msg->address_lo = comp.int_desc.address & 0xffffffff;
 	msg->data = comp.int_desc.data;
-	printk("cdx: hv_compose_msi_msg: irq %d, hwirq=%ld, vector_count=%u, addr=0x%llx, data=0x%x\n",
-		data->irq, data->hwirq, int_desc->vector_count, int_desc->address, int_desc->data);
 
 	put_pcichild(hpdev);
 	return;
@@ -1818,7 +1797,6 @@ static void prepopulate_bars(struct hv_pcibus_device *hbus)
 				command |= PCI_COMMAND_MEMORY;
 				_hv_pcifront_write_config(hpdev, PCI_COMMAND, 2,
 							  command);
-				printk("cdx: prepopulate_bars: done\n");
 				break;
 			}
 		}
@@ -3377,40 +3355,18 @@ static int hv_pci_suspend(struct hv_device *hdev)
 	return 0;
 }
 
-static int hv_pci_walk_wrapper(struct pci_dev *pdev, void *data)
+static int hv_pci_walk_wrapper(struct pci_dev *pdev, void *arg)
 {
 	struct msi_desc *entry;
 	struct irq_data *irq_data;
-	int irq;
 
-	printk("cdx: hv_pci_walk_wrapper: 1\n");
 	for_each_pci_msi_entry(entry, pdev) {
-		irq = entry->irq;
-		irq_data = irq_get_irq_data(irq);
+		irq_data = irq_get_irq_data(entry->irq);
 		if (WARN_ON_ONCE(!irq_data))
 			return -EINVAL;
 
-		printk("cdx: hv_pci_walk_wrapper: 2.1: irq = %d:%d, hwirq=%ld, addr=0x%llx, data=0x%x, mask=0x%x\n",
-			irq, irq_data->irq, irq_data->hwirq,
-			(((unsigned long long)entry->msg.address_hi) << 32) | entry->msg.address_lo,
-			entry->msg.data, entry->masked);
-
 		hv_compose_msi_msg(irq_data, &entry->msg);
-
-		printk("cdx: hv_pci_walk_wrapper: 2.2: irq = %d:%d, hwirq=%ld, addr=0x%llx, data=0x%x, mask=0x%x\n",
-			irq, irq_data->irq, irq_data->hwirq,
-			(((unsigned long long)entry->msg.address_hi) << 32) | entry->msg.address_lo,
-			entry->msg.data, entry->masked);
-
-#if 0
-//cuidexuan: 9/3/2020, 00:08 AM
-		if (!(entry->masked & PCI_MSIX_ENTRY_CTRL_MASKBIT)) {
-		//	WARN_ON_ONCE(1);
-			hv_irq_unmask(irq_data);
-		}
-#endif
 	}
-	printk("cdx: hv_pci_walk_wrapper: 9\n");
 
 	return 0;
 }
@@ -3453,9 +3409,7 @@ static int hv_pci_resume(struct hv_device *hdev)
 
 	prepopulate_bars(hbus);
 
-	printk("cdx: before hv_pci_restore_msi_state: 111111111111111111111\n");
 	hv_pci_restore_msi_state(hbus);
-	printk("cdx: before hv_pci_restore_msi_state: 2222222222222222222222222222222222\n");
 
 	hbus->state = hv_pcibus_installed;
 	return 0;
