@@ -1211,6 +1211,13 @@ static void hv_irq_unmask(struct irq_data *data)
 	pbus = pdev->bus;
 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
 
+	if (hbus->state == hv_pcibus_removing ||
+	    hbus->state == hv_pcibus_removed) {
+		//update desc->masked
+		pci_msi_unmask_irq(data);
+		return;
+	}
+
 	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
 
 	params = &hbus->retarget_msi_interrupt_params;
@@ -3372,6 +3379,27 @@ static int hv_pci_suspend(struct hv_device *hdev)
 	return 0;
 }
 
+static int hv_pci_walk_wrapper(struct pci_dev *pdev, void *arg)
+{
+	struct msi_desc *entry;
+	struct irq_data *irq_data;
+
+	for_each_pci_msi_entry(entry, pdev) {
+		irq_data = irq_get_irq_data(entry->irq);
+		if (WARN_ON_ONCE(!irq_data))
+			return -EINVAL;
+
+		hv_compose_msi_msg(irq_data, &entry->msg);
+	}
+
+	return 0;
+}
+
+static void hv_pci_restore_msi_state(struct hv_pcibus_device *hbus)
+{
+	pci_walk_bus(hbus->pci_bus, hv_pci_walk_wrapper, NULL);
+}
+
 static int hv_pci_resume(struct hv_device *hdev)
 {
 	struct hv_pcibus_device *hbus = hv_get_drvdata(hdev);
@@ -3404,6 +3432,8 @@ static int hv_pci_resume(struct hv_device *hdev)
 		goto out;
 
 	prepopulate_bars(hbus);
+
+	hv_pci_restore_msi_state(hbus);
 
 	hbus->state = hv_pcibus_installed;
 	return 0;

@@ -2587,7 +2587,7 @@ static int netvsc_remove(struct hv_device *dev)
 static int netvsc_suspend(struct hv_device *dev)
 {
 	struct net_device_context *ndev_ctx;
-	struct net_device *vf_netdev, *net;
+	struct net_device *net;
 	struct netvsc_device *nvdev;
 	int ret;
 
@@ -2604,10 +2604,6 @@ static int netvsc_suspend(struct hv_device *dev)
 		goto out;
 	}
 
-	vf_netdev = rtnl_dereference(ndev_ctx->vf_netdev);
-	if (vf_netdev)
-		netvsc_unregister_vf(vf_netdev);
-
 	/* Save the current config info */
 	ndev_ctx->saved_netvsc_dev_info = netvsc_devinfo_get(nvdev);
 
@@ -2623,6 +2619,7 @@ static int netvsc_resume(struct hv_device *dev)
 	struct net_device *net = hv_get_drvdata(dev);
 	struct net_device_context *net_device_ctx;
 	struct netvsc_device_info *device_info;
+	struct net_device *vf_netdev;
 	int ret;
 
 	rtnl_lock();
@@ -2634,6 +2631,10 @@ static int netvsc_resume(struct hv_device *dev)
 
 	netvsc_devinfo_put(device_info);
 	net_device_ctx->saved_netvsc_dev_info = NULL;
+
+	vf_netdev = rtnl_dereference(net_device_ctx->vf_netdev);
+	if (vf_netdev && netvsc_vf_changed(vf_netdev) != NOTIFY_OK)
+		ret = -EINVAL;
 
 	rtnl_unlock();
 
