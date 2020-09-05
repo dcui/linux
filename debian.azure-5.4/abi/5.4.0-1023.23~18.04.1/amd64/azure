@@ -5881,6 +5881,7 @@ EXPORT_SYMBOL	 vmlinux 0x00000000	ktime_get_real_ts64
 EXPORT_SYMBOL	 vmlinux 0x00000000	kvasprintf
 EXPORT_SYMBOL	 vmlinux 0x00000000	kvasprintf_const
 EXPORT_SYMBOL	 vmlinux 0x00000000	kvfree
+EXPORT_SYMBOL	 vmlinux 0x00000000	kvfree_sensitive
 EXPORT_SYMBOL	 vmlinux 0x00000000	kvmalloc_node
 EXPORT_SYMBOL	 vmlinux 0x00000000	kzfree
 EXPORT_SYMBOL	 vmlinux 0x00000000	laptop_mode
@@ -11778,6 +11779,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__mnt_is_readonly
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__module_address
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__module_text_address
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__ndisc_fill_addr_option
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__netdev_watchdog_up
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__netif_set_xps_queue
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__netpoll_cleanup
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__netpoll_free
@@ -13513,6 +13515,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_internal_suspend_noflush
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_noflush_suspending
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_path_uevent
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_per_bio_data
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_post_suspending
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_put
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_remap_zone_report
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dm_send_uevents
@@ -13960,7 +13963,6 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_state_synchronize_rcu
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_task_mm
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_task_pid
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_timespec64
-EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_umwait_control_msr
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_user_pages_fast
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	get_xsave_addr
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	getboottime64
@@ -16109,6 +16111,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_psock_destroy
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_psock_drop
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_psock_init
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_psock_msg_verdict
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_psock_tls_strp_read
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_set_memalloc
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_set_peek_off
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sk_setup_caps

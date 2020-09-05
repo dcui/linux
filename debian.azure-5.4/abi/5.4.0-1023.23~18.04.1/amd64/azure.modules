@@ -726,7 +726,6 @@ intel-ishtp-loader
 intel-lpss
 intel-lpss-acpi
 intel-lpss-pci
-rapl
 intel-rng
 intel-rst
 intel-smartconnect
@@ -1474,6 +1473,7 @@ raid456
 raid6_pq
 raid_class
 ramoops
+rapl
 raw
 raw_diag
 rbd

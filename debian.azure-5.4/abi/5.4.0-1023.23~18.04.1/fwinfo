@@ -661,6 +661,7 @@ firmware:       rtl_nic/rtl8168e-2.fw
 firmware:       rtl_nic/rtl8168e-3.fw
 firmware:       rtl_nic/rtl8168f-1.fw
 firmware:       rtl_nic/rtl8168f-2.fw
+firmware:       rtl_nic/rtl8168fp-3.fw
 firmware:       rtl_nic/rtl8168g-2.fw
 firmware:       rtl_nic/rtl8168g-3.fw
 firmware:       rtl_nic/rtl8168h-1.fw
