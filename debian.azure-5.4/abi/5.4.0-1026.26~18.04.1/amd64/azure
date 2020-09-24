@@ -11452,6 +11452,7 @@ EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_create_pooled
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_create_xprt
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_destroy
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_drop
+EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_encode_read_payload
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_exit_thread
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_fill_symlink_pathname
 EXPORT_SYMBOL_GPL	 net/sunrpc/sunrpc 0x00000000	svc_fill_write_vector
@@ -11936,7 +11937,9 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__udp_gso_segment
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__unwind_start
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__usb_create_hcd
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__usb_get_extra_descriptor
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vfs_removexattr_locked
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vfs_removexattr_noperm
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vfs_setxattr_locked
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vfs_setxattr_noperm
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vmbus_driver_register
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__vring_new_virtqueue
