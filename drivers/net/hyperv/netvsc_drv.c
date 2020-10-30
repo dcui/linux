@@ -780,7 +780,8 @@ static struct sk_buff *netvsc_alloc_recv_skb(struct net_device *net,
 					     struct napi_struct *napi,
 					     const struct ndis_tcp_ip_checksum_info *csum_info,
 					     const struct ndis_pkt_8021q_info *vlan,
-					     void *data, u32 buflen)
+					     void *data, u32 buflen,
+					     const u32 *hash_info)
 {
 	struct sk_buff *skb;
 
@@ -816,6 +817,9 @@ static struct sk_buff *netvsc_alloc_recv_skb(struct net_device *net,
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
 	}
 
+	if (hash_info)
+		skb_set_hash(skb, *hash_info, PKT_HASH_TYPE_L4);
+
 	if (vlan) {
 		u16 vlan_tci = vlan->vlanid | (vlan->pri << VLAN_PRIO_SHIFT);
 
@@ -834,7 +838,8 @@ int netvsc_recv_callback(struct net_device *net,
 			 struct vmbus_channel *channel,
 			 void  *data, u32 len,
 			 const struct ndis_tcp_ip_checksum_info *csum_info,
-			 const struct ndis_pkt_8021q_info *vlan)
+			 const struct ndis_pkt_8021q_info *vlan,
+			 const u32 *hash_info)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct netvsc_device *net_device;
@@ -855,7 +860,7 @@ int netvsc_recv_callback(struct net_device *net,
 
 	/* Allocate a skb - TODO direct I/O to pages? */
 	skb = netvsc_alloc_recv_skb(net, &nvchan->napi,
-				    csum_info, vlan, data, len);
+				    csum_info, vlan, data, len, hash_info);
 	if (unlikely(!skb)) {
 drop:
 		++net->stats.rx_dropped;

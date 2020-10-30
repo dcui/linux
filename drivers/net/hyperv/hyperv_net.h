@@ -205,7 +205,8 @@ int netvsc_recv_callback(struct net_device *net,
 			 struct vmbus_channel *channel,
 			 void  *data, u32 len,
 			 const struct ndis_tcp_ip_checksum_info *csum_info,
-			 const struct ndis_pkt_8021q_info *vlan);
+			 const struct ndis_pkt_8021q_info *vlan,
+			 const u32 *hash_info);
 void netvsc_channel_cb(void *context);
 int netvsc_poll(struct napi_struct *napi, int budget);
 

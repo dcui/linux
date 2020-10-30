@@ -369,6 +369,7 @@ static int rndis_filter_receive_data(struct net_device *ndev,
 	struct rndis_packet *rndis_pkt = &msg->msg.pkt;
 	const struct ndis_tcp_ip_checksum_info *csum_info;
 	const struct ndis_pkt_8021q_info *vlan;
+	const u32 *hash_info;
 	u32 data_offset;
 
 	/* Remove the rndis header and pass it back up the stack */
@@ -397,9 +398,10 @@ static int rndis_filter_receive_data(struct net_device *ndev,
 	 */
 	data = (void *)((unsigned long)data + data_offset);
 	csum_info = rndis_get_ppi(rndis_pkt, TCPIP_CHKSUM_PKTINFO);
+	hash_info = rndis_get_ppi(rndis_pkt, NBL_HASH_VALUE);
 	return netvsc_recv_callback(ndev, channel,
 				    data, rndis_pkt->data_len,
-				    csum_info, vlan);
+				    csum_info, vlan, hash_info);
 }
 
 int rndis_filter_receive(struct net_device *ndev,
