@@ -15987,6 +15987,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sdev_evt_send
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sdev_evt_send_simple
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	secure_ipv4_port_ephemeral
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	secure_tcp_seq
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	security_file_ioctl
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	security_file_permission
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	security_inode_create
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	security_inode_mkdir
