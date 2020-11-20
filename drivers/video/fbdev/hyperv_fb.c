@@ -31,16 +31,6 @@
  * "set-vmvideo" command. For example
  *     set-vmvideo -vmname name -horizontalresolution:1920 \
  * -verticalresolution:1200 -resolutiontype single
- *
- * Gen 1 VMs also support direct using VM's physical memory for framebuffer.
- * It could improve the efficiency and performance for framebuffer and VM.
- * This requires to allocate contiguous physical memory from Linux kernel's
- * CMA memory allocator. To enable this, supply a kernel parameter to give
- * enough memory space to CMA allocator for framebuffer. For example:
- *    cma=130m
- * This gives 130MB memory to CMA allocator that can be allocated to
- * framebuffer. For reference, 8K resolution (7680x4320) takes about
- * 127MB memory.
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
@@ -267,15 +257,7 @@ struct hvfb_par {
 	/* If true, the VSC notifies the VSP on every framebuffer change */
 	bool synchronous_fb;
 
-	/* If true, need to copy from deferred IO mem to framebuffer mem */
-	bool need_docopy;
-
 	struct notifier_block hvfb_panic_nb;
-
-	/* Memory for deferred IO and frame buffer itself */
-	unsigned char *dio_vp;
-	unsigned char *mmio_vp;
-	phys_addr_t mmio_pp;
 
 	/* Dirty rectangle, protected by delayed_refresh_lock */
 	int x1, y1, x2, y2;
@@ -405,21 +387,6 @@ synthvid_update(struct fb_info *info, int x1, int y1, int x2, int y2)
 	return 0;
 }
 
-static void hvfb_docopy(struct hvfb_par *par,
-			unsigned long offset,
-			unsigned long size)
-{
-	if (!par || !par->mmio_vp || !par->dio_vp || !par->fb_ready ||
-	    size == 0 || offset >= dio_fb_size)
-		return;
-
-	if (offset + size > dio_fb_size)
-		size = dio_fb_size - offset;
-
-	memcpy(par->mmio_vp + offset, par->dio_vp + offset, size);
-}
-
-/* Deferred IO callback */
 static void synthvid_deferred_io(struct fb_info *p,
 				 struct list_head *pagelist)
 {
@@ -444,10 +411,6 @@ static void synthvid_deferred_io(struct fb_info *p,
 		y2 = end / p->fix.line_length;
 		miny = min_t(int, miny, y1);
 		maxy = max_t(int, maxy, y2);
-
-		/* Copy from dio space to mmio address */
-		if (par->fb_ready && par->need_docopy)
-			hvfb_docopy(par, start, PAGE_SIZE);
 	}
 
 	if (par->fb_ready && par->update)
@@ -704,7 +667,7 @@ static int synthvid_send_config(struct hv_device *hdev)
 	msg->vid_hdr.type = SYNTHVID_VRAM_LOCATION;
 	msg->vid_hdr.size = sizeof(struct synthvid_msg_hdr) +
 		sizeof(struct synthvid_vram_location);
-	msg->vram.user_ctx = msg->vram.vram_gpa = par->mmio_pp;
+	msg->vram.user_ctx = msg->vram.vram_gpa = info->fix.smem_start;
 	msg->vram.is_vram_gpa_specified = 1;
 	synthvid_send(hdev, msg);
 
@@ -714,7 +677,7 @@ static int synthvid_send_config(struct hv_device *hdev)
 		ret = -ETIMEDOUT;
 		goto out;
 	}
-	if (msg->vram_ack.user_ctx != par->mmio_pp) {
+	if (msg->vram_ack.user_ctx != info->fix.smem_start) {
 		pr_err("Unable to set VRAM location\n");
 		ret = -ENODEV;
 		goto out;
@@ -740,7 +703,6 @@ static void hvfb_update_work(struct work_struct *w)
 	struct fb_info *info = par->info;
 	unsigned long flags;
 	int x1, x2, y1, y2;
-	int j;
 
 	spin_lock_irqsave(&par->delayed_refresh_lock, flags);
 	/* Reset the request flag */
@@ -761,14 +723,6 @@ static void hvfb_update_work(struct work_struct *w)
 	if (x1 > info->var.xres || x2 > info->var.xres ||
 	    y1 > info->var.yres || y2 > info->var.yres || x2 <= x1)
 		return;
-
-	/* Copy the dirty rectangle to frame buffer memory */
-	if (par->need_docopy)
-		for (j = y1; j < y2; j++)
-			hvfb_docopy(par,
-				    j * info->fix.line_length +
-				    (x1 * screen_depth / 8),
-				    (x2 - x1) * screen_depth / 8);
 
 	/* Refresh */
 	if (par->fb_ready && par->update)
@@ -813,8 +767,6 @@ static int hvfb_on_panic(struct notifier_block *nb,
 	par = container_of(nb, struct hvfb_par, hvfb_panic_nb);
 	par->synchronous_fb = true;
 	info = par->info;
-	if (par->need_docopy)
-		hvfb_docopy(par, 0, dio_fb_size);
 	synthvid_update(info, 0, 0, INT_MAX, INT_MAX);
 
 	return NOTIFY_DONE;
@@ -953,62 +905,6 @@ static void hvfb_get_option(struct fb_info *info)
 	return;
 }
 
-/*
- * Allocate enough contiguous physical memory.
- * Return physical address if succeeded or -1 if failed.
- */
-static phys_addr_t hvfb_get_phymem(struct hv_device *hdev,
-				   unsigned int request_size)
-{
-	struct page *page = NULL;
-	dma_addr_t dma_handle;
-	void *vmem;
-	phys_addr_t paddr = 0;
-	unsigned int order = get_order(request_size);
-
-	if (request_size == 0)
-		return -1;
-
-	if (order < MAX_ORDER) {
-		/* Call alloc_pages if the size is less than 2^MAX_ORDER */
-		page = alloc_pages(GFP_KERNEL | __GFP_ZERO, order);
-		if (!page)
-			return -1;
-
-		paddr = (page_to_pfn(page) << PAGE_SHIFT);
-	} else {
-		/* Allocate from CMA */
-		hdev->device.coherent_dma_mask = DMA_BIT_MASK(64);
-
-		vmem = dma_alloc_coherent(&hdev->device,
-					  round_up(request_size, PAGE_SIZE),
-					  &dma_handle,
-					  GFP_KERNEL | __GFP_NOWARN);
-
-		if (!vmem)
-			return -1;
-
-		paddr = virt_to_phys(vmem);
-	}
-
-	return paddr;
-}
-
-/* Release contiguous physical memory */
-static void hvfb_release_phymem(struct hv_device *hdev,
-				phys_addr_t paddr, unsigned int size)
-{
-	unsigned int order = get_order(size);
-
-	if (order < MAX_ORDER)
-		__free_pages(pfn_to_page(paddr >> PAGE_SHIFT), order);
-	else
-		dma_free_coherent(&hdev->device,
-				  round_up(size, PAGE_SIZE),
-				  phys_to_virt(paddr),
-				  paddr);
-}
-
 
 /* Get framebuffer memory from Hyper-V video pci space */
 static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
@@ -1018,7 +914,6 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 	void __iomem *fb_virt;
 	int gen2vm = efi_enabled(EFI_BOOT);
 	resource_size_t pot_start, pot_end;
-	phys_addr_t paddr;
 	int ret;
 
 	info->apertures = alloc_apertures(1);
@@ -1036,38 +931,12 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 
 		info->apertures->ranges[0].base = pci_resource_start(pdev, 0);
 		info->apertures->ranges[0].size = pci_resource_len(pdev, 0);
-
-		/*
-		 * For Gen 1 VM, we can directly use the contiguous memory
-		 * from VM. If we succeed, deferred IO happens directly
-		 * on this allocated framebuffer memory, avoiding extra
-		 * memory copy.
-		 */
-		paddr = hvfb_get_phymem(hdev, screen_fb_size);
-		if (paddr != (phys_addr_t) -1) {
-			par->mmio_pp = paddr;
-			par->mmio_vp = par->dio_vp = __va(paddr);
-
-			info->fix.smem_start = paddr;
-			info->fix.smem_len = screen_fb_size;
-			info->screen_base = par->mmio_vp;
-			info->screen_size = screen_fb_size;
-
-			par->need_docopy = false;
-			goto getmem_done;
-		}
-		pr_info("Unable to allocate enough contiguous physical memory on Gen 1 VM. Using MMIO instead.\n");
 	} else {
 		info->apertures->ranges[0].base = screen_info.lfb_base;
 		info->apertures->ranges[0].size = screen_info.lfb_size;
 	}
 
-	/*
-	 * Cannot use the contiguous physical memory.
-	 * Allocate mmio space for framebuffer.
-	 */
-	dio_fb_size =
-		screen_width * screen_height * screen_depth / 8;
+	dio_fb_size = screen_width * screen_height * screen_depth / 8;
 
 	if (gen2vm) {
 		pot_start = 0;
@@ -1101,22 +970,11 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
 	if (!fb_virt)
 		goto err2;
 
-	/* Allocate memory for deferred IO */
-	par->dio_vp = vzalloc(round_up(dio_fb_size, PAGE_SIZE));
-	if (par->dio_vp == NULL)
-		goto err3;
-
-	/* Physical address of FB device */
-	par->mmio_pp = par->mem->start;
-	/* Virtual address of FB device */
-	par->mmio_vp = (unsigned char *) fb_virt;
-
 	info->fix.smem_start = par->mem->start;
 	info->fix.smem_len = dio_fb_size;
-	info->screen_base = par->dio_vp;
+	info->screen_base = fb_virt;
 	info->screen_size = dio_fb_size;
 
-getmem_done:
 	remove_conflicting_framebuffers(info->apertures,
 					KBUILD_MODNAME, false);
 	if (!gen2vm)
@@ -1125,8 +983,6 @@ getmem_done:
 
 	return 0;
 
-err3:
-	iounmap(fb_virt);
 err2:
 	vmbus_free_mmio(par->mem->start, screen_fb_size);
 	par->mem = NULL;
@@ -1139,19 +995,12 @@ err1:
 }
 
 /* Release the framebuffer */
-static void hvfb_putmem(struct hv_device *hdev, struct fb_info *info)
+static void hvfb_putmem(struct fb_info *info)
 {
 	struct hvfb_par *par = info->par;
 
-	if (par->need_docopy) {
-		vfree(par->dio_vp);
-		iounmap(info->screen_base);
-		vmbus_free_mmio(par->mem->start, screen_fb_size);
-	} else {
-		hvfb_release_phymem(hdev, info->fix.smem_start,
-				    screen_fb_size);
-	}
-
+	iounmap(info->screen_base);
+	vmbus_free_mmio(par->mem->start, screen_fb_size);
 	par->mem = NULL;
 }
 
@@ -1170,7 +1019,6 @@ static int hvfb_probe(struct hv_device *hdev,
 	par = info->par;
 	par->info = info;
 	par->fb_ready = false;
-	par->need_docopy = true;
 	init_completion(&par->wait);
 	INIT_DELAYED_WORK(&par->dwork, hvfb_update_work);
 
@@ -1256,7 +1104,7 @@ static int hvfb_probe(struct hv_device *hdev,
 
 error:
 	fb_deferred_io_cleanup(info);
-	hvfb_putmem(hdev, info);
+	hvfb_putmem(info);
 error2:
 	vmbus_close(hdev->channel);
 error1:
@@ -1286,7 +1134,7 @@ static int hvfb_remove(struct hv_device *hdev)
 	vmbus_close(hdev->channel);
 	hv_set_drvdata(hdev, NULL);
 
-	hvfb_putmem(hdev, info);
+	hvfb_putmem(info);
 	framebuffer_release(info);
 
 	return 0;
