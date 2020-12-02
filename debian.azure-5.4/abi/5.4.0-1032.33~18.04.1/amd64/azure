@@ -5980,6 +5980,7 @@ EXPORT_SYMBOL	 vmlinux 0x00000000	md_reap_sync_thread
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_register_thread
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_reload_sb
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_set_array_sectors
+EXPORT_SYMBOL	 vmlinux 0x00000000	md_submit_discard_bio
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_unregister_thread
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_update_sb
 EXPORT_SYMBOL	 vmlinux 0x00000000	md_wait_for_blocked_rdev
@@ -6590,7 +6591,6 @@ EXPORT_SYMBOL	 vmlinux 0x00000000	pci_msi_enabled
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_msi_vec_count
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_msix_vec_count
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_pci_problems
-EXPORT_SYMBOL	 vmlinux 0x00000000	pci_platform_rom
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_pme_active
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_pme_capable
 EXPORT_SYMBOL	 vmlinux 0x00000000	pci_prepare_to_sleep
@@ -7624,6 +7624,7 @@ EXPORT_SYMBOL	 vmlinux 0x00000000	sscanf
 EXPORT_SYMBOL	 vmlinux 0x00000000	starget_for_each_device
 EXPORT_SYMBOL	 vmlinux 0x00000000	start_tty
 EXPORT_SYMBOL	 vmlinux 0x00000000	stop_tty
+EXPORT_SYMBOL	 vmlinux 0x00000000	stpcpy
 EXPORT_SYMBOL	 vmlinux 0x00000000	strcasecmp
 EXPORT_SYMBOL	 vmlinux 0x00000000	strcat
 EXPORT_SYMBOL	 vmlinux 0x00000000	strchr
@@ -7741,7 +7742,6 @@ EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_get_next_proto
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idr_check_alloc
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idr_cleanup
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idr_create
-EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idr_insert
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idr_search
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_idrinfo_destroy
 EXPORT_SYMBOL	 vmlinux 0x00000000	tcf_queue_work
@@ -9633,7 +9633,6 @@ EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	realtek_smi_write_reg_
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_enable_vlan
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_enable_vlan4k
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_get_ethtool_stats
-EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_get_pvid
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_get_sset_count
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_get_strings
 EXPORT_SYMBOL_GPL	 drivers/net/dsa/realtek-smi 0x00000000	rtl8366_init_vlan
@@ -11087,6 +11086,7 @@ EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_dump_packet_com
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_dump_sk_uid_gid
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_dump_tcp_header
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_dump_udp_header
+EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_dump_vlan
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_log_common 0x00000000	nf_log_l2packet
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_nat 0x00000000	nf_ct_nat_ext_add
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_nat 0x00000000	nf_nat_alloc_null_binding
@@ -13047,6 +13047,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_layout_busy_page
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_read_lock
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_read_unlock
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_region_put
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_supported
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_write_cache
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_write_cache_enabled
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	dax_writeback_mapping_range
