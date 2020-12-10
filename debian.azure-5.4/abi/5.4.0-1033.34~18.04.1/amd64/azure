@@ -14933,6 +14933,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_stop_ctrl
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_stop_keep_alive
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_stop_queues
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_submit_sync_cmd
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_sync_io_queues
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_sync_queues
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_try_sched_reset
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	nvme_unfreeze
