@@ -698,6 +698,7 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
 
 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
 
+	ssleep(10); //delay the creation of the sub-channels.
 	ret = vmbus_open(new_sc,
 			 storvsc_ringbuffer_size,
 			 storvsc_ringbuffer_size,
@@ -814,7 +815,7 @@ static void cache_wwn(struct storvsc_device *stor_device,
 
 static int storvsc_execute_vstor_op(struct hv_device *device,
 				    struct storvsc_cmd_request *request,
-				    bool status_check)
+				    bool status_check, bool first_path)
 {
 	struct vstor_packet *vstor_packet;
 	int ret, t;
@@ -833,6 +834,12 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
 	if (ret != 0)
 		return ret;
 
+	if (first_path) {
+		ssleep(2); //let the 2nd path change 'vmscsi_size_delta' to 0
+		tasklet_enable(&device->channel->callback_event);
+		tasklet_schedule(&device->channel->callback_event);
+	}
+
 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
 	if (t == 0)
 		return -ETIMEDOUT;
@@ -847,6 +854,7 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
 	return ret;
 }
 
+static atomic_t my_counter;
 static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 {
 	struct storvsc_device *stor_device;
@@ -855,11 +863,13 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 	int ret, i;
 	int max_chns;
 	bool process_sub_channels = false;
+	bool first_path;
 
 	stor_device = get_out_stor_device(device);
 	if (!stor_device)
 		return -ENODEV;
 
+	first_path = atomic_inc_return(&my_counter) == 1;
 	request = &stor_device->init_request;
 	vstor_packet = &request->vstor_packet;
 
@@ -867,9 +877,14 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 	 * Now, initiate the vsc/vsp initialization protocol on the open
 	 * channel
 	 */
+	if (first_path)
+		tasklet_disable(&device->channel->callback_event);
+	else
+		ssleep(1); //let the first path send the request with the tasklet disabled
+
 	memset(request, 0, sizeof(struct storvsc_cmd_request));
 	vstor_packet->operation = VSTOR_OPERATION_BEGIN_INITIALIZATION;
-	ret = storvsc_execute_vstor_op(device, request, true);
+	ret = storvsc_execute_vstor_op(device, request, true, first_path);
 	if (ret)
 		return ret;
 	/*
@@ -889,7 +904,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 		 * The revision number is only used in Windows; set it to 0.
 		 */
 		vstor_packet->version.revision = 0;
-		ret = storvsc_execute_vstor_op(device, request, false);
+		ret = storvsc_execute_vstor_op(device, request, false, first_path);
 		if (ret != 0)
 			return ret;
 
@@ -916,7 +931,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 
 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
 	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROPERTIES;
-	ret = storvsc_execute_vstor_op(device, request, true);
+	ret = storvsc_execute_vstor_op(device, request, true, first_path);
 	if (ret != 0)
 		return ret;
 
@@ -963,7 +978,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 	 */
 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
 	vstor_packet->operation = VSTOR_OPERATION_FCHBA_DATA;
-	ret = storvsc_execute_vstor_op(device, request, true);
+	ret = storvsc_execute_vstor_op(device, request, true, first_path);
 	if (ret != 0)
 		return ret;
 
@@ -976,7 +991,7 @@ done:
 
 	memset(vstor_packet, 0, sizeof(struct vstor_packet));
 	vstor_packet->operation = VSTOR_OPERATION_END_INITIALIZATION;
-	ret = storvsc_execute_vstor_op(device, request, true);
+	ret = storvsc_execute_vstor_op(device, request, true, first_path);
 	if (ret != 0)
 		return ret;
 
@@ -1248,6 +1263,7 @@ static void storvsc_on_channel_callback(void *context)
 
 		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) - vmscsi_size_delta) {
 			dev_err(&device->device, "Invalid packet len\n");
+			WARN_ON(1);
 			continue;
 		}
 
