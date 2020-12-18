@@ -674,7 +674,8 @@ int acpi_device_add(struct acpi_device *device,
 	}
 	if (!found) {
 		acpi_device_bus_id = new_bus_id;
-		strcpy(acpi_device_bus_id->bus_id, acpi_device_hid(device));
+		strlcpy(acpi_device_bus_id->bus_id, acpi_device_hid(device),
+			sizeof(acpi_device_bus_id->bus_id));
 		acpi_device_bus_id->instance_no = 0;
 		list_add_tail(&acpi_device_bus_id->node, &acpi_bus_id_list);
 	}
