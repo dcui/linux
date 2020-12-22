@@ -310,6 +310,9 @@ static bool workqueue_freezing;		/* PL: have wqs started freezing? */
 /* PL: allowable cpus for unbound wqs and work items */
 static cpumask_var_t wq_unbound_cpumask;
 
+/* PL&A: online cpus (cpu_online_mask with the going-down cpu cleared) */
+static cpumask_var_t wq_online_cpumask;
+
 /* CPU where unbound work was last round robin scheduled from this CPU */
 static DEFINE_PER_CPU(int, wq_rr_cpu_last);
 
@@ -1848,11 +1851,11 @@ static void worker_attach_to_pool(struct worker *worker,
 {
 	mutex_lock(&wq_pool_attach_mutex);
 
-	/*
-	 * set_cpus_allowed_ptr() will fail if the cpumask doesn't have any
-	 * online CPUs.  It'll be re-applied when any of the CPUs come up.
-	 */
-	set_cpus_allowed_ptr(worker->task, pool->attrs->cpumask);
+	/* Is there any cpu in pool->attrs->cpumask online? */
+	if (cpumask_intersects(pool->attrs->cpumask, wq_online_cpumask))
+		WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, pool->attrs->cpumask) < 0);
+	else
+		WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, cpu_possible_mask) < 0);
 
 	/*
 	 * The wq_pool_attach_mutex ensures %POOL_DISASSOCIATED remains
@@ -1888,6 +1891,19 @@ static void worker_detach_from_pool(struct worker *worker)
 
 	if (list_empty(&pool->workers))
 		detach_completion = pool->detach_completion;
+
+	/*
+	 * The pool->attrs->cpumask might be a single CPU and it may go
+	 * down after detachment, and the scheduler won't force to break
+	 * affinity for us since it is a per-cpu-ktrhead.  So we have to
+	 * do it on our own and unbind this worker which can't be unbound
+	 * by workqueue_offline_cpu() since it doesn't belong to any pool
+	 * after detachment.  Do it unconditionally for there is no harm
+	 * to break affinity for non-per-cpu-ktrhead and we don't need to
+	 * rely on the scheduler's policy on when to break affinity.
+	 */
+	set_cpus_allowed_ptr(worker->task, cpu_possible_mask);
+
 	mutex_unlock(&wq_pool_attach_mutex);
 
 	/* clear leftover flags without pool->lock after it is detached */
@@ -1938,7 +1954,15 @@ static struct worker *create_worker(struct worker_pool *pool)
 		goto fail;
 
 	set_user_nice(worker->task, pool->attrs->nice);
-	kthread_bind_mask(worker->task, pool->attrs->cpumask);
+
+	/*
+	 * Set PF_NO_SETAFFINITY via kthread_bind_mask().  We use
+	 * cpu_possible_mask instead of pool->attrs->cpumask, because
+	 * there might not be any online cpu in the pool->attrs->cpumask.
+	 * The cpumask of the worker will be set properly later in
+	 * worker_attach_to_pool().
+	 */
+	kthread_bind_mask(worker->task, cpu_possible_mask);
 
 	/* successful, attach the worker to the pool */
 	worker_attach_to_pool(worker, pool);
@@ -3815,12 +3839,10 @@ static struct pool_workqueue *alloc_unbound_pwq(struct workqueue_struct *wq,
  * wq_calc_node_cpumask - calculate a wq_attrs' cpumask for the specified node
  * @attrs: the wq_attrs of the default pwq of the target workqueue
  * @node: the target NUMA node
- * @cpu_going_down: if >= 0, the CPU to consider as offline
  * @cpumask: outarg, the resulting cpumask
  *
- * Calculate the cpumask a workqueue with @attrs should use on @node.  If
- * @cpu_going_down is >= 0, that cpu is considered offline during
- * calculation.  The result is stored in @cpumask.
+ * Calculate the cpumask a workqueue with @attrs should use on @node.
+ * The result is stored in @cpumask.
  *
  * If NUMA affinity is not enabled, @attrs->cpumask is always used.  If
  * enabled and @node has online CPUs requested by @attrs, the returned
@@ -3834,15 +3856,14 @@ static struct pool_workqueue *alloc_unbound_pwq(struct workqueue_struct *wq,
  * %false if equal.
  */
 static bool wq_calc_node_cpumask(const struct workqueue_attrs *attrs, int node,
-				 int cpu_going_down, cpumask_t *cpumask)
+				 cpumask_t *cpumask)
 {
 	if (!wq_numa_enabled || attrs->no_numa)
 		goto use_dfl;
 
 	/* does @node have any online CPUs @attrs wants? */
 	cpumask_and(cpumask, cpumask_of_node(node), attrs->cpumask);
-	if (cpu_going_down >= 0)
-		cpumask_clear_cpu(cpu_going_down, cpumask);
+	cpumask_and(cpumask, cpumask, wq_online_cpumask);
 
 	if (cpumask_empty(cpumask))
 		goto use_dfl;
@@ -3951,7 +3972,7 @@ apply_wqattrs_prepare(struct workqueue_struct *wq,
 		goto out_free;
 
 	for_each_node(node) {
-		if (wq_calc_node_cpumask(new_attrs, node, -1, tmp_attrs->cpumask)) {
+		if (wq_calc_node_cpumask(new_attrs, node, tmp_attrs->cpumask)) {
 			ctx->pwq_tbl[node] = alloc_unbound_pwq(wq, tmp_attrs);
 			if (!ctx->pwq_tbl[node])
 				goto out_free;
@@ -4076,7 +4097,6 @@ int apply_workqueue_attrs(struct workqueue_struct *wq,
  * wq_update_unbound_numa - update NUMA affinity of a wq for CPU hot[un]plug
  * @wq: the target workqueue
  * @cpu: the CPU coming up or going down
- * @online: whether @cpu is coming up or going down
  *
  * This function is to be called from %CPU_DOWN_PREPARE, %CPU_ONLINE and
  * %CPU_DOWN_FAILED.  @cpu is being hot[un]plugged, update NUMA affinity of
@@ -4094,11 +4114,9 @@ int apply_workqueue_attrs(struct workqueue_struct *wq,
  * affinity, it's the user's responsibility to flush the work item from
  * CPU_DOWN_PREPARE.
  */
-static void wq_update_unbound_numa(struct workqueue_struct *wq, int cpu,
-				   bool online)
+static void wq_update_unbound_numa(struct workqueue_struct *wq, int cpu)
 {
 	int node = cpu_to_node(cpu);
-	int cpu_off = online ? -1 : cpu;
 	struct pool_workqueue *old_pwq = NULL, *pwq;
 	struct workqueue_attrs *target_attrs;
 	cpumask_t *cpumask;
@@ -4126,7 +4144,7 @@ static void wq_update_unbound_numa(struct workqueue_struct *wq, int cpu,
 	 * and create a new one if they don't match.  If the target cpumask
 	 * equals the default pwq's, the default pwq should be used.
 	 */
-	if (wq_calc_node_cpumask(wq->dfl_pwq->pool->attrs, node, cpu_off, cpumask)) {
+	if (wq_calc_node_cpumask(wq->dfl_pwq->pool->attrs, node, cpumask)) {
 		if (cpumask_equal(cpumask, pwq->pool->attrs->cpumask))
 			return;
 	} else {
@@ -4889,61 +4907,57 @@ void wq_worker_comm(char *buf, size_t size, struct task_struct *task)
  * cpu comes back online.
  */
 
-static void unbind_workers(int cpu)
+static void unbind_workers(struct worker_pool *pool)
 {
-	struct worker_pool *pool;
 	struct worker *worker;
 
-	for_each_cpu_worker_pool(pool, cpu) {
-		mutex_lock(&wq_pool_attach_mutex);
-		raw_spin_lock_irq(&pool->lock);
+	lockdep_assert_held(&wq_pool_attach_mutex);
 
-		/*
-		 * We've blocked all attach/detach operations. Make all workers
-		 * unbound and set DISASSOCIATED.  Before this, all workers
-		 * except for the ones which are still executing works from
-		 * before the last CPU down must be on the cpu.  After
-		 * this, they may become diasporas.
-		 */
-		for_each_pool_worker(worker, pool)
-			worker->flags |= WORKER_UNBOUND;
+	raw_spin_lock_irq(&pool->lock);
 
-		pool->flags |= POOL_DISASSOCIATED;
+	/*
+	 * We've blocked all attach/detach operations. Make all workers
+	 * unbound and set DISASSOCIATED.  Before this, all workers
+	 * except for the ones which are still executing works from
+	 * before the last CPU down must be on the cpu.  After
+	 * this, they may become diasporas.
+	 */
+	for_each_pool_worker(worker, pool)
+		worker->flags |= WORKER_UNBOUND;
 
-		raw_spin_unlock_irq(&pool->lock);
+	pool->flags |= POOL_DISASSOCIATED;
 
-		for_each_pool_worker(worker, pool)
-			WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, cpu_active_mask) < 0);
+	raw_spin_unlock_irq(&pool->lock);
 
-		mutex_unlock(&wq_pool_attach_mutex);
+	for_each_pool_worker(worker, pool)
+		WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, cpu_possible_mask) < 0);
 
-		/*
-		 * Call schedule() so that we cross rq->lock and thus can
-		 * guarantee sched callbacks see the %WORKER_UNBOUND flag.
-		 * This is necessary as scheduler callbacks may be invoked
-		 * from other cpus.
-		 */
-		schedule();
+	/*
+	 * Call schedule() so that we cross rq->lock and thus can
+	 * guarantee sched callbacks see the %WORKER_UNBOUND flag.
+	 * This is necessary as scheduler callbacks may be invoked
+	 * from other cpus.
+	 */
+	schedule();
 
-		/*
-		 * Sched callbacks are disabled now.  Zap nr_running.
-		 * After this, nr_running stays zero and need_more_worker()
-		 * and keep_working() are always true as long as the
-		 * worklist is not empty.  This pool now behaves as an
-		 * unbound (in terms of concurrency management) pool which
-		 * are served by workers tied to the pool.
-		 */
-		atomic_set(&pool->nr_running, 0);
+	/*
+	 * Sched callbacks are disabled now.  Zap nr_running.
+	 * After this, nr_running stays zero and need_more_worker()
+	 * and keep_working() are always true as long as the
+	 * worklist is not empty.  This pool now behaves as an
+	 * unbound (in terms of concurrency management) pool which
+	 * are served by workers tied to the pool.
+	 */
+	atomic_set(&pool->nr_running, 0);
 
-		/*
-		 * With concurrency management just turned off, a busy
-		 * worker blocking could lead to lengthy stalls.  Kick off
-		 * unbound chain execution of currently pending work items.
-		 */
-		raw_spin_lock_irq(&pool->lock);
-		wake_up_worker(pool);
-		raw_spin_unlock_irq(&pool->lock);
-	}
+	/*
+	 * With concurrency management just turned off, a busy
+	 * worker blocking could lead to lengthy stalls.  Kick off
+	 * unbound chain execution of currently pending work items.
+	 */
+	raw_spin_lock_irq(&pool->lock);
+	wake_up_worker(pool);
+	raw_spin_unlock_irq(&pool->lock);
 }
 
 /**
@@ -5012,31 +5026,42 @@ static void rebind_workers(struct worker_pool *pool)
 }
 
 /**
- * restore_unbound_workers_cpumask - restore cpumask of unbound workers
+ * update_unbound_workers_cpumask - update cpumask of unbound workers
  * @pool: unbound pool of interest
- * @cpu: the CPU which is coming up
+ * @cpu: the CPU which is coming up or going down
  *
  * An unbound pool may end up with a cpumask which doesn't have any online
- * CPUs.  When a worker of such pool get scheduled, the scheduler resets
- * its cpus_allowed.  If @cpu is in @pool's cpumask which didn't have any
- * online CPU before, cpus_allowed of all its workers should be restored.
+ * CPUs.  We have to reset workers' cpus_allowed of such pool.  And we
+ * restore the workers' cpus_allowed when the pool's cpumask has online
+ * CPU for the first time after reset.
  */
-static void restore_unbound_workers_cpumask(struct worker_pool *pool, int cpu)
+static void update_unbound_workers_cpumask(struct worker_pool *pool, int cpu)
 {
 	static cpumask_t cpumask;
 	struct worker *worker;
 
+	lockdep_assert_held(&wq_pool_mutex);
 	lockdep_assert_held(&wq_pool_attach_mutex);
 
 	/* is @cpu allowed for @pool? */
 	if (!cpumask_test_cpu(cpu, pool->attrs->cpumask))
 		return;
 
-	cpumask_and(&cpumask, pool->attrs->cpumask, cpu_online_mask);
+	cpumask_and(&cpumask, pool->attrs->cpumask, wq_online_cpumask);
 
-	/* as we're called from CPU_ONLINE, the following shouldn't fail */
-	for_each_pool_worker(worker, pool)
-		WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, &cpumask) < 0);
+	switch (cpumask_weight(&cpumask)) {
+	case 0: /* @cpu is the last one going down for the @pool. */
+		for_each_pool_worker(worker, pool)
+			WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, cpu_possible_mask) < 0);
+		break;
+	case 1: /* @cpu is the first one onlined for the @pool. */
+		/* as we're called from CPU_ONLINE, the following shouldn't fail */
+		for_each_pool_worker(worker, pool)
+			WARN_ON_ONCE(set_cpus_allowed_ptr(worker->task, pool->attrs->cpumask) < 0);
+		break;
+	default: /* other cases, nothing to do */
+		break;
+	}
 }
 
 int workqueue_prepare_cpu(unsigned int cpu)
@@ -5060,20 +5085,25 @@ int workqueue_online_cpu(unsigned int cpu)
 
 	mutex_lock(&wq_pool_mutex);
 
+	mutex_lock(&wq_pool_attach_mutex);
+	cpumask_set_cpu(cpu, wq_online_cpumask);
+	for_each_cpu_worker_pool(pool, cpu)
+		rebind_workers(pool);
+	mutex_unlock(&wq_pool_attach_mutex);
+
+	/* update CPU affinity of workers of unbound pools */
 	for_each_pool(pool, pi) {
 		mutex_lock(&wq_pool_attach_mutex);
 
-		if (pool->cpu == cpu)
-			rebind_workers(pool);
-		else if (pool->cpu < 0)
-			restore_unbound_workers_cpumask(pool, cpu);
+		if (pool->cpu < 0)
+			update_unbound_workers_cpumask(pool, cpu);
 
 		mutex_unlock(&wq_pool_attach_mutex);
 	}
 
 	/* update NUMA affinity of unbound workqueues */
 	list_for_each_entry(wq, &workqueues, list)
-		wq_update_unbound_numa(wq, cpu, true);
+		wq_update_unbound_numa(wq, cpu);
 
 	mutex_unlock(&wq_pool_mutex);
 	return 0;
@@ -5081,18 +5111,35 @@ int workqueue_online_cpu(unsigned int cpu)
 
 int workqueue_offline_cpu(unsigned int cpu)
 {
+	struct worker_pool *pool;
 	struct workqueue_struct *wq;
+	int pi;
 
 	/* unbinding per-cpu workers should happen on the local CPU */
 	if (WARN_ON(cpu != smp_processor_id()))
 		return -1;
 
-	unbind_workers(cpu);
+	mutex_lock(&wq_pool_mutex);
+
+	mutex_lock(&wq_pool_attach_mutex);
+	cpumask_clear_cpu(cpu, wq_online_cpumask);
+	for_each_cpu_worker_pool(pool, cpu)
+		unbind_workers(pool);
+	mutex_unlock(&wq_pool_attach_mutex);
+
+	/* update CPU affinity of workers of unbound pools */
+	for_each_pool(pool, pi) {
+		mutex_lock(&wq_pool_attach_mutex);
+
+		if (pool->cpu < 0)
+			update_unbound_workers_cpumask(pool, cpu);
+
+		mutex_unlock(&wq_pool_attach_mutex);
+	}
 
 	/* update NUMA affinity of unbound workqueues */
-	mutex_lock(&wq_pool_mutex);
 	list_for_each_entry(wq, &workqueues, list)
-		wq_update_unbound_numa(wq, cpu, false);
+		wq_update_unbound_numa(wq, cpu);
 	mutex_unlock(&wq_pool_mutex);
 
 	return 0;
@@ -5929,6 +5976,9 @@ void __init workqueue_init_early(void)
 
 	BUILD_BUG_ON(__alignof__(struct pool_workqueue) < __alignof__(long long));
 
+	BUG_ON(!alloc_cpumask_var(&wq_online_cpumask, GFP_KERNEL));
+	cpumask_copy(wq_online_cpumask, cpu_online_mask);
+
 	BUG_ON(!alloc_cpumask_var(&wq_unbound_cpumask, GFP_KERNEL));
 	cpumask_copy(wq_unbound_cpumask, housekeeping_cpumask(hk_flags));
 
@@ -6025,7 +6075,7 @@ void __init workqueue_init(void)
 	}
 
 	list_for_each_entry(wq, &workqueues, list) {
-		wq_update_unbound_numa(wq, smp_processor_id(), true);
+		wq_update_unbound_numa(wq, smp_processor_id());
 		WARN(init_rescuer(wq),
 		     "workqueue: failed to create early rescuer for %s",
 		     wq->name);
