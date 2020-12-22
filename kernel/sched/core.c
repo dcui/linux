@@ -2376,9 +2376,11 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 		 * For kernel threads that do indeed end up on online &&
 		 * !active we want to ensure they are strict per-CPU threads.
 		 */
+#if 0
 		WARN_ON(cpumask_intersects(new_mask, cpu_online_mask) &&
 			!cpumask_intersects(new_mask, cpu_active_mask) &&
 			p->nr_cpus_allowed != 1);
+#endif
 	}
 
 	return affine_move_task(rq, p, &rf, dest_cpu, flags);
