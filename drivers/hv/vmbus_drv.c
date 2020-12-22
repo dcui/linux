@@ -678,6 +678,25 @@ static const struct attribute_group vmbus_dev_group = {
 };
 __ATTRIBUTE_GROUPS(vmbus_dev);
 
+/* Set up bus attribute(s) for /sys/bus/vmbus/supported_features */
+static ssize_t supported_features_show(struct bus_type *bus, char *buf)
+{
+	bool hb = hv_is_hibernation_supported();
+
+	return sprintf(buf, "%s\n", hb ? "hibernation" : "");
+}
+
+static BUS_ATTR_RO(supported_features);
+
+static struct attribute *vmbus_bus_attrs[] = {
+	&bus_attr_supported_features.attr,
+	NULL,
+};
+static const struct attribute_group vmbus_bus_group = {
+	.attrs = vmbus_bus_attrs,
+};
+__ATTRIBUTE_GROUPS(vmbus_bus);
+
 /*
  * vmbus_uevent - add uevent for our device
  *
@@ -1024,6 +1043,7 @@ static struct bus_type  hv_bus = {
 	.uevent =		vmbus_uevent,
 	.dev_groups =		vmbus_dev_groups,
 	.drv_groups =		vmbus_drv_groups,
+	.bus_groups =		vmbus_bus_groups,
 	.pm =			&vmbus_pm,
 };
 

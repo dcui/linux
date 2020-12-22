@@ -1,3 +1,10 @@
+What:		/sys/bus/vmbus/supported_features
+Date:		Dec 2020
+KernelVersion:	5.11
+Contact:	Dexuan Cui <decui@microsoft.com>
+Description:	Features specific to VMs running on Hyper-V
+Users:		Daemon that sets up swap partition/file for hibernation
+
 What:		/sys/bus/vmbus/devices/<UUID>/id
 Date:		Jul 2009
 KernelVersion:	2.6.31
