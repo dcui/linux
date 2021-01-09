@@ -43,6 +43,7 @@
 #include <linux/fb.h>
 #include <linux/pci.h>
 #include <linux/efi.h>
+#include <linux/vmalloc.h>
 
 #include <linux/hyperv.h>
 
