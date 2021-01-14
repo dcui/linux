@@ -228,6 +228,16 @@ static void __init hv_smp_prepare_boot_cpu(void)
 }
 #endif
 
+static void (*old_setup_per_cpu_clockev)(void);
+
+static void hv_stimer_per_cpu_init(void)
+{
+       (void)hv_stimer_alloc();
+
+	if (old_setup_per_cpu_clockev)
+		old_setup_per_cpu_clockev();
+}
+
 static void __init ms_hyperv_init_platform(void)
 {
 	int hv_host_info_eax;
@@ -348,6 +358,10 @@ static void __init ms_hyperv_init_platform(void)
 	 * Setup the hook to get control post apic initialization.
 	 */
 	x86_platform.apic_post_init = hyperv_init;
+
+	old_setup_per_cpu_clockev = x86_init.timers.setup_percpu_clockev;
+	x86_init.timers.setup_percpu_clockev = hv_stimer_per_cpu_init;
+
 	hyperv_setup_mmu_ops();
 	/* Setup the IDT for hypervisor callback */
 	alloc_intr_gate(HYPERVISOR_CALLBACK_VECTOR, asm_sysvec_hyperv_callback);
