@@ -28,6 +28,18 @@ config DRM_GM12U320
 	 This is a KMS driver for projectors which use the GM12U320 chipset
 	 for video transfer over USB2/3, such as the Acer C120 mini projector.
 
+config DRM_HYPERV
+	tristate "DRM Support for hyperv synthetic video device"
+	depends on DRM && PCI && MMU && HYPERV
+	select DRM_KMS_HELPER
+	select DRM_GEM_SHMEM_HELPER
+	help
+	 This is a KMS driver for hyperv synthetic video device. Choose this
+	 option if you would like to enable drm driver for Hyper-V virtual
+	 machine.
+
+	 If M is selected the module will be called hyperv_drm.
+
 config TINYDRM_HX8357D
 	tristate "DRM support for HX8357D display panels"
 	depends on DRM && SPI
