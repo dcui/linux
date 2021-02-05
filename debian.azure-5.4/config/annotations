@@ -23,7 +23,10 @@ CONFIG_INFINIBAND_IPOIB                            policy<{'amd64': 'm'}>
 CONFIG_INFINIBAND_IPOIB                            mark<ENFORCED> note<LP:#1837397>
 
 CONFIG_BLK_DEV_NVME                                policy<{'amd64': 'y'}>
-CONFIG_BLK_DEV_NVME                                mark<ENFORCED> note<LP:#1793386>
+CONFIG_BLK_DEV_NVME                                mark<ENFORCED> note<LP:#1793386> note<LP:#1908571>
+
+CONFIG_PCI_HYPERV                                  policy<{'amd64': 'y'}>
+CONFIG_PCI_HYPERV                                  mark<ENFORCED> note<LP:#1908571>
 
 CONFIG_EDAC_DECODE_MCE                             policy<{'amd64': 'y'}>
 CONFIG_EDAC_DECODE_MCE                             mark<ENFORCED> note<LP:#1793386>
@@ -105,6 +108,9 @@ CONFIG_USB_XHCI_PLATFORM                           mark<ENFORCED> note<LP:#18670
 
 CONFIG_CONTEXT_TRACKING_FORCE                      policy<{'amd64': 'n'}>
 CONFIG_CONTEXT_TRACKING_FORCE                      flag<REVIEW> note<Likely VIRT_CPU_ACCOUNTING_GEN should be disabled>
+
+CONFIG_ATARI_PARTITION                             policy<{'amd64': 'n'}>
+CONFIG_ATARI_PARTITION                             mark<ENFORCED> note<LP:1908264>
 
 # From linux-azure initial packaging
 
