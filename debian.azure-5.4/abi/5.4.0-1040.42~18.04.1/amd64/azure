@@ -2892,6 +2892,7 @@ EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_register_match
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_register_matches
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_register_target
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_register_targets
+EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_table_get_private_protected
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_unregister_match
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_unregister_matches
 EXPORT_SYMBOL	 net/netfilter/x_tables 0x00000000	xt_unregister_target
@@ -9976,10 +9977,6 @@ EXPORT_SYMBOL_GPL	 drivers/nvme/target/nvmet-fc 0x00000000	nvmet_fc_rcv_fcp_req
 EXPORT_SYMBOL_GPL	 drivers/nvme/target/nvmet-fc 0x00000000	nvmet_fc_rcv_ls_req
 EXPORT_SYMBOL_GPL	 drivers/nvme/target/nvmet-fc 0x00000000	nvmet_fc_register_targetport
 EXPORT_SYMBOL_GPL	 drivers/nvme/target/nvmet-fc 0x00000000	nvmet_fc_unregister_targetport
-EXPORT_SYMBOL_GPL	 drivers/pci/controller/pci-hyperv-intf 0x00000000	hvpci_block_ops
-EXPORT_SYMBOL_GPL	 drivers/pci/controller/pci-hyperv-intf 0x00000000	hyperv_read_cfg_blk
-EXPORT_SYMBOL_GPL	 drivers/pci/controller/pci-hyperv-intf 0x00000000	hyperv_reg_block_invalidate
-EXPORT_SYMBOL_GPL	 drivers/pci/controller/pci-hyperv-intf 0x00000000	hyperv_write_cfg_blk
 EXPORT_SYMBOL_GPL	 drivers/pci/switch/switchtec 0x00000000	switchtec_class
 EXPORT_SYMBOL_GPL	 drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_probe_by_hid
 EXPORT_SYMBOL_GPL	 drivers/pinctrl/intel/pinctrl-intel 0x00000000	intel_pinctrl_probe_by_uid
@@ -11123,6 +11120,7 @@ EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nf_tables_bind_set
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nf_tables_deactivate_flowtable
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nf_tables_deactivate_set
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nf_tables_destroy_set
+EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nf_tables_trans_destroy_flush_work
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nft_chain_validate
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nft_chain_validate_dependency
 EXPORT_SYMBOL_GPL	 net/netfilter/nf_tables 0x00000000	nft_chain_validate_hooks
@@ -11715,6 +11713,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__devm_regmap_init
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__devm_regmap_init_mmio_clk
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__devm_regmap_init_spi
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__devm_reset_control_get
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__devm_spi_alloc_controller
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__dma_request_channel
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__efivar_entry_delete
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	__efivar_entry_get
@@ -12039,7 +12038,6 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_os_unmap_memory
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pci_check_ejectable
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pci_detect_ejectable
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pci_find_root
-EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pm_set_bridge_wakeup
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pm_set_device_wakeup
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_pm_wakeup_event
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	acpi_processor_ffh_cstate_enter
@@ -13019,6 +13017,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	cs47l24_patch
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	cs47l24_spi_regmap
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	css_next_descendant_pre
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	current_is_async
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	current_save_fsgs
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	d_exchange
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	d_walk
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	da9052_adc_manual_read
@@ -14130,6 +14129,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hvc_instantiate
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hvc_kick
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hvc_poll
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hvc_remove
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hvpci_block_ops
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hw_breakpoint_restore
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hwmon_device_register
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hwmon_device_register_with_groups
@@ -14156,9 +14156,12 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_fill_flush_guest_mapping_list
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_flush_guest_mapping
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_flush_guest_mapping_range
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_pcpu_input_arg
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_read_cfg_blk
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_reg_block_invalidate
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_report_panic
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_report_panic_msg
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_stop_tsc_emulation
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	hyperv_write_cfg_blk
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	ibft_addr
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	idr_alloc
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	idr_alloc_u32
@@ -14399,7 +14402,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_chip_set_wake_parent
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_chip_unmask_parent
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_direct_mapping
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_fwspec_mapping
-EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_mapping
+EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_mapping_affinity
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_of_mapping
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_create_strict_mappings
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	irq_dispose_mapping
@@ -15913,7 +15916,6 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sata_scr_write_flush
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sata_set_spd
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sata_sff_hardreset
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sata_std_hardreset
-EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	save_fsgs_for_kvm
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sb800_prefetch
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sbitmap_add_wait_queue
 EXPORT_SYMBOL_GPL	 vmlinux 0x00000000	sbitmap_any_bit_clear
