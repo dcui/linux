@@ -134,6 +134,7 @@ arptable_filter
 as370-hwmon
 asb100
 asc7621
+ashmem_linux
 aspeed-pwm-tacho
 ast
 asus-wireless
@@ -187,6 +188,7 @@ bfa
 bfq
 bfs
 bh1770glc
+binder_linux
 binfmt_misc
 blocklayoutdriver
 blowfish-x86_64

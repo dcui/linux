@@ -262,3 +262,6 @@ CONFIG_SND_SOC_AMD_RENOIR_MACH                     note<Unnecessary for Azure>
 
 CONFIG_BT_HS                                       policy<{'amd64': '-'}>
 CONFIG_BT_HS                                       note<Not reachable under Azure>
+
+CONFIG_DRM_BOCHS                                   policy<{'amd64': 'n'}>
+CONFIG_DRM_BOCHS                                   note<Unnecessary for Azure>
