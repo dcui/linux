@@ -4,6 +4,9 @@
 
 include "../../debian.master/config/annotations"
 
+CONFIG_FPGA_MGR_XILINX_SPI                         mark<ENFORCED> note<LP:#1922582>
+CONFIG_FPGA_MGR_XILINX_SPI                         policy<{'amd64': 'm'}>
+
 CONFIG_ANDROID                                     policy<{'amd64': 'y'}>
 CONFIG_ANDROID                                     mark<ENFORCED> note<LP:#1914568>
 
@@ -265,3 +268,15 @@ CONFIG_BT_HS                                       note<Not reachable under Azur
 
 CONFIG_DRM_BOCHS                                   policy<{'amd64': 'n'}>
 CONFIG_DRM_BOCHS                                   note<Unnecessary for Azure>
+
+CONFIG_SPI_INTEL_SPI_PCI                           policy<{'amd64': '-'}>
+CONFIG_SPI_INTEL_SPI_PCI                           mark<ENFORCED> note<LP:1734147> note<this config is not available in linux-azure>
+
+CONFIG_SPI_INTEL_SPI_PLATFORM                      policy<{'amd64': '-'}>
+CONFIG_SPI_INTEL_SPI_PLATFORM                      mark<ENFORCED> note<LP:1734147> note<this config is not available in linux-azure>
+
+CONFIG_MTD_DOCG3                                   policy<{'amd64': '-'}>
+CONFIG_MTD_DOCG3                                   mark<ENFORCED> note<LP:1792205>
+
+CONFIG_SAMPLE_TRACE_PRINTK                         policy<{'amd64': '-'}>
+CONFIG_SAMPLE_TRACE_PRINTK                         mark<ENFORCED> note<not required by LP:#1877958>

@@ -46,6 +46,7 @@ drivers/crypto/vmx/vmx-crypto.ko
 drivers/dax/*
 drivers/firmware/efi/*
 drivers/firmware/iscsi_ibft.ko
+drivers/fpga/*
 drivers/gpu/drm/ast/ast.ko
 drivers/gpu/drm/drm_kms_helper.ko
 drivers/gpu/drm/drm.ko
