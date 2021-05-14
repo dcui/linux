@@ -23,5 +23,4 @@ do_libc_dev_package=false
 disable_d_i=true
 do_source_package = false
 do_doc_package  = false
-do_dkms_nvidia  = true
 do_dkms_wireguard = true

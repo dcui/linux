@@ -4,6 +4,9 @@
 
 include "../../debian.master/config/annotations"
 
+CONFIG_ACPI_HOTPLUG_MEMORY                         policy<{'amd64': 'n'}>
+CONFIG_ACPI_HOTPLUG_MEMORY                         mark<ENFORCED> note<LP:#1671203>
+
 CONFIG_FPGA_MGR_XILINX_SPI                         mark<ENFORCED> note<LP:#1922582>
 CONFIG_FPGA_MGR_XILINX_SPI                         policy<{'amd64': 'm'}>
 
