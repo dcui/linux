@@ -3,6 +3,9 @@ firmware:       advansys/38C0800.bin
 firmware:       advansys/38C1600.bin
 firmware:       advansys/mcode.bin
 firmware:       aic94xx-seq.fw
+firmware:       amd/amd_sev_fam17h_model0xh.sbin
+firmware:       amd/amd_sev_fam17h_model3xh.sbin
+firmware:       amd/amd_sev_fam19h_model0xh.sbin
 firmware:       amdgpu/banks_k_2_smc.bin
 firmware:       amdgpu/bonaire_ce.bin
 firmware:       amdgpu/bonaire_k_smc.bin
