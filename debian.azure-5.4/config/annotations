@@ -19,6 +19,9 @@ CONFIG_ASHMEM                                      mark<ENFORCED> note<LP:#19145
 CONFIG_ANDROID_BINDER_IPC                          policy<{'amd64': 'm'}>
 CONFIG_ANDROID_BINDER_IPC                          mark<ENFORCED> note<LP:#1914568>
 
+CONFIG_ANDROID_BINDERFS                            policy<{'amd64': 'm'}>
+CONFIG_ANDROID_BINDERFS                            mark<ENFORCED> note<LP:#1925246>
+
 CONFIG_MLX5_CORE                                   policy<{'amd64': 'm'}>
 CONFIG_MLX5_CORE                                   mark<ENFORCED> note<LP:#1837397>
 
