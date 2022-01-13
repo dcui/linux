@@ -3664,6 +3664,7 @@ EXPORT_SYMBOL	 vmlinux 0x18f299eb	seq_lseek
 EXPORT_SYMBOL	 vmlinux 0x1912be44	clk_hw_register_clkdev
 EXPORT_SYMBOL	 vmlinux 0x191aa3c7	__mdiobus_write
 EXPORT_SYMBOL	 vmlinux 0x191c03c2	devm_pci_remap_iospace
+EXPORT_SYMBOL	 vmlinux 0x19242e38	efi
 EXPORT_SYMBOL	 vmlinux 0x19293588	kernel_bind
 EXPORT_SYMBOL	 vmlinux 0x193250ff	request_firmware
 EXPORT_SYMBOL	 vmlinux 0x19408df5	is_nd_btt
@@ -4214,6 +4215,7 @@ EXPORT_SYMBOL	 vmlinux 0x32f30133	ip_generic_getfrag
 EXPORT_SYMBOL	 vmlinux 0x32f43ded	file_ns_capable
 EXPORT_SYMBOL	 vmlinux 0x32fa8338	tty_hung_up_p
 EXPORT_SYMBOL	 vmlinux 0x3320c7d1	agp_generic_create_gatt_table
+EXPORT_SYMBOL	 vmlinux 0x33216b1d	mdio_driver_unregister
 EXPORT_SYMBOL	 vmlinux 0x3324ef3b	acpi_set_firmware_waking_vector
 EXPORT_SYMBOL	 vmlinux 0x332812b5	iget_locked
 EXPORT_SYMBOL	 vmlinux 0x336805d3	cdev_add
@@ -5551,7 +5553,6 @@ EXPORT_SYMBOL	 vmlinux 0x7454f08d	scsi_free_host_dev
 EXPORT_SYMBOL	 vmlinux 0x745543d3	sock_edemux
 EXPORT_SYMBOL	 vmlinux 0x74754435	acpi_bus_generate_netlink_event
 EXPORT_SYMBOL	 vmlinux 0x7481b148	refcount_add_checked
-EXPORT_SYMBOL	 vmlinux 0x748dd7fb	mdio_driver_unregister
 EXPORT_SYMBOL	 vmlinux 0x74964d18	sdev_disable_disk_events
 EXPORT_SYMBOL	 vmlinux 0x74bc742f	serio_unregister_child_port
 EXPORT_SYMBOL	 vmlinux 0x74c134b9	__sw_hweight32
@@ -6435,7 +6436,6 @@ EXPORT_SYMBOL	 vmlinux 0xa0dad88e	netdev_adjacent_get_private
 EXPORT_SYMBOL	 vmlinux 0xa0eae826	smp_call_function
 EXPORT_SYMBOL	 vmlinux 0xa0ebd14c	sysctl_tcp_mem
 EXPORT_SYMBOL	 vmlinux 0xa0ef1d7e	splice_direct_to_actor
-EXPORT_SYMBOL	 vmlinux 0xa0f493d9	efi
 EXPORT_SYMBOL	 vmlinux 0xa0fbac79	wake_up_bit
 EXPORT_SYMBOL	 vmlinux 0xa1040166	devm_kvasprintf
 EXPORT_SYMBOL	 vmlinux 0xa108eb4d	sysctl_optmem_max
@@ -7592,7 +7592,6 @@ EXPORT_SYMBOL	 vmlinux 0xd7dd777b	reserve_perfctr_nmi
 EXPORT_SYMBOL	 vmlinux 0xd7e13d02	block_write_end
 EXPORT_SYMBOL	 vmlinux 0xd7e56a4e	simple_strtoll
 EXPORT_SYMBOL	 vmlinux 0xd80cdf2e	d_instantiate
-EXPORT_SYMBOL	 vmlinux 0xd818a47b	mdio_driver_register
 EXPORT_SYMBOL	 vmlinux 0xd81bf61c	agp_generic_type_to_mask_type
 EXPORT_SYMBOL	 vmlinux 0xd846c315	acpi_write_bit_register
 EXPORT_SYMBOL	 vmlinux 0xd8602b6a	tun_is_xdp_frame
@@ -7854,6 +7853,7 @@ EXPORT_SYMBOL	 vmlinux 0xe40976c0	pnp_range_reserved
 EXPORT_SYMBOL	 vmlinux 0xe40c37ea	down_write_trylock
 EXPORT_SYMBOL	 vmlinux 0xe411fec5	inet_add_offload
 EXPORT_SYMBOL	 vmlinux 0xe419bc99	iowrite32be
+EXPORT_SYMBOL	 vmlinux 0xe4219a8c	mdio_driver_register
 EXPORT_SYMBOL	 vmlinux 0xe4329092	__ctzdi2
 EXPORT_SYMBOL	 vmlinux 0xe43fc9c1	neigh_lookup_nodev
 EXPORT_SYMBOL	 vmlinux 0xe441e95a	refcount_dec_not_one
