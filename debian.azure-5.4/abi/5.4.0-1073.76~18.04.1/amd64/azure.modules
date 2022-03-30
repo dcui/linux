@@ -606,6 +606,7 @@ hsr
 hsu_dma
 htc-pasic3
 huawei-wmi
+hv_azure_blob
 hv_balloon
 hv_netvsc
 hv_sock
