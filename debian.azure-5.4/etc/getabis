@@ -12,5 +12,6 @@ repo_list=(
 package_prefixes linux-buildinfo
 
 getall amd64 azure
+getall arm64 azure
 
 # Ports arches and flavours.
