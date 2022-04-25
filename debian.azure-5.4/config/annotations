@@ -4,6 +4,8 @@
 
 include "../../debian.master/config/annotations"
 
+CONFIG_STACKPROTECTOR_PER_TASK                     policy<{'arm64': '-'}>
+
 CONFIG_HIBERNATION                                 policy<{'amd64': 'y', 'arm64': 'y'}>
 CONFIG_HIBERNATION                                 mark<ENFORCED> note<LP:1967336>
 
