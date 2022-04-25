@@ -1,6 +1,7 @@
 8021q
 9pnet_rdma
 a8293
+aacraid
 act_gact
 act_mirred
 ad5820
@@ -34,6 +35,11 @@ arm_smmuv3_pmu
 ascot2e
 ashmem_linux
 asix
+async_memcpy
+async_pq
+async_raid6_recov
+async_tx
+async_xor
 at24
 at25
 ata_piix
@@ -148,6 +154,7 @@ dib9000
 dibx000_common
 dm-log
 dm-mirror
+dm-raid
 dm-region-hash
 dm-zero
 dm9601
@@ -345,13 +352,16 @@ mb86a20s
 mc
 mc44s803
 mcs7830
-md-mod
 mdio
 mdio-bcm-unimac
 mdio-mux-meson-g12a
 mdt_loader
 mediatek-drm
 mediatek-drm-hdmi
+megaraid
+megaraid_mbox
+megaraid_mm
+megaraid_sas
 meson-canvas
 meson-drm
 meson-gxl
@@ -470,6 +480,7 @@ phy-tegra194-p2u
 pl111_drm
 plusb
 pm8xxx-vibrator
+pmcraid
 psnap
 pwm-bcm2835
 pwm-beeper
@@ -511,7 +522,12 @@ qrtr-tun
 qt1010
 r8152
 r820t
+raid0
+raid1
+raid10
+raid456
 raid6_pq
+raid6test
 raid_class
 raspberrypi-cpufreq
 raspberrypi-hwmon
@@ -972,5 +988,4 @@ zl10353
 zlua
 znvpair
 zstd_compress
-zstd_decompress
 zunicode

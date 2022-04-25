@@ -14951,6 +14951,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0x9a302624	sata_sff_hardreset
 EXPORT_SYMBOL_GPL	 vmlinux 0x9a55a21a	sk_msg_free_nocharge
 EXPORT_SYMBOL_GPL	 vmlinux 0x9a569300	n_tty_inherit_ops
 EXPORT_SYMBOL_GPL	 vmlinux 0x9a58dd2d	trace_print_bitmask_seq
+EXPORT_SYMBOL_GPL	 vmlinux 0x9a63ebef	hv_setup_dma_ops
 EXPORT_SYMBOL_GPL	 vmlinux 0x9a69d0ed	__regmap_init_spi
 EXPORT_SYMBOL_GPL	 vmlinux 0x9a980aa3	debugfs_create_u32_array
 EXPORT_SYMBOL_GPL	 vmlinux 0x9aa71c2a	efi_query_variable_store
