@@ -418,6 +418,7 @@ static void vmbus_release_relid(u32 relid)
 	struct vmbus_channel_relid_released msg;
 	int ret;
 
+        printk("cdx: vmbus_release_relid: relid=%d\n", relid);
 	memset(&msg, 0, sizeof(struct vmbus_channel_relid_released));
 	msg.child_relid = relid;
 	msg.header.msgtype = CHANNELMSG_RELID_RELEASED;
@@ -436,8 +437,12 @@ void hv_process_channel_removal(struct vmbus_channel *channel)
 	 * hv_process_channel_removal() could find INVALID_RELID only for
 	 * hv_sock channels.  See the inline comments in vmbus_onoffer().
 	 */
-	WARN_ON(channel->offermsg.child_relid == INVALID_RELID &&
-		!is_hvsock_channel(channel));
+	if (WARN_ON(channel->offermsg.child_relid == INVALID_RELID &&
+		!is_hvsock_channel(channel)))
+		printk("cdx: hv_process_channel_removal: channel=%pUl:%pUl\n",
+			&channel->offermsg.offer.if_type,
+			&channel->offermsg.offer.if_instance
+			);
 
 	/*
 	 * Upon suspend, an in-use hv_sock channel is removed from the array of
@@ -1013,6 +1018,8 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 	oldchannel = find_primary_channel_by_offer(offer);
 
 	if (oldchannel != NULL) {
+		printk("cdx: vmbus_onoffer: old=1: relid=%d, %pUl:%pUl\n", oldchannel->offermsg.child_relid,
+			&oldchannel->offermsg.offer.if_type,&oldchannel->offermsg.offer.if_instance);
 		/*
 		 * We're resuming from hibernation: all the sub-channel and
 		 * hv_sock channels we had before the hibernation should have
@@ -1093,6 +1100,8 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 
 	vmbus_setup_channel_state(newchannel, offer);
 
+	printk("cdx: vmbus_onoffer: new=1: relid=%d, %pUl:%pUl\n", newchannel->offermsg.child_relid,
+		&newchannel->offermsg.offer.if_type,&newchannel->offermsg.offer.if_instance);
 	vmbus_process_offer(newchannel);
 }
 
@@ -1119,6 +1128,12 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	bool clean_up_chan_for_suspend;
 
 	rescind = (struct vmbus_channel_rescind_offer *)hdr;
+
+	if (rescind->child_relid == 7) {
+		printk("cdx: vmbus_onoffer_rescind: 1: relid=%d\n", rescind->child_relid);
+		ssleep(20);
+	        printk("cdx: vmbus_onoffer_rescind: 2: relid=%d\n", rescind->child_relid);
+	}
 
 	trace_vmbus_onoffer_rescind(rescind);
 

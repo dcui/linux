@@ -258,7 +258,9 @@ struct vmbus_connection {
 	 * is further handled on handle_primary_chan_wq or
 	 * handle_sub_chan_wq.
 	 */
+	bool			ignore_offer_rescind_msg;
 	struct workqueue_struct *work_queue;
+	struct workqueue_struct *rescind_work_queue;
 	struct workqueue_struct *handle_primary_chan_wq;
 	struct workqueue_struct *handle_sub_chan_wq;
 

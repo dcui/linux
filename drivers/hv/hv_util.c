@@ -631,6 +631,7 @@ static int util_suspend(struct hv_device *dev)
 	}
 
 	vmbus_close(dev->channel);
+	printk("cdx: util_suspend: relid=%d\n", dev->channel->offermsg.child_relid);
 
 	return 0;
 }
