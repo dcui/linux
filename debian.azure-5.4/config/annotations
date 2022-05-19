@@ -5330,3 +5330,4 @@ CONFIG_ZEROPLUS_FF                                 policy<{'amd64': '-', 'arm64'
 CONFIG_ZOPT2201                                    policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_ZPA2326                                     policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_ZX_TDM                                      policy<{'amd64': '-', 'arm64': '-'}>
+CONFIG_STACKPROTECTOR_PER_TASK policy<{'arm64': '-'}>
