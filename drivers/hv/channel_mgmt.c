@@ -465,6 +465,9 @@ static void vmbus_add_channel_work(struct work_struct *work)
 	struct vmbus_channel *primary_channel = newchannel->primary_channel;
 	int ret;
 
+	trace_printk("cdx: vmbus_add_channel_work: id=%d:%d class=%pUl, device=%pUl\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index,
+		&newchannel->offermsg.offer.if_type, &newchannel->offermsg.offer.if_instance);
 	/*
 	 * This state is used to indicate a successful open
 	 * so that when we do close the channel normally, we
@@ -502,7 +505,11 @@ static void vmbus_add_channel_work(struct work_struct *work)
 	 * binding which eventually invokes the device driver's AddDevice()
 	 * method.
 	 */
+	trace_printk("cdx: offer: id=%d:%d (adding dev)\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index);
 	ret = vmbus_device_register(newchannel->device_obj);
+	trace_printk("cdx: offer: id=%d:%d (added dev)\n",
+		newchannel->offermsg.child_relid, newchannel->offermsg.offer.sub_channel_index);
 
 	if (ret != 0) {
 		pr_err("unable to add child device object (relid %d)\n",
@@ -992,8 +999,17 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 		check_ready_for_resume_event();
 
 		mutex_unlock(&vmbus_connection.channel_mutex);
+
+		trace_printk("cdx: offer-old!!!: id=%d, class=%pUl, device=%pUl\n",
+			offer->child_relid, &offer->offer.if_type,
+			&offer->offer.if_instance);
+
 		return;
 	}
+
+	trace_printk("cdx: offer: id=%d, class=%pUl, device=%pUl\n",
+		offer->child_relid, &offer->offer.if_type,
+		&offer->offer.if_instance);
 
 	/* Allocate the channel object and save this offer. */
 	newchannel = alloc_channel();
@@ -1032,6 +1048,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 	bool clean_up_chan_for_suspend;
 
 	rescind = (struct vmbus_channel_rescind_offer *)hdr;
+	trace_printk("cdx: id=%d(start)\n", rescind->child_relid);
 
 	trace_vmbus_onoffer_rescind(rescind);
 
@@ -1122,6 +1139,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 			vmbus_device_unregister(channel->device_obj);
 			put_device(dev);
 		}
+		trace_printk("cdx: id=%d(end-primary)\n", rescind->child_relid);
 	} else if (channel->primary_channel != NULL) {
 		/*
 		 * Sub-channel is being rescinded. Following is the channel
@@ -1141,6 +1159,7 @@ static void vmbus_onoffer_rescind(struct vmbus_channel_message_header *hdr)
 			complete(&channel->rescind_event);
 		}
 		mutex_unlock(&vmbus_connection.channel_mutex);
+		trace_printk("cdx: id=%d(end-sub)\n", rescind->child_relid);
 	}
 
 	/* The "channel" may have been freed. Do not access it any longer. */

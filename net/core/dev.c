@@ -1153,6 +1153,30 @@ bool dev_valid_name(const char *name)
 }
 EXPORT_SYMBOL(dev_valid_name);
 
+#ifdef CONFIG_STACKTRACE
+
+#ifdef CONFIG_UNWINDER_ORC
+/* Skip 2:
+ *   event_triggers_post_call()
+ *   trace_event_raw_event_xxx()
+ */
+#define STACK_SKIP 2
+#else
+/*
+ * Skip 4:
+ *   stacktrace_trigger()
+ *   event_triggers_post_call()
+ *   trace_event_buffer_commit()
+ *   trace_event_raw_event_xxx()
+ */
+#define STACK_SKIP 4
+#endif
+
+#else
+#error CONFIG_UNWINDER_ORC undefined...
+#endif
+
+
 /**
  *	__dev_alloc_name - allocate a name for a device
  *	@net: network namespace to allocate the device name in
@@ -1318,6 +1342,10 @@ int dev_change_name(struct net_device *dev, const char *newname)
 	 * they are supposed to operate on master interface
 	 * directly.
 	 */
+	trace_dump_stack(STACK_SKIP);
+	trace_printk("cdx: 1: net=%px, name=(%s -> %s) name_type=%d\n",
+		dev, dev->name, newname, dev->name_assign_type);
+
 	if (dev->flags & IFF_UP &&
 	    likely(!(dev->priv_flags & IFF_LIVE_RENAME_OK)))
 		return -EBUSY;
@@ -1332,6 +1360,8 @@ int dev_change_name(struct net_device *dev, const char *newname)
 	memcpy(oldname, dev->name, IFNAMSIZ);
 
 	err = dev_get_valid_name(net, dev, newname);
+	trace_printk("cdx: 2: net=%px, name=(%s -> %s) name_type=%d\n",
+		dev, dev->name, newname, dev->name_assign_type);
 	if (err < 0) {
 		up_write(&devnet_rename_sem);
 		return err;
@@ -1342,6 +1372,8 @@ int dev_change_name(struct net_device *dev, const char *newname)
 
 	old_assign_type = dev->name_assign_type;
 	dev->name_assign_type = NET_NAME_RENAMED;
+	trace_printk("cdx: 3: net=%px, name=(%s -> %s) name_type=%d (old_type=%d)\n",
+		dev, dev->name, newname, dev->name_assign_type, old_assign_type);
 
 rollback:
 	ret = device_rename(&dev->dev, dev->name);
@@ -1349,8 +1381,15 @@ rollback:
 		memcpy(dev->name, oldname, IFNAMSIZ);
 		dev->name_assign_type = old_assign_type;
 		up_write(&devnet_rename_sem);
+
+		trace_printk("cdx: 4: net=%px, name=(%s -> %s) name_type=%d, ret=%d\n",
+			dev, dev->name, newname, dev->name_assign_type, ret);
+
 		return ret;
 	}
+
+	trace_printk("cdx: 5: net=%px, name=(%s -> %s) name_type=%d\n",
+		dev, dev->name, newname, dev->name_assign_type);
 
 	up_write(&devnet_rename_sem);
 
@@ -1369,6 +1408,8 @@ rollback:
 	ret = call_netdevice_notifiers(NETDEV_CHANGENAME, dev);
 	ret = notifier_to_errno(ret);
 
+	trace_printk("cdx: 6: net=%px, name=(%s -> %s) name_type=%d, ret=%d\n",
+		dev, dev->name, newname, dev->name_assign_type, ret);
 	if (ret) {
 		/* err >= 0 after dev_alloc_name() or stores the first errno */
 		if (err >= 0) {
@@ -1378,8 +1419,10 @@ rollback:
 			memcpy(oldname, newname, IFNAMSIZ);
 			dev->name_assign_type = old_assign_type;
 			old_assign_type = NET_NAME_RENAMED;
+			WARN_ON(1);
 			goto rollback;
 		} else {
+			WARN_ON(1);
 			pr_err("%s: name change rollback failed: %d\n",
 			       dev->name, ret);
 		}
@@ -1403,6 +1446,8 @@ int dev_set_alias(struct net_device *dev, const char *alias, size_t len)
 	if (len >= IFALIASZ)
 		return -EINVAL;
 
+	trace_printk("cdx: net=%px, name=%s, alias = %s, name_type=%d\n",
+		dev, dev->name, alias, dev->name_assign_type);
 	if (len) {
 		new_alias = kmalloc(sizeof(*new_alias) + len + 1, GFP_KERNEL);
 		if (!new_alias)
@@ -10025,7 +10070,12 @@ int register_netdevice(struct net_device *dev)
 	spin_lock_init(&dev->addr_list_lock);
 	netdev_set_addr_lockdep_class(dev);
 
+	trace_dump_stack(STACK_SKIP);
+	trace_printk("cdx: 1: net=%px, name=%s, name_type=%d\n",
+		dev, dev->name, dev->name_assign_type);
 	ret = dev_get_valid_name(net, dev, dev->name);
+	trace_printk("cdx: 2: net=%px, name=%s, name_type=%d, ret=%d\n",
+		dev, dev->name, dev->name_assign_type, ret);
 	if (ret < 0)
 		goto out;
 
