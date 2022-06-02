@@ -572,6 +572,10 @@ hisi-trng-v2
 hisi_hpre
 hisi_qm
 hisi_sec2
+hisi_uncore_ddrc_pmu
+hisi_uncore_hha_pmu
+hisi_uncore_l3c_pmu
+hisi_uncore_pmu
 hisi_zip
 hmc6352
 hms-profinet
