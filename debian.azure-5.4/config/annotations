@@ -2902,7 +2902,8 @@ CONFIG_NS83820                                     policy<{'amd64': '-', 'arm64'
 CONFIG_NTB_PERF                                    policy<{'amd64': 'n', 'arm64': 'n'}>
 CONFIG_NTB_PINGPONG                                policy<{'amd64': 'n', 'arm64': 'n'}>
 CONFIG_NTB_TOOL                                    policy<{'amd64': 'n', 'arm64': 'n'}>
-CONFIG_NVM                                         policy<{'amd64': 'n', 'arm64': 'n'}>
+CONFIG_NVM                                         policy<{'amd64': '-', 'arm64': '-'}>
+CONFIG_NVM                                         note<LP: #1979014>
 CONFIG_NVMEM_BCM_OCOTP                             policy<{'arm64': 'y'}>
 CONFIG_NVMEM_IMX_IIM                               policy<{'arm64': 'n'}>
 CONFIG_NVMEM_IMX_OCOTP                             policy<{'arm64': 'y'}>

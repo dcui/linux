@@ -15103,6 +15103,7 @@ EXPORT_SYMBOL_GPL	 vmlinux 0xa284fd29	regulator_unregister_notifier
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2a50283	gpiod_set_raw_value
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2c74331	list_lru_count_node
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2c74e83	xhci_run
+EXPORT_SYMBOL_GPL	 vmlinux 0xa2d0b59d	mmio_stale_data_clear
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2e1b3ef	trace_printk_init_buffers
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2e2c944	fixup_user_fault
 EXPORT_SYMBOL_GPL	 vmlinux 0xa2f2680e	sysfs_chmod_file
