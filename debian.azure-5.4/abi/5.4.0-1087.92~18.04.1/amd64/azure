@@ -8567,7 +8567,6 @@ EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x60d0d4f3	kvm_get_msr
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x61507de0	kvm_io_bus_write
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x61697479	current_vcpu
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x6175a0fd	kvm_is_visible_gfn
-EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x61869820	kvm_x86_ops
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x6243ac82	__kvm_apic_update_irr
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x6308046c	kvm_rdpmc
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0x63270977	kvm_default_tsc_scaling_ratio
@@ -8657,6 +8656,7 @@ EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbbe34a46	kvm_vcpu_mark_page_dirty
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbc1ef0e0	kvm_hv_assist_page_enabled
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbc49788c	kvm_vcpu_write_guest_page
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbd0c9e40	gfn_to_pfn_prot
+EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbe69bec5	kvm_x86_ops
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xbfc61ecf	__tracepoint_kvm_page_fault
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xc00f583a	kvm_mtrr_get_guest_memory_type
 EXPORT_SYMBOL_GPL	 arch/x86/kvm/kvm 0xc1d769b7	__tracepoint_kvm_nested_intr_vmexit
