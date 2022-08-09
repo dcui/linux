@@ -604,18 +604,21 @@ static unsigned int hv_msi_get_int_vector(struct irq_data *data)
 	return cfg->vector;
 }
 
-static void hv_set_msi_entry_from_desc(union hv_msi_entry *msi_entry,
-				       struct msi_desc *msi_desc)
-{
-	msi_entry->address.as_uint32 = msi_desc->msg.address_lo;
-	msi_entry->data.as_uint32 = msi_desc->msg.data;
-}
-
 static int hv_msi_prepare(struct irq_domain *domain, struct device *dev,
 			  int nvec, msi_alloc_info_t *info)
 {
-	return pci_msi_prepare(domain, dev, nvec, info);
+	int ret = pci_msi_prepare(domain, dev, nvec, info);
+
+	/*
+	 * By using the interrupt remapper in the hypervisor IOMMU, contiguous
+	 * CPU vectors is not needed for multi-MSI
+	 */
+	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
+		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
+
+	return ret;
 }
+
 #elif defined(CONFIG_ARM64)
 /*
  * SPI vectors to use for vPCI; arch SPIs range is [32, 1019], but leaving a bit
@@ -649,14 +652,6 @@ static struct irq_chip hv_arm64_msi_irq_chip = {
 static unsigned int hv_msi_get_int_vector(struct irq_data *irqd)
 {
 	return irqd->parent_data->hwirq;
-}
-
-static void hv_set_msi_entry_from_desc(union hv_msi_entry *msi_entry,
-				       struct msi_desc *msi_desc)
-{
-	msi_entry->address = ((u64)msi_desc->msg.address_hi << 32) |
-			      msi_desc->msg.address_lo;
-	msi_entry->data = msi_desc->msg.data;
 }
 
 /*
@@ -1458,28 +1453,6 @@ static void hv_irq_mask(struct irq_data *data)
 	pci_msi_mask_irq(data);
 	if (data->parent_data->chip->irq_mask)
 		irq_chip_mask_parent(data);
-}
-
-static unsigned int hv_msi_get_int_vector(struct irq_data *data)
-{
-	struct irq_cfg *cfg = irqd_cfg(data);
-
-	return cfg->vector;
-}
-
-static int hv_msi_prepare(struct irq_domain *domain, struct device *dev,
-			  int nvec, msi_alloc_info_t *info)
-{
-	int ret = pci_msi_prepare(domain, dev, nvec, info);
-
-	/*
-	 * By using the interrupt remapper in the hypervisor IOMMU, contiguous
-	 * CPU vectors is not needed for multi-MSI
-	 */
-	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
-		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
-
-	return ret;
 }
 
 /**
