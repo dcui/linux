@@ -4486,8 +4486,8 @@ CONFIG_TOUCHSCREEN_ZET6223                         policy<{'amd64': '-', 'arm64'
 CONFIG_TOUCHSCREEN_ZFORCE                          policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_TPL0102                                     policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_TPS68470_PMIC_OPREGION                      policy<{'amd64': '-', 'arm64': '-'}>
-CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS                 policy<{'amd64': 'y', 'arm64': 'y'}>
-CONFIG_TRANSPARENT_HUGEPAGE_MADVISE                policy<{'amd64': 'n', 'arm64': 'n'}>
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS                 policy<{'amd64': 'y', 'arm64': 'n'}> note<LP: #1988434>
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE                policy<{'amd64': 'n', 'arm64': 'y'}> note<LP: #1988434>
 CONFIG_TSL2583                                     policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_TSL2772                                     policy<{'amd64': '-', 'arm64': '-'}>
 CONFIG_TSL4531                                     policy<{'amd64': '-', 'arm64': '-'}>
