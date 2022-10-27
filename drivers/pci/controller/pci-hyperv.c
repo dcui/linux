@@ -1613,7 +1613,7 @@ out:
 }
 
 static u32 hv_compose_msi_req_v1(
-	struct pci_create_interrupt *int_pkt,
+	struct pci_create_interrupt *int_pkt, const struct cpumask *affinity,
 	u32 slot, u8 vector, u8 vector_count)
 {
 	int_pkt->message_type.type = PCI_CREATE_INTERRUPT_MESSAGE;
@@ -1640,39 +1640,18 @@ static int hv_compose_msi_req_get_cpu(const struct cpumask *affinity)
 	return cpumask_first_and(affinity, cpu_online_mask);
 }
 
-/*
- * Make sure the dummy vCPU values for multi-MSI don't all point to vCPU0.
- */
-static int hv_compose_multi_msi_req_get_cpu(void)
-{
-	static DEFINE_SPINLOCK(multi_msi_cpu_lock);
-
-	/* -1 means starting with CPU 0 */
-	static int cpu_next = -1;
-
-	unsigned long flags;
-	int cpu;
-
-	spin_lock_irqsave(&multi_msi_cpu_lock, flags);
-
-	cpu_next = cpumask_next_wrap(cpu_next, cpu_online_mask, nr_cpu_ids,
-				     false);
-	cpu = cpu_next;
-
-	spin_unlock_irqrestore(&multi_msi_cpu_lock, flags);
-
-	return cpu;
-}
-
 static u32 hv_compose_msi_req_v2(
-	struct pci_create_interrupt2 *int_pkt, int cpu,
+	struct pci_create_interrupt2 *int_pkt, const struct cpumask *affinity,
 	u32 slot, u8 vector, u8 vector_count)
 {
+	int cpu;
+
 	int_pkt->message_type.type = PCI_CREATE_INTERRUPT_MESSAGE2;
 	int_pkt->wslot.slot = slot;
 	int_pkt->int_desc.vector = vector;
 	int_pkt->int_desc.vector_count = vector_count;
 	int_pkt->int_desc.delivery_mode = DELIVERY_MODE;
+	cpu = hv_compose_msi_req_get_cpu(affinity);
 	int_pkt->int_desc.processor_array[0] =
 		hv_cpu_number_to_vp_number(cpu);
 	int_pkt->int_desc.processor_count = 1;
@@ -1681,15 +1660,18 @@ static u32 hv_compose_msi_req_v2(
 }
 
 static u32 hv_compose_msi_req_v3(
-	struct pci_create_interrupt3 *int_pkt, int cpu,
+	struct pci_create_interrupt3 *int_pkt, const struct cpumask *affinity,
 	u32 slot, u32 vector, u8 vector_count)
 {
+	int cpu;
+
 	int_pkt->message_type.type = PCI_CREATE_INTERRUPT_MESSAGE3;
 	int_pkt->wslot.slot = slot;
 	int_pkt->int_desc.vector = vector;
 	int_pkt->int_desc.reserved = 0;
 	int_pkt->int_desc.vector_count = vector_count;
 	int_pkt->int_desc.delivery_mode = DELIVERY_MODE;
+	cpu = hv_compose_msi_req_get_cpu(affinity);
 	int_pkt->int_desc.processor_array[0] =
 		hv_cpu_number_to_vp_number(cpu);
 	int_pkt->int_desc.processor_count = 1;
@@ -1728,18 +1710,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 			struct pci_create_interrupt3 v3;
 		} int_pkts;
 	} __packed ctxt;
-	bool multi_msi;
 	u64 trans_id;
 	u32 size;
 	int ret;
-	int cpu;
-
-	msi_desc  = irq_data_get_msi_desc(data);
-	multi_msi = !msi_desc->pci.msi_attrib.is_msix &&
-		    msi_desc->nvec_used > 1;
 
 	/* Reuse the previous allocation */
-	if (data->chip_data && multi_msi) {
+	if (data->chip_data) {
 		int_desc = data->chip_data;
 		msg->address_hi = int_desc->address >> 32;
 		msg->address_lo = int_desc->address & 0xffffffff;
@@ -1747,6 +1723,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 		return;
 	}
 
+	msi_desc  = irq_data_get_msi_desc(data);
 	pdev = msi_desc_to_pci_dev(msi_desc);
 	dest = irq_data_get_effective_affinity_mask(data);
 	pbus = pdev->bus;
@@ -1756,18 +1733,11 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	if (!hpdev)
 		goto return_null_message;
 
-	/* Free any previous message that might have already been composed. */
-	if (data->chip_data && !multi_msi) {
-		int_desc = data->chip_data;
-		data->chip_data = NULL;
-		hv_int_desc_free(hpdev, int_desc);
-	}
-
 	int_desc = kzalloc(sizeof(*int_desc), GFP_ATOMIC);
 	if (!int_desc)
 		goto drop_reference;
 
-	if (multi_msi) {
+	if (!msi_desc->pci.msi_attrib.is_msix && msi_desc->nvec_used > 1) {
 		/*
 		 * If this is not the first MSI of Multi MSI, we already have
 		 * a mapping.  Can exit early.
@@ -1792,11 +1762,9 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 		 */
 		vector = 32;
 		vector_count = msi_desc->nvec_used;
-		cpu = hv_compose_multi_msi_req_get_cpu();
 	} else {
 		vector = hv_msi_get_int_vector(data);
 		vector_count = 1;
-		cpu = hv_compose_msi_req_get_cpu(dest);
 	}
 
 	memset(&ctxt, 0, sizeof(ctxt));
@@ -1807,6 +1775,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	switch (hbus->protocol_version) {
 	case PCI_PROTOCOL_VERSION_1_1:
 		size = hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
+					dest,
 					hpdev->desc.win_slot.slot,
 					vector,
 					vector_count);
@@ -1815,7 +1784,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 	case PCI_PROTOCOL_VERSION_1_2:
 	case PCI_PROTOCOL_VERSION_1_3:
 		size = hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
-					cpu,
+					dest,
 					hpdev->desc.win_slot.slot,
 					vector,
 					vector_count);
@@ -1823,7 +1792,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
 
 	case PCI_PROTOCOL_VERSION_1_4:
 		size = hv_compose_msi_req_v3(&ctxt.int_pkts.v3,
-					cpu,
+					dest,
 					hpdev->desc.win_slot.slot,
 					vector,
 					vector_count);
