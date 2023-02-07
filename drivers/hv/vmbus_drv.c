@@ -683,9 +683,81 @@ static const struct attribute_group vmbus_dev_group = {
 };
 __ATTRIBUTE_GROUPS(vmbus_dev);
 
+
+#if 1
+struct onmessage_work_context {
+	struct work_struct work;
+	struct {
+		struct hv_message_header header;
+		u8 payload[];
+	} msg;
+};
+static void vmbus_onmessage_work(struct work_struct *work);
+#endif
+
+extern struct vmbus_channel_offer_channel vf_offer;
+extern u32 vf_relid;
+
+static void offer_vf(void)
+{
+	struct onmessage_work_context *ctx;
+	struct vmbus_channel_offer_channel *offer;
+
+	ctx = kzalloc(sizeof(*ctx) + sizeof(*offer), GFP_KERNEL | __GFP_NOFAIL);
+
+	ctx->msg.header.message_type = 1;
+	ctx->msg.header.payload_size = sizeof(*offer);
+
+	offer = (struct vmbus_channel_offer_channel *)ctx->msg.payload;
+	memcpy(offer, &vf_offer, sizeof(vf_offer));
+
+	WARN(offer->header.msgtype != CHANNELMSG_OFFERCHANNEL, "cdx: offer.msgtype=%d\n", offer->header.msgtype);
+	printk("cdx: offer_vf: relid=%d\n", offer->child_relid);
+
+	atomic_inc(&vmbus_connection.offer_in_progress);
+
+	INIT_WORK(&ctx->work, vmbus_onmessage_work);
+	queue_work(vmbus_connection.work_queue, &ctx->work);
+}
+
+static void rescind_vf(void)
+{
+	struct onmessage_work_context *ctx;
+	struct vmbus_channel_rescind_offer *rescind;
+
+	ctx = kzalloc(sizeof(*ctx) + sizeof(*rescind), GFP_KERNEL | __GFP_NOFAIL);
+
+	ctx->msg.header.message_type = 1;
+	ctx->msg.header.payload_size = sizeof(*rescind);
+
+	rescind = (struct vmbus_channel_rescind_offer *)ctx->msg.payload;
+	rescind->header.msgtype = CHANNELMSG_RESCIND_CHANNELOFFER;
+	rescind->child_relid = vf_relid;
+	printk("cdx: rescind_vf: relid=%d\n", rescind->child_relid);
+
+	INIT_WORK(&ctx->work, vmbus_onmessage_work);
+	queue_work(vmbus_connection.rescind_work_queue, &ctx->work);
+}
+
 /* Set up the attribute for /sys/bus/vmbus/hibernation */
+
 static ssize_t hibernation_show(struct bus_type *bus, char *buf)
 {
+	int i;
+	int wait;
+
+	printk("cdx: hibernation_show: calling rescind_vf-1\n");
+	rescind_vf();
+	ssleep(10);
+
+	printk("cdx: hibernation_show: calling offer_vf-1\n");
+	offer_vf();
+
+	msleep(50);
+
+	printk("cdx: hibernation_show: calling rescind_vf-2\n");
+	rescind_vf();
+
 	return sprintf(buf, "%d\n", !!hv_is_hibernation_supported());
 }
 
@@ -1063,6 +1135,7 @@ static struct bus_type  hv_bus = {
 	.pm =			&vmbus_pm,
 };
 
+#if 0
 struct onmessage_work_context {
 	struct work_struct work;
 	struct {
@@ -1070,6 +1143,7 @@ struct onmessage_work_context {
 		u8 payload[];
 	} msg;
 };
+#endif
 
 static void vmbus_onmessage_work(struct work_struct *work)
 {

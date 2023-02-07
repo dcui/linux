@@ -147,6 +147,10 @@ const struct vmbus_device vmbus_devs[] = {
 	},
 };
 
+static struct { guid_t guid; } vf_guid = { HV_PCIE_GUID };
+struct vmbus_channel_offer_channel vf_offer;
+u32 vf_relid;
+
 static const struct {
 	guid_t guid;
 } vmbus_unsupported_devs[] = {
@@ -419,6 +423,11 @@ static void vmbus_release_relid(u32 relid)
 {
 	struct vmbus_channel_relid_released msg;
 	int ret;
+
+	if (relid == vf_relid) {
+		printk("cdx: vmbus_release_relid: skipping relid=%d\n", relid);
+		return;
+	}
 
 	memset(&msg, 0, sizeof(struct vmbus_channel_relid_released));
 	msg.child_relid = relid;
@@ -1003,6 +1012,7 @@ static bool vmbus_is_valid_offer(const struct vmbus_channel_offer_channel *offer
  * vmbus_onoffer - Handler for channel offers from vmbus in parent partition.
  *
  */
+
 static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 {
 	struct vmbus_channel_offer_channel *offer;
@@ -1023,6 +1033,7 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 	oldchannel = find_primary_channel_by_offer(offer);
 
 	if (oldchannel != NULL) {
+		WARN_ON(1);
 		/*
 		 * We're resuming from hibernation: all the sub-channel and
 		 * hv_sock channels we had before the hibernation should have
@@ -1102,6 +1113,12 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 	}
 
 	vmbus_setup_channel_state(newchannel, offer);
+
+	if (vf_relid == 0 && guid_equal(&vf_guid.guid, &offer->offer.if_type)) {
+		memcpy(&vf_offer, offer, sizeof(struct vmbus_channel_offer_channel));
+		vf_relid = offer->child_relid;
+		printk("cdx: backing up vf_offer: relid=%d\n", vf_relid);
+	}
 
 	vmbus_process_offer(newchannel);
 }
