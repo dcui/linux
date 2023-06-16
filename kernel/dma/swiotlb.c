@@ -209,11 +209,18 @@ void __init swiotlb_update_mem_attributes(void)
 {
 	struct io_tlb_mem *mem = &io_tlb_default_mem;
 	unsigned long bytes;
+	int rc;
 
 	if (!mem->nslabs || mem->late_alloc)
 		return;
 	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
-	set_memory_decrypted((unsigned long)mem->vaddr, bytes >> PAGE_SHIFT);
+	rc = set_memory_decrypted((unsigned long)mem->vaddr, bytes >> PAGE_SHIFT);
+	if (rc) {
+		pr_err("Failed to decrypt swiotlb buffer (%d): disabling swiotlb!\n",
+		       rc);
+		mem->nslabs = 0;
+		return;
+	}
 }
 
 static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
@@ -356,7 +363,7 @@ int swiotlb_init_late(size_t size, gfp_t gfp_mask,
 	struct io_tlb_mem *mem = &io_tlb_default_mem;
 	unsigned long nslabs = ALIGN(size >> IO_TLB_SHIFT, IO_TLB_SEGSIZE);
 	unsigned char *vstart = NULL;
-	unsigned int order, area_order;
+	unsigned int order, area_order, slot_order;
 	bool retried = false;
 	int rc = 0;
 
@@ -400,6 +407,7 @@ retry:
 	if (!default_nareas)
 		swiotlb_adjust_nareas(num_possible_cpus());
 
+	rc = -ENOMEM;
 	area_order = get_order(array_size(sizeof(*mem->areas),
 		default_nareas));
 	mem->areas = (struct io_tlb_area *)
@@ -407,24 +415,34 @@ retry:
 	if (!mem->areas)
 		goto error_area;
 
+	slot_order = get_order(array_size(sizeof(*mem->slots), nslabs));
 	mem->slots = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
-		get_order(array_size(sizeof(*mem->slots), nslabs)));
+		slot_order);
 	if (!mem->slots)
 		goto error_slots;
 
-	set_memory_decrypted((unsigned long)vstart,
-			     (nslabs << IO_TLB_SHIFT) >> PAGE_SHIFT);
+	rc = set_memory_decrypted((unsigned long)vstart,
+				  (nslabs << IO_TLB_SHIFT) >> PAGE_SHIFT);
+	if (rc) {
+		pr_err("Failed to decrypt swiotlb buffer (%d): disabling swiotlb!\n",
+		       rc);
+		mem->nslabs = 0;
+		goto error_decrypted;
+	}
+
 	swiotlb_init_io_tlb_mem(mem, virt_to_phys(vstart), nslabs, 0, true,
 				default_nareas);
 
 	swiotlb_print_info();
 	return 0;
 
+error_decrypted:
+	free_pages((unsigned long)mem->slots, slot_order);
 error_slots:
 	free_pages((unsigned long)mem->areas, area_order);
 error_area:
 	free_pages((unsigned long)vstart, order);
-	return -ENOMEM;
+	return rc;
 }
 
 void __init swiotlb_exit(void)
@@ -1031,6 +1049,7 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
 
 	/* Set Per-device io tlb area to one */
 	unsigned int nareas = 1;
+	int rc = -ENOMEM;
 
 	if (PageHighMem(pfn_to_page(PHYS_PFN(rmem->base)))) {
 		dev_err(dev, "Restricted DMA pool must be accessible within the linear mapping.");
@@ -1048,21 +1067,22 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
 			return -ENOMEM;
 
 		mem->slots = kcalloc(nslabs, sizeof(*mem->slots), GFP_KERNEL);
-		if (!mem->slots) {
-			kfree(mem);
-			return -ENOMEM;
-		}
+		if (!mem->slots)
+			goto free_mem;
 
 		mem->areas = kcalloc(nareas, sizeof(*mem->areas),
 				GFP_KERNEL);
-		if (!mem->areas) {
-			kfree(mem->slots);
-			kfree(mem);
-			return -ENOMEM;
+		if (!mem->areas)
+			goto free_slots;
+
+		rc = set_memory_decrypted(
+				(unsigned long)phys_to_virt(rmem->base),
+				rmem->size >> PAGE_SHIFT);
+		if (rc) {
+			pr_err("Failed to decrypt rmem buffer (%d)\n", rc);
+			goto free_areas;
 		}
 
-		set_memory_decrypted((unsigned long)phys_to_virt(rmem->base),
-				     rmem->size >> PAGE_SHIFT);
 		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, SWIOTLB_FORCE,
 					false, nareas);
 		mem->for_alloc = true;
@@ -1075,6 +1095,14 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
 	dev->dma_io_tlb_mem = mem;
 
 	return 0;
+
+free_areas:
+	kfree(mem->areas);
+free_slots:
+	kfree(mem->slots);
+free_mem:
+	kfree(mem);
+	return rc;
 }
 
 static void rmem_swiotlb_device_release(struct reserved_mem *rmem,
