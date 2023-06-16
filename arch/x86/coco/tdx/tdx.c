@@ -175,6 +175,7 @@ static void tdx_parse_tdinfo(u64 *cc_mask)
 		const char *msg = "TD misconfiguration: SEPT_VE_DISABLE attribute must be set.";
 
 		/* Relax SEPT_VE_DISABLE check for debug TD. */
+		td_attr |= ATTR_DEBUG;
 		if (td_attr & ATTR_DEBUG)
 			pr_warn("%s\n", msg);
 		else
