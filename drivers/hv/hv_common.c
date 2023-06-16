@@ -129,6 +129,7 @@ int hv_common_cpu_init(unsigned int cpu)
 	u64 msr_vp_index;
 	gfp_t flags;
 	int pgcount = hv_root_partition ? 2 : 1;
+	void *mem;
 	int ret;
 
 	/* hv_cpu_init() can be called with IRQs disabled from hv_resume() */
@@ -141,25 +142,26 @@ int hv_common_cpu_init(unsigned int cpu)
 	 * allocated if this CPU was previously online and then taken offline
 	 */
 	if (!*inputarg) {
-		*inputarg = kmalloc(pgcount * HV_HYP_PAGE_SIZE, flags);
-		if (!(*inputarg))
+		mem = kmalloc(pgcount * HV_HYP_PAGE_SIZE, flags);
+		if (!mem)
 			return -ENOMEM;
 
 		if (hv_isolation_type_tdx()) {
-			ret = set_memory_decrypted((unsigned long)*inputarg, pgcount);
-			if (ret) {
-				/* It may be unsafe to free *inputarg */
-				*inputarg = NULL;
-				return ret;
-			}
+			ret = set_memory_decrypted((unsigned long)mem, pgcount);
 
-			memset(*inputarg, 0x00, pgcount * HV_HYP_PAGE_SIZE);
+			/* It may be unsafe to free mem upon error. */
+			if (ret)
+				return ret;
+
+			memset(mem, 0x00, pgcount * HV_HYP_PAGE_SIZE);
 		}
 
 		if (hv_root_partition) {
 			outputarg = (void **)this_cpu_ptr(hyperv_pcpu_output_arg);
-			*outputarg = (char *)(*inputarg) + HV_HYP_PAGE_SIZE;
+			*outputarg = (char *)mem + HV_HYP_PAGE_SIZE;
 		}
+
+		*inputarg = mem;
 	}
 
 	msr_vp_index = hv_get_register(HV_REGISTER_VP_INDEX);
