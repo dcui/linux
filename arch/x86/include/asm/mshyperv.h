@@ -33,6 +33,7 @@ void hyperv_vector_handler(struct pt_regs *regs);
 
 #if IS_ENABLED(CONFIG_HYPERV)
 extern int hyperv_init_cpuhp;
+extern bool hyperv_paravisor_present;
 
 extern void *hv_hypercall_pg;
 
@@ -59,7 +60,7 @@ static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return hv_tdx_hypercall(control,
 					cc_mkdec(input_address),
 					cc_mkdec(output_address));
@@ -106,7 +107,7 @@ static inline u64 _hv_do_fast_hypercall8(u64 control, u64 input1)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return hv_tdx_hypercall(control, input1, 0);
 
 	{
@@ -154,7 +155,7 @@ static inline u64 _hv_do_fast_hypercall16(u64 control, u64 input1, u64 input2)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return hv_tdx_hypercall(control, input1, input2);
 
 	{
@@ -236,14 +237,14 @@ int hv_map_ioapic_interrupt(int ioapic_id, bool level, int vcpu, int vector,
 int hv_unmap_ioapic_interrupt(int ioapic_id, struct hv_interrupt_entry *entry);
 
 #ifdef CONFIG_AMD_MEM_ENCRYPT
-void hv_ghcb_msr_write(u64 msr, u64 value);
-void hv_ghcb_msr_read(u64 msr, u64 *value);
+void hv_ivm_msr_write(u64 msr, u64 value);
+void hv_ivm_msr_read(u64 msr, u64 *value);
 bool hv_ghcb_negotiate_protocol(void);
 void hv_ghcb_terminate(unsigned int set, unsigned int reason);
 void hv_vtom_init(void);
 #else
-static inline void hv_ghcb_msr_write(u64 msr, u64 value) {}
-static inline void hv_ghcb_msr_read(u64 msr, u64 *value) {}
+static inline void hv_ivm_msr_write(u64 msr, u64 value) {}
+static inline void hv_ivm_msr_read(u64 msr, u64 *value) {}
 static inline bool hv_ghcb_negotiate_protocol(void) { return false; }
 static inline void hv_ghcb_terminate(unsigned int set, unsigned int reason) {}
 static inline void hv_vtom_init(void) {}
