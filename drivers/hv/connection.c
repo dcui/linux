@@ -483,10 +483,17 @@ void vmbus_set_event(struct vmbus_channel *channel)
 
 	++channel->sig_events;
 
-	if (hv_isolation_type_snp())
-		hv_ghcb_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
-				NULL, sizeof(channel->sig_event));
-	else
+	if (!hyperv_paravisor_present) {
 		hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
+		return;
+	}
+
+	if (hv_isolation_type_snp())
+		hv_ivm_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
+				NULL, sizeof(channel->sig_event));
+	else if (hv_isolation_type_tdx())
+		hv_tdx_hypercall_fast(HVCALL_SIGNAL_EVENT, channel->sig_event);
+	else
+		WARN_ON_ONCE(1);
 }
 EXPORT_SYMBOL_GPL(vmbus_set_event);
