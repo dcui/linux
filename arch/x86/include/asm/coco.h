@@ -12,6 +12,7 @@ enum cc_vendor {
 
 void cc_set_vendor(enum cc_vendor v);
 void cc_set_mask(u64 mask);
+extern bool cc_attr_cpu_hotplug_disabled;
 
 #ifdef CONFIG_ARCH_HAS_CC_PLATFORM
 u64 cc_mkenc(u64 val);

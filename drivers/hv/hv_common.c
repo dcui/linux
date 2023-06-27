@@ -331,8 +331,8 @@ void __weak hyperv_cleanup(void)
 }
 EXPORT_SYMBOL_GPL(hyperv_cleanup);
 
-u64 __weak hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
+u64 __weak hv_ivm_hypercall(u64 control, void *input, void *output, u32 input_size)
 {
 	return HV_STATUS_INVALID_PARAMETER;
 }
-EXPORT_SYMBOL_GPL(hv_ghcb_hypercall);
+EXPORT_SYMBOL_GPL(hv_ivm_hypercall);

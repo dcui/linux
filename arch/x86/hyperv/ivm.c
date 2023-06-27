@@ -57,7 +57,7 @@ union hv_ghcb {
 
 static u16 hv_ghcb_version __ro_after_init;
 
-u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
+static u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
 {
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
@@ -99,6 +99,31 @@ u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
 
 	return status;
 }
+
+
+u64 hv_ivm_hypercall(u64 control, void *input, void *output, u32 input_size)
+{
+	if (hv_isolation_type_tdx()) {
+		u64 input_address = input ? (virt_to_phys(input) | ms_hyperv.shared_gpa_boundary) : 0;
+		u64 output_address = output ? (virt_to_phys(output) | ms_hyperv.shared_gpa_boundary) : 0;
+		return hv_tdx_hypercall(control, input_address, output_address);
+	} else if (hv_isolation_type_snp()) {
+		return hv_ghcb_hypercall(control, input, output, input_size);
+	} else {
+		return HV_STATUS_INVALID_HYPERCALL_CODE;
+	}
+}
+
+u64 hv_tdx_hypercall_fast(u64 control, u64 input)
+{
+	u64 input_address = input;
+	u64 output_address = 0;
+
+	return hv_tdx_hypercall(control | HV_HYPERCALL_FAST_BIT,
+				input_address, output_address);
+}
+EXPORT_SYMBOL_GPL(hv_tdx_hypercall_fast);
+
 
 static inline u64 rd_ghcb_msr(void)
 {
@@ -174,7 +199,38 @@ bool hv_ghcb_negotiate_protocol(void)
 	return true;
 }
 
-void hv_ghcb_msr_write(u64 msr, u64 value)
+#define EXIT_REASON_MSR_READ            31
+#define EXIT_REASON_MSR_WRITE           32
+
+static void hv_tdx_read_msr(u64 msr, u64 *val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_READ,
+		.r12 = msr,
+	};
+
+	u64 ret = __tdx_hypercall(&args, TDX_HCALL_HAS_OUTPUT);
+	if (WARN_ONCE(ret, "Failed to emulate MSR read: %lld\n", ret))
+		*val = 0;
+	else
+		*val = args.r11;
+}
+
+static void hv_tdx_write_msr(u64 msr, u64 val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_WRITE,
+		.r12 = msr,
+		.r13 = val,
+	};
+
+	u64 ret =__tdx_hypercall(&args, 0);
+	WARN_ONCE(ret, "Failed to emulate MSR write: %lld\n", ret);
+}
+
+static void hv_ghcb_msr_write(u64 msr, u64 value)
 {
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
@@ -202,9 +258,17 @@ void hv_ghcb_msr_write(u64 msr, u64 value)
 
 	local_irq_restore(flags);
 }
-EXPORT_SYMBOL_GPL(hv_ghcb_msr_write);
 
-void hv_ghcb_msr_read(u64 msr, u64 *value)
+void hv_ivm_msr_write(u64 msr, u64 value)
+{
+	if (hv_isolation_type_tdx())
+		hv_tdx_write_msr(msr, value);
+	else if (hv_isolation_type_snp())
+		hv_ghcb_msr_write(msr, value);
+}
+EXPORT_SYMBOL_GPL(hv_ivm_msr_write);
+
+static void hv_ghcb_msr_read(u64 msr, u64 *value)
 {
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
@@ -234,7 +298,6 @@ void hv_ghcb_msr_read(u64 msr, u64 *value)
 			| ((u64)lower_32_bits(hv_ghcb->ghcb.save.rdx) << 32);
 	local_irq_restore(flags);
 }
-EXPORT_SYMBOL_GPL(hv_ghcb_msr_read);
 
 #ifdef CONFIG_INTEL_TDX_GUEST
 DEFINE_STATIC_KEY_FALSE(isolation_type_tdx);
@@ -259,6 +322,17 @@ u64 hv_tdx_hypercall(u64 control, u64 param1, u64 param2)
 EXPORT_SYMBOL_GPL(hv_tdx_hypercall);
 #endif
 
+void hv_ivm_msr_read(u64 msr, u64 *value)
+{
+	if (hv_isolation_type_tdx())
+		hv_tdx_read_msr(msr, value);
+	else if (hv_isolation_type_snp())
+		hv_ghcb_msr_read(msr, value);
+}
+EXPORT_SYMBOL_GPL(hv_ivm_msr_read);
+
+static DEFINE_PER_CPU_PAGE_ALIGNED(struct hv_gpa_range_for_visibility,
+				   hv_gpa_range_for_visibility);
 /*
  * hv_mark_gpa_visibility - Set pages visible to host via hvcall.
  *
@@ -266,10 +340,10 @@ EXPORT_SYMBOL_GPL(hv_tdx_hypercall);
  * needs to set memory visible to host via hvcall before sharing memory
  * with host.
  */
-static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
+int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
 			   enum hv_mem_host_visibility visibility)
 {
-	struct hv_gpa_range_for_visibility **input_pcpu, *input;
+	struct hv_gpa_range_for_visibility *input;
 	u16 pages_processed;
 	u64 hv_status;
 	unsigned long flags;
@@ -285,14 +359,13 @@ static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
 	}
 
 	local_irq_save(flags);
-	input_pcpu = (struct hv_gpa_range_for_visibility **)
-			this_cpu_ptr(hyperv_pcpu_input_arg);
-	input = *input_pcpu;
-	if (unlikely(!input)) {
-		local_irq_restore(flags);
-		return -EINVAL;
-	}
-
+	/*
+	 * The page should be a private page, which is passed to the pavavisor
+	 * and is not shared with the hypervisor. Note: we shouldn't use the
+	 * hyperv_pcpu_input_arg, which is a shared page in the case of
+	 * a TDX VM with the pavavisor.
+         */
+	input = this_cpu_ptr(&hv_gpa_range_for_visibility);
 	input->partition_id = HV_PARTITION_ID_SELF;
 	input->host_visibility = visibility;
 	input->reserved0 = 0;
@@ -381,13 +454,30 @@ static bool hv_is_private_mmio(u64 addr)
 
 void __init hv_vtom_init(void)
 {
+	enum hv_isolation_type type = hv_get_isolation_type();
 	/*
 	 * By design, a VM using vTOM doesn't see the SEV setting,
 	 * so SEV initialization is bypassed and sev_status isn't set.
 	 * Set it here to indicate a vTOM VM.
 	 */
-	sev_status = MSR_AMD64_SNP_VTOM;
-	cc_set_vendor(CC_VENDOR_AMD);
+	switch (type) {
+	case HV_ISOLATION_TYPE_VBS:
+		fallthrough;
+
+	case HV_ISOLATION_TYPE_SNP:
+		sev_status = MSR_AMD64_SNP_VTOM;
+		cc_set_vendor(CC_VENDOR_AMD);
+		break;
+
+	case HV_ISOLATION_TYPE_TDX:
+		cc_set_vendor(CC_VENDOR_INTEL);
+		cc_attr_cpu_hotplug_disabled = false;
+		break;
+
+	default:
+		panic("hv_vtom_init: unsupported isolation type %d\n", type);
+	}
+
 	cc_set_mask(ms_hyperv.shared_gpa_boundary);
 	physical_mask &= ms_hyperv.shared_gpa_boundary - 1;
 

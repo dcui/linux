@@ -100,8 +100,8 @@ int hv_post_message(union hv_connection_id connection_id,
 	aligned_msg->payload_size = payload_size;
 	memcpy((void *)aligned_msg->payload, payload, payload_size);
 
-	if (hv_isolation_type_snp())
-		status = hv_ghcb_hypercall(HVCALL_POST_MESSAGE,
+	if (hyperv_paravisor_present)
+		status = hv_ivm_hypercall(HVCALL_POST_MESSAGE,
 				(void *)aligned_msg, NULL,
 				sizeof(*aligned_msg));
 	else
@@ -146,7 +146,7 @@ int hv_synic_alloc(void)
 		 * Synic message and event pages are allocated by paravisor.
 		 * Skip these pages allocation here.
 		 */
-		if (!hv_isolation_type_snp() && !hv_root_partition) {
+		if (!hyperv_paravisor_present && !hv_root_partition) {
 			hv_cpu->synic_message_page =
 				(void *)get_zeroed_page(GFP_ATOMIC);
 			if (hv_cpu->synic_message_page == NULL) {
@@ -162,7 +162,8 @@ int hv_synic_alloc(void)
 			}
 		}
 
-		if (hv_isolation_type_tdx()) {
+		/* It's better to leak the page if the decryption fails. */
+		if (hv_isolation_type_tdx() && !hyperv_paravisor_present) {
 			ret = set_memory_decrypted(
 				(unsigned long)hv_cpu->synic_message_page, 1);
 			if (ret) {
@@ -198,12 +199,15 @@ void hv_synic_free(void)
 		struct hv_per_cpu_context *hv_cpu
 			= per_cpu_ptr(hv_context.cpu_context, cpu);
 
-		if (hv_isolation_type_tdx()) {
-			ret = set_memory_encrypted(
-				(unsigned long)hv_cpu->synic_message_page, 1);
-			if (ret) {
-				pr_err("Failed to encrypt SYNIC msg page\n");
-				continue;
+		/* It's better to leak the page if the encryption fails. */
+		if (hv_isolation_type_tdx() && !hyperv_paravisor_present) {
+			if (hv_cpu->synic_message_page) {
+				ret = set_memory_encrypted((unsigned long)
+					hv_cpu->synic_message_page, 1);
+				if (ret) {
+					pr_err("Failed to encrypt SYNIC msg page: %d\n", ret);
+					hv_cpu->synic_message_page = NULL;
+				}
 			}
 
 			ret = set_memory_encrypted(
@@ -241,7 +245,7 @@ void hv_synic_enable_regs(unsigned int cpu)
 	simp.as_uint64 = hv_get_register(HV_REGISTER_SIMP);
 	simp.simp_enabled = 1;
 
-	if (hv_isolation_type_snp() || hv_root_partition) {
+	if (hyperv_paravisor_present || hv_root_partition) {
 		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
 		u64 base = (simp.base_simp_gpa << HV_HYP_PAGE_SHIFT) &
 				~ms_hyperv.shared_gpa_boundary;
@@ -264,7 +268,7 @@ void hv_synic_enable_regs(unsigned int cpu)
 	siefp.as_uint64 = hv_get_register(HV_REGISTER_SIEFP);
 	siefp.siefp_enabled = 1;
 
-	if (hv_isolation_type_snp() || hv_root_partition) {
+	if (hyperv_paravisor_present || hv_root_partition) {
 		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
 		u64 base = (siefp.base_siefp_gpa << HV_HYP_PAGE_SHIFT) &
 				~ms_hyperv.shared_gpa_boundary;
@@ -351,7 +355,7 @@ void hv_synic_disable_regs(unsigned int cpu)
 	 * addresses.
 	 */
 	simp.simp_enabled = 0;
-	if (hv_isolation_type_snp() || hv_root_partition) {
+	if (hyperv_paravisor_present || hv_root_partition) {
 		iounmap(hv_cpu->synic_message_page);
 		hv_cpu->synic_message_page = NULL;
 	} else {
@@ -363,7 +367,7 @@ void hv_synic_disable_regs(unsigned int cpu)
 	siefp.as_uint64 = hv_get_register(HV_REGISTER_SIEFP);
 	siefp.siefp_enabled = 0;
 
-	if (hv_isolation_type_snp() || hv_root_partition) {
+	if (hyperv_paravisor_present || hv_root_partition) {
 		iounmap(hv_cpu->synic_event_page);
 		hv_cpu->synic_event_page = NULL;
 	} else {

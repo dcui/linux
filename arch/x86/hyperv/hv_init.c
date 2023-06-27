@@ -381,6 +381,36 @@ static void __init hv_get_partition_id(void)
 	local_irq_restore(flags);
 }
 
+static int hv_write_efer(unsigned int cpu)
+{
+	unsigned long long efer;
+
+	if (!hv_isolation_type_tdx() || !hyperv_paravisor_present)
+		return 0;
+
+	/*
+	 * Write EFER by force, otherwise the paravisor's hypercall
+	 * handler thinks that the VP is in 32-bit mode, and the
+	 * returning RIP is truncated to 32-bits, causing a fatal
+	 * page fault. This is a TDX-spefic issue because it looks
+	 * like the initial default value of EFER on non-boot VPs
+	 * already has the EFER.LMA bit, and when the reading of
+	 * EFER on a non-boot VP is the same as the value of EER
+	 * on VP0, Linux doesn't write the EFER register on a
+	 * non-boot VP: see the code in arch/x86/kernel/head_64.S
+	 * ("Avoid writing EFER if no change was made (for TDX guest)").
+	 * Also see commit 77a512e35db7 ("x86/boot: Avoid #VE during boot for TDX platforms")
+	 * Work around the issue for now by force an EFER write.
+	 *
+	 * XXX: This is a temporary hack. Need to figure out why the
+	 * initial default value of EFER on non-boot VPs is not zero.
+	 */
+	rdmsrl(MSR_EFER, efer);
+	wrmsrl(MSR_EFER, efer);
+
+	return 0;
+}
+
 /*
  * This function is to be invoked early in the boot sequence after the
  * hypervisor has been detected.
@@ -394,9 +424,18 @@ void __init hyperv_init(void)
 	u64 guest_id;
 	union hv_x64_msr_hypercall_contents hypercall_msr;
 	int cpuhp;
+	int ret;
 
 	if (x86_hyper_type != X86_HYPER_MS_HYPERV)
 		return;
+
+	if (hv_isolation_type_tdx() && hyperv_paravisor_present) {
+		ret = cpuhp_setup_state(CPUHP_AP_HYPERV_FORCE_EFER_WRITE,
+					"x86/hyperv_write_efer",
+					hv_write_efer, NULL);
+		if (WARN_ON(ret < 0))
+			return;
+	}
 
 	if (hv_common_init())
 		return;
@@ -429,24 +468,37 @@ void __init hyperv_init(void)
 			goto free_vp_assist_page;
 	}
 
-	cpuhp = cpuhp_setup_state(CPUHP_AP_HYPERV_ONLINE, "x86/hyperv_init:online",
-				  hv_cpu_init, hv_cpu_die);
-	if (cpuhp < 0)
-		goto free_ghcb_page;
-
 	/*
 	 * Setup the hypercall page and enable hypercalls.
 	 * 1. Register the guest ID
 	 * 2. Enable the hypercall and register the hypercall page
+	 *
+	 * A TDX VM with no paravisor uses GHCI rather than hv_hypercall_pg.
+	 * When the VM needs to pass an input page to Hyper-V, the page must
+	 * be a shared page, e.g. hv_post_message() uses the per-CPU shared
+	 * page hyperv_pcpu_input_arg.
+	 *
+	 * A TDX VM with the paravisor uses hv_hypercall_pg for most hypercalls,
+	 * which are handled by the paravisor and a private input page must be
+	 * used, e.g. see hv_mark_gpa_visibility(). The VM uses GHCI for
+	 * two hypercalls: HVCALL_SIGNAL_EVENT (see vmbus_set_event()) and
+	 * HVCALL_POST_MESSAGE (the input page must be a shared page, i.e.
+	 * hv_post_message() uses the per-CPU shared hyperv_pcpu_input_arg.)
+	 * NOTE: we must initialize hv_hypercall_pg before hv_cpu_init(),
+	 * because hv_cpu_init() -> hv_common_cpu_init() -> set_memory_decrypted()
+	 * -> ... -> hv_vtom_set_host_visibility() -> ... -> hv_do_hypercall()
+	 * needs to call the hv_hypercall_pg.
+	 */
+
+	/*
+	 * In the case of TDX with the paravisor, we should write the MSR
+	 * before hv_cpu_init(), which needs to call the paravisor-handled
+	 * HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY.
 	 */
 	guest_id = hv_generate_guest_id(LINUX_VERSION_CODE);
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, guest_id);
 
-	/* Hyper-V requires to write guest os id via ghcb in SNP IVM. */
-	hv_ghcb_msr_write(HV_X64_MSR_GUEST_OS_ID, guest_id);
-
-	/* A TDX guest uses the GHCI call rather than hv_hypercall_pg. */
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		goto skip_hypercall_pg_init;
 
 	hv_hypercall_pg = __vmalloc_node_range(PAGE_SIZE, 1, VMALLOC_START,
@@ -454,7 +506,7 @@ void __init hyperv_init(void)
 			VM_FLUSH_RESET_PERMS, NUMA_NO_NODE,
 			__builtin_return_address(0));
 	if (hv_hypercall_pg == NULL)
-		goto clean_guest_os_id;
+		goto free_ghcb_page;
 
 	rdmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
 	hypercall_msr.enable = 1;
@@ -489,6 +541,18 @@ void __init hyperv_init(void)
 	}
 
 skip_hypercall_pg_init:
+	cpuhp = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "x86/hyperv_init:online",
+				  hv_cpu_init, hv_cpu_die);
+	if (cpuhp < 0)
+		goto clean_guest_os_id;
+
+	/*
+	 * In the case of SNP with the paravisor, we must write the MSR to
+	 * the hypervisor after hv_cpu_init(), which maps the hv_ghcb_pg first.
+	 */
+	if (hyperv_paravisor_present)
+		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, guest_id);
+
 	/*
 	 * hyperv_init() is called before LAPIC is initialized: see
 	 * apic_intr_mode_init() -> x86_platform.apic_post_init() and
@@ -528,8 +592,8 @@ skip_hypercall_pg_init:
 
 clean_guest_os_id:
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);
-	hv_ghcb_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
-	cpuhp_remove_state(cpuhp);
+	if (hyperv_paravisor_present)
+		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
 free_ghcb_page:
 	free_percpu(hv_ghcb_pg);
 free_vp_assist_page:
@@ -549,7 +613,8 @@ void hyperv_cleanup(void)
 
 	/* Reset our OS id */
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);
-	hv_ghcb_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
+	if (hyperv_paravisor_present)
+		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
 
 	/*
 	 * Reset hypercall page reference before reset the page,
@@ -612,8 +677,8 @@ bool hv_is_hyperv_initialized(void)
 	if (x86_hyper_type != X86_HYPER_MS_HYPERV)
 		return false;
 
-	/* A TDX guest uses the GHCI call rather than hv_hypercall_pg. */
-	if (hv_isolation_type_tdx())
+	/* A TDX guest without paravisor uses the GHCI call rather than hv_hypercall_pg */
+	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return true;
 	/*
 	 * Verify that earlier initialization succeeded by checking
