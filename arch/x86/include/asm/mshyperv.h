@@ -68,7 +68,7 @@ static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && 0) //!ms_hyperv.paravisor_present)
 		return hv_tdx_hypercall(control,
 					cc_mkdec(input_address),
 					cc_mkdec(output_address));
@@ -115,7 +115,7 @@ static inline u64 _hv_do_fast_hypercall8(u64 control, u64 input1)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && 0)
 		return hv_tdx_hypercall(control, input1, 0);
 
 	{
@@ -163,7 +163,7 @@ static inline u64 _hv_do_fast_hypercall16(u64 control, u64 input1, u64 input2)
 	u64 hv_status;
 
 #ifdef CONFIG_X86_64
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && 0)
 		return hv_tdx_hypercall(control, input1, input2);
 
 	{

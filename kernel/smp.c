@@ -26,6 +26,8 @@
 #include <linux/sched/debug.h>
 #include <linux/jump_label.h>
 
+#include <asm/apic.h>
+
 #include <trace/events/ipi.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/csd.h>
@@ -208,6 +210,7 @@ static int csd_lock_wait_getcpu(struct __call_single_data *csd)
  * the CSD_TYPE_SYNC/ASYNC types provide the destination CPU,
  * so waiting on other types gets much less information.
  */
+extern struct apic *apic;
 static bool csd_lock_wait_toolong(struct __call_single_data *csd, u64 ts0, u64 *ts1, int *bug_id)
 {
 	int cpu = -1;
@@ -217,6 +220,7 @@ static bool csd_lock_wait_toolong(struct __call_single_data *csd, u64 ts0, u64 *
 	call_single_data_t *cpu_cur_csd;
 	unsigned int flags = READ_ONCE(csd->node.u_flags);
 	unsigned long long csd_lock_timeout_ns = csd_lock_timeout * NSEC_PER_MSEC;
+	int j;
 
 	if (!(flags & CSD_FLAG_LOCK)) {
 		if (!unlikely(*bug_id))
@@ -244,6 +248,32 @@ static bool csd_lock_wait_toolong(struct __call_single_data *csd, u64 ts0, u64 *
 	pr_alert("csd: %s non-responsive CSD lock (#%d) on CPU#%d, waiting %llu ns for CPU#%02d %pS(%ps).\n",
 		 firsttime ? "Detected" : "Continued", *bug_id, raw_smp_processor_id(), ts2 - ts0,
 		 cpu, csd->func, csd->info);
+
+#define irq_stats(x)            (&per_cpu(irq_stat, x))
+	for_each_online_cpu(j)
+		pr_alert("cdx: cpu %d: ipi-call-func=%u nmi=%d hv:cb=%d, timer=%d others:%d %d %d, %d %d %d, %d %d %d %d %d \n",
+			j,
+			irq_stats(j)->irq_call_count,
+			irq_stats(j)->__nmi_count,
+			irq_stats(j)->irq_hv_callback_count,
+			irq_stats(j)->hyperv_stimer0_count,
+
+			//others
+			irq_stats(j)->x86_platform_ipis,
+			irq_stats(j)->irq_tlb_count,
+			irq_stats(j)->irq_deferred_error_count,
+
+			irq_stats(j)->irq_hv_reenlightenment_count,
+			irq_stats(j)->apic_timer_irqs,
+			irq_stats(j)->irq_spurious_count,
+
+			irq_stats(j)->icr_read_retry_count,
+			irq_stats(j)->apic_irq_work_irqs,
+			irq_stats(j)->irq_resched_count,
+			irq_stats(j)->irq_thermal_count,
+			irq_stats(j)->irq_threshold_count
+			);
+
 	if (cpu_cur_csd && csd != cpu_cur_csd) {
 		pr_alert("\tcsd: CSD lock (#%d) handling prior %pS(%ps) request.\n",
 			 *bug_id, READ_ONCE(per_cpu(cur_csd_func, cpux)),
@@ -255,8 +285,10 @@ static bool csd_lock_wait_toolong(struct __call_single_data *csd, u64 ts0, u64 *
 	if (cpu >= 0) {
 		dump_cpu_task(cpu);
 		if (!cpu_cur_csd) {
-			pr_alert("csd: Re-sending CSD lock (#%d) IPI from CPU#%02d to CPU#%02d\n", *bug_id, raw_smp_processor_id(), cpu);
+			pr_alert("cdx610: csd: Re-sending CSD lock (#%d) IPI from CPU#%02d to CPU#%02d\n", *bug_id, raw_smp_processor_id(), cpu);
 			arch_send_call_function_single_ipi(cpu);
+			//apic->send_IPI(cpu, RESCHEDULE_VECTOR);
+			//apic->send_IPI(cpu, NMI_VECTOR);
 		}
 	}
 	dump_stack();

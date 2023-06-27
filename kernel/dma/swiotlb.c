@@ -211,13 +211,16 @@ void __init swiotlb_update_mem_attributes(void)
 	unsigned long bytes;
 	int rc;
 
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	if (!mem->nslabs || mem->late_alloc)
 		return;
 	bytes = PAGE_ALIGN(mem->nslabs << IO_TLB_SHIFT);
 	rc = set_memory_decrypted((unsigned long)mem->vaddr, bytes >> PAGE_SHIFT);
+	printk("cdx: %s: line %d: rc=%d\n", __func__, __LINE__, rc);
 	if (rc) {
 		pr_err("Failed to decrypt swiotlb buffer (%d): disabling swiotlb!\n",
 		       rc);
+		WARN_ON(1);
 		mem->nslabs = 0;
 		return;
 	}

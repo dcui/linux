@@ -29,6 +29,7 @@
 #include <linux/syscore_ops.h>
 #include <clocksource/hyperv_timer.h>
 #include <linux/highmem.h>
+#include <linux/delay.h>
 
 int hyperv_init_cpuhp;
 u64 hv_current_partition_id = ~0ull;
@@ -51,7 +52,7 @@ static int hyperv_init_ghcb(void)
 	void *ghcb_va;
 	void **ghcb_base;
 
-	if (!hv_isolation_type_snp())
+	if (!hv_isolation_type_snp()) //XXX cdx
 		return 0;
 
 	if (!hv_ghcb_pg)
@@ -403,7 +404,7 @@ void __init hyperv_init(void)
 	 * The VP assist page is useless to a TDX guest: the only use we
 	 * would have for it is lazy EOI, which can not be used with TDX.
 	 */
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !ms_hyperv.paravisor_present)
 		hv_vp_assist_page = NULL;
 	else
 		hv_vp_assist_page = kcalloc(num_possible_cpus(),
@@ -412,11 +413,11 @@ void __init hyperv_init(void)
 	if (!hv_vp_assist_page) {
 		ms_hyperv.hints &= ~HV_X64_ENLIGHTENED_VMCS_RECOMMENDED;
 
-		if (!hv_isolation_type_tdx())
+		if (!hv_isolation_type_tdx() || ms_hyperv.paravisor_present)
 			goto common_free;
 	}
 
-	if (hv_isolation_type_snp()) {
+	if (hv_isolation_type_snp()) { //XXX: cdx
 		/* Negotiate GHCB Version. */
 		if (!hv_ghcb_negotiate_protocol())
 			hv_ghcb_terminate(SEV_TERM_SET_GEN,
@@ -427,10 +428,12 @@ void __init hyperv_init(void)
 			goto free_vp_assist_page;
 	}
 
+#if 0
 	cpuhp = cpuhp_setup_state(CPUHP_AP_HYPERV_ONLINE, "x86/hyperv_init:online",
 				  hv_cpu_init, hv_cpu_die);
 	if (cpuhp < 0)
 		goto free_ghcb_page;
+#endif
 
 	/*
 	 * Setup the hypercall page and enable hypercalls.
@@ -444,7 +447,7 @@ void __init hyperv_init(void)
 	hv_ghcb_msr_write(HV_X64_MSR_GUEST_OS_ID, guest_id);
 
 	/* A TDX guest uses the GHCI call rather than hv_hypercall_pg. */
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !ms_hyperv.paravisor_present)
 		goto skip_hypercall_pg_init;
 
 	hv_hypercall_pg = __vmalloc_node_range(PAGE_SIZE, 1, VMALLOC_START,
@@ -485,6 +488,13 @@ void __init hyperv_init(void)
 		hypercall_msr.guest_physical_address = vmalloc_to_pfn(hv_hypercall_pg);
 		wrmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
 	}
+
+#if 1
+	cpuhp = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, "x86/hyperv_init:online",
+				  hv_cpu_init, hv_cpu_die);
+	if (cpuhp < 0)
+		goto free_ghcb_page;
+#endif
 
 skip_hypercall_pg_init:
 	/*
@@ -611,7 +621,7 @@ bool hv_is_hyperv_initialized(void)
 		return false;
 
 	/* A TDX guest uses the GHCI call rather than hv_hypercall_pg. */
-	if (hv_isolation_type_tdx())
+	if (hv_isolation_type_tdx() && !ms_hyperv.paravisor_present)
 		return true;
 	/*
 	 * Verify that earlier initialization succeeded by checking

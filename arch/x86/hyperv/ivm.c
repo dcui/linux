@@ -58,8 +58,10 @@ union hv_ghcb {
 
 static u16 hv_ghcb_version __ro_after_init;
 
+u64 hv_tdx_hypercall(u64 control, u64 param1, u64 param2); //cdx
 u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
 {
+#if 0
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
 	unsigned long flags;
@@ -99,7 +101,24 @@ u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
 	local_irq_restore(flags);
 
 	return status;
+#else
+	u64 input_address = input ? (virt_to_phys(input) | ms_hyperv.shared_gpa_boundary) : 0;
+	u64 output_address = output ? (virt_to_phys(output) | ms_hyperv.shared_gpa_boundary) : 0;
+	return hv_tdx_hypercall(control, input_address, output_address); //input_size is not used.
+#endif
 }
+
+u64 hv_ghcb_hypercall_no_mem(u64 control, u64 input);
+u64 hv_ghcb_hypercall_no_mem(u64 control, u64 input)
+{
+	u64 input_address = input;
+	u64 output_address = 0;
+	u64 rc;
+	rc = hv_tdx_hypercall(control, input_address, output_address);
+	return rc;
+}
+EXPORT_SYMBOL_GPL(hv_ghcb_hypercall_no_mem);
+
 
 static inline u64 rd_ghcb_msr(void)
 {
@@ -111,6 +130,7 @@ static inline void wr_ghcb_msr(u64 val)
 	native_wrmsrl(MSR_AMD64_SEV_ES_GHCB, val);
 }
 
+#if 0
 static enum es_result hv_ghcb_hv_call(struct ghcb *ghcb, u64 exit_code,
 				   u64 exit_info_1, u64 exit_info_2)
 {
@@ -129,6 +149,7 @@ static enum es_result hv_ghcb_hv_call(struct ghcb *ghcb, u64 exit_code,
 	else
 		return ES_OK;
 }
+#endif
 
 void __noreturn hv_ghcb_terminate(unsigned int set, unsigned int reason)
 {
@@ -175,8 +196,54 @@ bool hv_ghcb_negotiate_protocol(void)
 	return true;
 }
 
+#define EXIT_REASON_MSR_READ            31
+#define EXIT_REASON_MSR_WRITE           32
+
+static void tdx_read_msr(u64 msr, u64 *val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_READ,
+		.r12 = msr,
+	};
+
+	u64 ret;
+
+	/*
+	 * Emulate the MSR read via hypercall. More info about ABI
+	 * can be found in TDX Guest-Host-Communication Interface
+	 * (GHCI), section titled "TDG.VP.VMCALL<Instruction.RDMSR>".
+	 */
+	ret = __tdx_hypercall_ret(&args);
+	if (WARN(ret, "cdx: ret=%lld\n", ret))
+		*val = 0;
+	else
+		*val = args.r11;
+}
+
+static void tdx_write_msr(u64 msr, u64 val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_WRITE,
+		.r12 = msr,
+		.r13 = val,
+	};
+
+	u64 ret;
+
+	/*
+	 * Emulate the MSR write via hypercall. More info about ABI
+	 * can be found in TDX Guest-Host-Communication Interface
+	 * (GHCI) section titled "TDG.VP.VMCALL<Instruction.WRMSR>".
+	 */
+	ret =__tdx_hypercall(&args);
+	WARN(ret, "cdx: ret=%lld\n", ret);
+}
+
 void hv_ghcb_msr_write(u64 msr, u64 value)
 {
+#if 0
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
 	unsigned long flags;
@@ -202,11 +269,15 @@ void hv_ghcb_msr_write(u64 msr, u64 value)
 		pr_warn("Fail to write msr via ghcb %llx.\n", msr);
 
 	local_irq_restore(flags);
+#else
+	tdx_write_msr(msr, value);
+#endif
 }
 EXPORT_SYMBOL_GPL(hv_ghcb_msr_write);
 
 void hv_ghcb_msr_read(u64 msr, u64 *value)
 {
+#if 0
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
 	unsigned long flags;
@@ -234,9 +305,97 @@ void hv_ghcb_msr_read(u64 msr, u64 *value)
 		*value = (u64)lower_32_bits(hv_ghcb->ghcb.save.rax)
 			| ((u64)lower_32_bits(hv_ghcb->ghcb.save.rdx) << 32);
 	local_irq_restore(flags);
+#else
+	tdx_read_msr(msr, value);
+#endif
 }
 EXPORT_SYMBOL_GPL(hv_ghcb_msr_read);
 
+
+/*
+ * If the hypercall involves no input or output parameters, the hypervisor
+ * ignores the corresponding GPA pointer.
+ */
+#if 1
+u64 hv_do_hypercall_cdx(u64 control, void *input, void *output)
+{
+        u64 input_address = input ? virt_to_phys(input) : 0;
+        u64 output_address = output ? virt_to_phys(output) : 0;
+        u64 hv_status;
+
+        __asm__ __volatile__("mov %4, %%r8\n"
+                             CALL_NOSPEC
+                             : "=a" (hv_status), ASM_CALL_CONSTRAINT,
+                               "+c" (control), "+d" (input_address)
+                             :  "r" (output_address),
+                                THUNK_TARGET(hv_hypercall_pg)
+                             : "cc", "memory", "r8", "r9", "r10", "r11");
+	return hv_status;
+}
+#else
+u64 hv_do_hypercall_cdx(u64 control, void *input, void *output)
+{
+        u64 input_address = input ? virt_to_phys(input) : 0;
+        u64 output_address = output ? virt_to_phys(output) : 0;
+        u64 hv_status;
+
+        __asm__ __volatile__("mov %3, %%r8; vmcall\n"
+                             : "=a" (hv_status), "+c" (control), "+d" (input_address)
+                             :  "r" (output_address)
+                             : "cc", "memory", "r8", "r9", "r10", "r11");
+	return hv_status;
+}
+u64 hv_do_hypercall_cdx_cpu1(u64 control, void *input, void *output)
+{
+        u64 input_address = input ? virt_to_phys(input) : 0;
+        u64 output_address = output ? virt_to_phys(output) : 0;
+        u64 hv_status;
+
+        __asm__ __volatile__("mov %3, %%r8; \n\t"	\
+			     "1: nop; \n\t "		\
+                                "vmcall; \n\t"		\
+				"2: nop"
+                             : "=a" (hv_status), "+c" (control), "+d" (input_address)
+                             :  "r" (output_address)
+                             : "cc", "memory", "r8", "r9", "r10", "r11");
+	return hv_status;
+}
+#endif
+///////////////////
+//static unsigned long long efer_cpus[256];
+u64 hv_do_rep_hypercall_cdx(u16 code, u16 rep_count, u16 varhead_size,
+				      void *input, void *output)
+{
+	u64 control = code;
+	u64 status;
+	u16 rep_comp;
+	//unsigned long long *efer = &efer_cpus[raw_smp_processor_id()];
+
+	control |= (u64)varhead_size << HV_HYPERCALL_VARHEAD_OFFSET;
+	control |= (u64)rep_count << HV_HYPERCALL_REP_COMP_OFFSET;
+
+#if 0
+	if (*efer == 0) {
+		rdmsrl(MSR_EFER, *efer);
+		wrmsrl(MSR_EFER, *efer);
+	}
+#endif
+	do {
+		status = hv_do_hypercall_cdx(control, input, output);
+
+		if (!hv_result_success(status))
+			return status;
+
+		rep_comp = hv_repcomp(status);
+
+		control &= ~HV_HYPERCALL_REP_START_MASK;
+		control |= (u64)rep_comp << HV_HYPERCALL_REP_START_OFFSET;
+
+		touch_nmi_watchdog();
+	} while (rep_comp < rep_count);
+
+	return status;
+}
 /*
  * hv_mark_gpa_visibility - Set pages visible to host via hvcall.
  *
@@ -244,30 +403,36 @@ EXPORT_SYMBOL_GPL(hv_ghcb_msr_read);
  * needs to set memory visible to host via hvcall before sharing memory
  * with host.
  */
-static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
+int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
 			   enum hv_mem_host_visibility visibility)
 {
 	struct hv_gpa_range_for_visibility **input_pcpu, *input;
-	u16 pages_processed;
+	//u16 pages_processed;
 	u64 hv_status;
 	unsigned long flags;
 
 	/* no-op if partition isolation is not enabled */
-	if (!hv_is_isolation_supported())
+	if (!hv_is_isolation_supported()) {
+		BUG_ON(1); //cdx
 		return 0;
+	}
 
 	if (count > HV_MAX_MODIFY_GPA_REP_COUNT) {
 		pr_err("Hyper-V: GPA count:%d exceeds supported:%lu\n", count,
 			HV_MAX_MODIFY_GPA_REP_COUNT);
+		BUG_ON(1); //cdx
 		return -EINVAL;
 	}
 
 	local_irq_save(flags);
-	input_pcpu = (struct hv_gpa_range_for_visibility **)
-			this_cpu_ptr(hyperv_pcpu_input_arg);
-	input = *input_pcpu;
+	//input_pcpu = (struct hv_gpa_range_for_visibility **)
+	//		this_cpu_ptr(hyperv_pcpu_input_arg);
+	//input = *input_pcpu;
+	(void)input_pcpu;
+	input = kzalloc(PAGE_SIZE * 2, GFP_ATOMIC); //cdx
 	if (unlikely(!input)) {
 		local_irq_restore(flags);
+		BUG_ON(1); //cdx
 		return -EINVAL;
 	}
 
@@ -276,15 +441,19 @@ static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
 	input->reserved0 = 0;
 	input->reserved1 = 0;
 	memcpy((void *)input->gpa_page_list, pfn, count * sizeof(*pfn));
-	hv_status = hv_do_rep_hypercall(
+	hv_status = hv_do_rep_hypercall_cdx(
 			HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY, count,
-			0, input, &pages_processed);
+			0, input, (unsigned char *)input + 4096);
+			//0, input, &pages_processed);
+	kfree(input); //cdx
 	local_irq_restore(flags);
 
 	if (hv_result_success(hv_status))
 		return 0;
-	else
+	else {
+		WARN_ON(1);
 		return -EFAULT;
+	}
 }
 
 /*
@@ -317,6 +486,7 @@ static bool hv_vtom_set_host_visibility(unsigned long kbuffer, int pagecount, bo
 						     visibility);
 			if (ret) {
 				result = false;
+				BUG_ON(1);
 				goto err_free_pfn_array;
 			}
 			pfn = 0;
@@ -364,8 +534,9 @@ void __init hv_vtom_init(void)
 	 * so SEV initialization is bypassed and sev_status isn't set.
 	 * Set it here to indicate a vTOM VM.
 	 */
-	sev_status = MSR_AMD64_SNP_VTOM;
-	cc_vendor = CC_VENDOR_AMD;
+	//sev_status = MSR_AMD64_SNP_VTOM; //FIXME
+	//cc_vendor = CC_VENDOR_AMD; //FIXME
+	cc_vendor = CC_VENDOR_INTEL; //FIXME
 	cc_set_mask(ms_hyperv.shared_gpa_boundary);
 	physical_mask &= ms_hyperv.shared_gpa_boundary - 1;
 

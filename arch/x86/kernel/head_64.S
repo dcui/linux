@@ -390,7 +390,7 @@ SYM_INNER_LABEL(secondary_startup_64_no_verify, SYM_L_GLOBAL)
 
 	/* Avoid writing EFER if no change was made (for TDX guest) */
 1:	cmpl	%edx, %eax
-	je	1f
+	#cdx: je	1f
 	xor	%edx, %edx
 	wrmsr				/* Make changes effective */
 1:

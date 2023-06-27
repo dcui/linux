@@ -283,8 +283,8 @@ static void hv_send_ipi_self(int vector)
 
 void __init hv_apic_init(void)
 {
-	if (ms_hyperv.hints & HV_X64_CLUSTER_IPI_RECOMMENDED) {
-		pr_info("Hyper-V: Using IPI hypercalls\n");
+	if (0 & ms_hyperv.hints & HV_X64_CLUSTER_IPI_RECOMMENDED) { ////////////////////cdx
+		pr_info("Hyper-V: Using IPI hypercalls\n"); //cdx
 		/*
 		 * Set the IPI entry points.
 		 */
@@ -298,7 +298,7 @@ void __init hv_apic_init(void)
 		apic->send_IPI_self = hv_send_ipi_self;
 	}
 
-	if (ms_hyperv.hints & HV_X64_APIC_ACCESS_RECOMMENDED) {
+	if (0 & ms_hyperv.hints & HV_X64_APIC_ACCESS_RECOMMENDED) {
 		pr_info("Hyper-V: Using enlightened APIC (%s mode)",
 			x2apic_enabled() ? "x2apic" : "xapic");
 		/*

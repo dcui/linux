@@ -534,6 +534,7 @@ static void __init hv_init_tsc_clocksource(void)
 	if (ms_hyperv.features & HV_ACCESS_TSC_INVARIANT) {
 		hyperv_cs_tsc.rating = 250;
 		hyperv_cs_msr.rating = 245;
+		printk("cdx: hv_init_tsc_clocksource: HV_ACCESS_TSC_INVARIANT is on\n");
 	}
 
 	if (!(ms_hyperv.features & HV_MSR_REFERENCE_TSC_AVAILABLE))
