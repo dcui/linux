@@ -285,6 +285,7 @@ void __init hv_apic_init(void)
 {
 	if (ms_hyperv.hints & HV_X64_CLUSTER_IPI_RECOMMENDED) {
 		pr_info("Hyper-V: Using IPI hypercalls\n");
+		BUG_ON(1);
 		/*
 		 * Set the IPI entry points.
 		 */
@@ -301,6 +302,7 @@ void __init hv_apic_init(void)
 	if (ms_hyperv.hints & HV_X64_APIC_ACCESS_RECOMMENDED) {
 		pr_info("Hyper-V: Using enlightened APIC (%s mode)",
 			x2apic_enabled() ? "x2apic" : "xapic");
+		BUG_ON(1);
 		/*
 		 * When in x2apic mode, don't use the Hyper-V specific APIC
 		 * accessors since the field layout in the ICR register is

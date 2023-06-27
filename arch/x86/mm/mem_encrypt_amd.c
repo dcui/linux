@@ -537,9 +537,10 @@ void __init mem_encrypt_free_decrypted_mem(void)
 	 * CC_ATTR_MEM_ENCRYPT, aren't necessarily equivalent in a Hyper-V VM
 	 * using vTOM, where sme_me_mask is always zero.
 	 */
-	if (sme_me_mask) {
+	if (1 ||  sme_me_mask) {
 		r = set_memory_encrypted(vaddr, npages);
 		if (r) {
+			WARN_ON(1);
 			pr_warn("failed to free unused decrypted pages\n");
 			return;
 		}

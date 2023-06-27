@@ -810,8 +810,10 @@ int vmbus_open(struct vmbus_channel *newchannel,
 
 	err = vmbus_alloc_ring(newchannel, send_ringbuffer_size,
 			       recv_ringbuffer_size);
-	if (err)
+	if (err) {
+		WARN_ON(1);
 		return err;
+	}
 
 	err = __vmbus_open(newchannel, userdata, userdatalen,
 			   onchannelcallback, context);

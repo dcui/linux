@@ -280,7 +280,9 @@ DEFINE_IDTENTRY_SYSVEC(sysvec_call_function)
 	ack_APIC_irq();
 	trace_call_function_entry(CALL_FUNCTION_VECTOR);
 	inc_irq_stat(irq_call_count);
+	//trace_printk("cdx: call-mask-1: v=0x%x, cnt=%d\n", CALL_FUNCTION_VECTOR, this_cpu_read(irq_stat.irq_call_count));
 	generic_smp_call_function_interrupt();
+	//trace_printk("cdx: call-mask-2: v=0x%x, cnt=%d\n", CALL_FUNCTION_VECTOR, this_cpu_read(irq_stat.irq_call_count));
 	trace_call_function_exit(CALL_FUNCTION_VECTOR);
 }
 
@@ -289,7 +291,9 @@ DEFINE_IDTENTRY_SYSVEC(sysvec_call_function_single)
 	ack_APIC_irq();
 	trace_call_function_single_entry(CALL_FUNCTION_SINGLE_VECTOR);
 	inc_irq_stat(irq_call_count);
+	//trace_printk("cdx: call-one-1: v=0x%x, cnt=%d\n", CALL_FUNCTION_SINGLE_VECTOR, this_cpu_read(irq_stat.irq_call_count));
 	generic_smp_call_function_single_interrupt();
+	//trace_printk("cdx: call-one-2: v=0x%x, cnt=%d\n", CALL_FUNCTION_SINGLE_VECTOR, this_cpu_read(irq_stat.irq_call_count));
 	trace_call_function_single_exit(CALL_FUNCTION_SINGLE_VECTOR);
 }
 

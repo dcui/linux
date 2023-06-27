@@ -8,6 +8,7 @@
 
 #include <xen/xen.h>
 
+#if 0
 static __init int eisa_bus_probe(void)
 {
 	void __iomem *p;
@@ -22,3 +23,4 @@ static __init int eisa_bus_probe(void)
 	return 0;
 }
 subsys_initcall(eisa_bus_probe);
+#endif

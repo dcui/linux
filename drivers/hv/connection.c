@@ -100,6 +100,7 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
 		msg->msg_sint = VMBUS_MESSAGE_SINT;
 		vmbus_connection.msg_conn_id = VMBUS_MESSAGE_CONNECTION_ID_4;
 	} else {
+		BUG_ON(1);
 		msg->interrupt_page = virt_to_phys(vmbus_connection.int_page);
 		vmbus_connection.msg_conn_id = VMBUS_MESSAGE_CONNECTION_ID;
 	}
@@ -108,6 +109,7 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
 	 * shared_gpa_boundary is zero in non-SNP VMs, so it's safe to always
 	 * bitwise OR it
 	 */
+	//cdx
 	msg->monitor_page1 = virt_to_phys(vmbus_connection.monitor_pages[0]) |
 				ms_hyperv.shared_gpa_boundary;
 	msg->monitor_page2 = virt_to_phys(vmbus_connection.monitor_pages[1]) |
@@ -471,6 +473,7 @@ int vmbus_post_msg(void *buffer, size_t buflen, bool can_sleep)
 	return ret;
 }
 
+u64 hv_ghcb_hypercall_no_mem(u64 control, u64 input);
 /*
  * vmbus_set_event - Send an event notification to the parent
  */
@@ -478,14 +481,16 @@ void vmbus_set_event(struct vmbus_channel *channel)
 {
 	u32 child_relid = channel->offermsg.child_relid;
 
-	if (!channel->is_dedicated_interrupt)
+	if (!channel->is_dedicated_interrupt) {
+		WARN_ON(1);
 		vmbus_send_interrupt(child_relid);
+	}
 
 	++channel->sig_events;
 
-	if (hv_isolation_type_snp())
-		hv_ghcb_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
-				NULL, sizeof(channel->sig_event));
+	if (1 || hv_isolation_type_snp())
+		//hv_ghcb_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
+		hv_ghcb_hypercall_no_mem((u64)HVCALL_SIGNAL_EVENT | HV_HYPERCALL_FAST_BIT, channel->sig_event);
 	else
 		hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
 }
