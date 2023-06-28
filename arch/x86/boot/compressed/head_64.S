@@ -626,7 +626,7 @@ SYM_CODE_START(trampoline_32bit_src)
 	rdmsr
 	btsl	$_EFER_LME, %eax
 	/* Avoid writing EFER if no change was made (for TDX guest) */
-	#cdx: jc	1f
+	jc	1f
 	wrmsr
 1:	popl	%edx
 	popl	%ecx

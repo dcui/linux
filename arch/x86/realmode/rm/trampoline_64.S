@@ -168,7 +168,7 @@ SYM_CODE_START(startup_32)
 	cmp	pa_tr_efer, %eax
 	jne	.Lwrite_efer
 	cmp	pa_tr_efer + 4, %edx
-	#cdx: not helpful je	.Ldone_efer
+	je	.Ldone_efer
 .Lwrite_efer:
 	movl	pa_tr_efer, %eax
 	movl	pa_tr_efer + 4, %edx
