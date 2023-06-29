@@ -283,6 +283,8 @@ io_check_error(unsigned char reason, struct pt_regs *regs)
 }
 NOKPROBE_SYMBOL(io_check_error);
 
+void sysrq_handle_showallcpus(int key);
+
 static void
 unknown_nmi_error(unsigned char reason, struct pt_regs *regs)
 {
@@ -334,6 +336,8 @@ unknown_nmi_error(unsigned char reason, struct pt_regs *regs)
 			irq_stats(j)->irq_threshold_count
 			);
 
+	show_state_filter(TASK_UNINTERRUPTIBLE);
+	sysrq_handle_showallcpus('l');
 	pr_emerg("Dazed and confused, but trying to continue\n\n\n");
 }
 NOKPROBE_SYMBOL(unknown_nmi_error);

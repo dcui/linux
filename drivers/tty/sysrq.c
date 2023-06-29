@@ -250,7 +250,7 @@ static void sysrq_showregs_othercpus(struct work_struct *dummy)
 
 static DECLARE_WORK(sysrq_showallcpus, sysrq_showregs_othercpus);
 
-static void sysrq_handle_showallcpus(int key)
+void sysrq_handle_showallcpus(int key)
 {
 	/*
 	 * Fall back to the workqueue based printing if the
