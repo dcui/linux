@@ -287,6 +287,7 @@ static void
 unknown_nmi_error(unsigned char reason, struct pt_regs *regs)
 {
 	int handled;
+	int j;
 
 	/*
 	 * Use 'false' as back-to-back NMIs are dealt with one level up.
@@ -302,13 +303,38 @@ unknown_nmi_error(unsigned char reason, struct pt_regs *regs)
 
 	__this_cpu_add(nmi_stats.unknown, 1);
 
-	pr_emerg("Uhhuh. NMI received for unknown reason %02x on CPU %d.\n",
+	pr_emerg("\n\n\nUhhuh. NMI received for unknown reason %02x on CPU %d.\n",
 		 reason, smp_processor_id());
 
 	if (unknown_nmi_panic || panic_on_unrecovered_nmi)
 		nmi_panic(regs, "NMI: Not continuing");
 
-	pr_emerg("Dazed and confused, but trying to continue\n");
+	#define irq_stats(x)            (&per_cpu(irq_stat, x))
+	for_each_online_cpu(j)
+		pr_alert("cdx: cpu %d: ipi-call-func=%u nmi=%d hv:cb=%d, timer=%d others:%d %d %d, %d %d %d, %d %d %d %d %d \n",
+			j,
+			irq_stats(j)->irq_call_count,
+			irq_stats(j)->__nmi_count,
+			irq_stats(j)->irq_hv_callback_count,
+			irq_stats(j)->hyperv_stimer0_count,
+
+			//others
+			irq_stats(j)->x86_platform_ipis,
+			irq_stats(j)->irq_tlb_count,
+			irq_stats(j)->irq_deferred_error_count,
+
+			irq_stats(j)->irq_hv_reenlightenment_count,
+			irq_stats(j)->apic_timer_irqs,
+			irq_stats(j)->irq_spurious_count,
+
+			irq_stats(j)->icr_read_retry_count,
+			irq_stats(j)->apic_irq_work_irqs,
+			irq_stats(j)->irq_resched_count,
+			irq_stats(j)->irq_thermal_count,
+			irq_stats(j)->irq_threshold_count
+			);
+
+	pr_emerg("Dazed and confused, but trying to continue\n\n\n");
 }
 NOKPROBE_SYMBOL(unknown_nmi_error);
 
