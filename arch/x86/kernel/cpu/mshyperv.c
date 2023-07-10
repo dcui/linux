@@ -41,7 +41,6 @@ struct ms_hyperv_info ms_hyperv;
 
 bool hyperv_paravisor_present;
 /* The variable is used in modules via hv_do_hypercall() */
-EXPORT_SYMBOL_GPL(hyperv_paravisor_present);
 
 #if IS_ENABLED(CONFIG_HYPERV)
 static inline unsigned int hv_get_nested_reg(unsigned int reg)
