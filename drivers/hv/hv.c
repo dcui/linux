@@ -272,9 +272,12 @@ void hv_synic_enable_regs(unsigned int cpu)
 		if (!hv_cpu->synic_message_page)
 			pr_err("Fail to map synic message page.\n");
 	} else {
-		simp.base_simp_gpa =
-			cc_mkdec(virt_to_phys(hv_cpu->synic_message_page))
+		simp.base_simp_gpa = virt_to_phys(hv_cpu->synic_message_page)
 			>> HV_HYP_PAGE_SHIFT;
+
+		if (hv_isolation_type_tdx())
+			simp.base_simp_gpa |= ms_hyperv.shared_gpa_boundary
+				>> HV_HYP_PAGE_SHIFT;
 	}
 
 	hv_set_register(HV_REGISTER_SIMP, simp.as_uint64);
@@ -292,9 +295,12 @@ void hv_synic_enable_regs(unsigned int cpu)
 		if (!hv_cpu->synic_event_page)
 			pr_err("Fail to map synic event page.\n");
 	} else {
-		siefp.base_siefp_gpa =
-			cc_mkdec(virt_to_phys(hv_cpu->synic_event_page))
+		siefp.base_siefp_gpa = virt_to_phys(hv_cpu->synic_event_page)
 			>> HV_HYP_PAGE_SHIFT;
+
+		if (hv_isolation_type_tdx())
+			siefp.base_siefp_gpa |= ms_hyperv.shared_gpa_boundary
+				>> HV_HYP_PAGE_SHIFT;
 	}
 
 	hv_set_register(HV_REGISTER_SIEFP, siefp.as_uint64);
