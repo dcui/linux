@@ -37,6 +37,9 @@
 bool __weak hv_root_partition;
 EXPORT_SYMBOL_GPL(hv_root_partition);
 
+bool __weak hyperv_paravisor_present;
+EXPORT_SYMBOL_GPL(hyperv_paravisor_present);
+
 bool __weak hv_nested;
 EXPORT_SYMBOL_GPL(hv_nested);
 
@@ -338,3 +341,9 @@ u64 __weak hv_ivm_hypercall(u64 control, void *input, void *output, u32 input_si
 	return HV_STATUS_INVALID_PARAMETER;
 }
 EXPORT_SYMBOL_GPL(hv_ivm_hypercall);
+
+u64 __weak hv_tdx_hypercall_fast(u64 control, u64 input)
+{
+	return HV_STATUS_INVALID_PARAMETER;
+}
+EXPORT_SYMBOL_GPL(hv_tdx_hypercall_fast);

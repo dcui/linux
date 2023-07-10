@@ -183,6 +183,7 @@ extern int vmbus_interrupt;
 extern int vmbus_irq;
 
 extern bool hv_root_partition;
+extern bool hyperv_paravisor_present;
 
 #if IS_ENABLED(CONFIG_HYPERV)
 /*

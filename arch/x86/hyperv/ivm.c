@@ -122,8 +122,6 @@ u64 hv_tdx_hypercall_fast(u64 control, u64 input)
 	return hv_tdx_hypercall(control | HV_HYPERCALL_FAST_BIT,
 				input_address, output_address);
 }
-EXPORT_SYMBOL_GPL(hv_tdx_hypercall_fast);
-
 
 static inline u64 rd_ghcb_msr(void)
 {
