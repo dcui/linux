@@ -2529,6 +2529,8 @@ static int netvsc_probe(struct hv_device *dev,
 		goto devinfo_failed;
 	}
 
+	rtnl_lock(); //XXX
+
 	nvdev = rndis_filter_device_add(dev, device_info);
 	if (IS_ERR(nvdev)) {
 		ret = PTR_ERR(nvdev);
@@ -2546,7 +2548,7 @@ static int netvsc_probe(struct hv_device *dev,
 	 * the device lock, so all the subchannels can't be processed --
 	 * finally netvsc_subchan_work() hangs forever.
 	 */
-	rtnl_lock();
+	//rtnl_lock();
 
 	if (nvdev->num_chn > 1)
 		schedule_work(&nvdev->subchan_work);
@@ -2786,11 +2788,14 @@ static int __init netvsc_drv_init(void)
 	}
 	netvsc_ring_bytes = ring_size * PAGE_SIZE;
 
+	register_netdevice_notifier(&netvsc_netdev_notifier);
+	pr_info("cdx: netvsc_drv_init: applying haiyang's fix\n");
+
 	ret = vmbus_driver_register(&netvsc_drv);
 	if (ret)
 		return ret;
 
-	register_netdevice_notifier(&netvsc_netdev_notifier);
+	//register_netdevice_notifier(&netvsc_netdev_notifier);
 	return 0;
 }
 
