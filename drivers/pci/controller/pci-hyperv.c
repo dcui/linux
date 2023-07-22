@@ -2844,7 +2844,7 @@ static void hv_eject_device_work(struct work_struct *work)
 	hpdev = container_of(work, struct hv_pci_dev, wrk);
 	hbus = hpdev->hbus;
 
-	WARN_ON(hpdev->state != hv_pcichild_ejecting);
+	//WARN_ON(hpdev->state != hv_pcichild_ejecting);
 
 	/*
 	 * Ejection can come before or after the PCI bus has been set up, so
@@ -2860,6 +2860,10 @@ static void hv_eject_device_work(struct work_struct *work)
 		pci_dev_put(pdev);
 		pci_unlock_rescan_remove();
 	}
+
+	printk("cdx: %s: line %d: sleeping 13s: pdev=%px\n", __func__, __LINE__, pdev);
+	ssleep(13);
+	printk("cdx: %s: line %d: sleeping 13s: done\n", __func__, __LINE__);
 
 	spin_lock_irqsave(&hbus->device_list_lock, flags);
 	list_del(&hpdev->list_entry);
@@ -2902,7 +2906,7 @@ static void hv_pci_eject_device(struct hv_pci_dev *hpdev)
 		return;
 	}
 
-	hpdev->state = hv_pcichild_ejecting;
+	//hpdev->state = hv_pcichild_ejecting;
 	get_pcichild(hpdev);
 	INIT_WORK(&hpdev->wrk, hv_eject_device_work);
 	queue_work(hbus->wq, &hpdev->wrk);
@@ -3759,6 +3763,9 @@ retry:
 
 	hbus->state = hv_pcibus_probed;
 
+	printk("cdx: %s: line %d: sleeping 10s\n", __func__, __LINE__);
+	ssleep(10); //sleep 10s
+	printk("cdx: %s: line %d: sleeping 10s: done.\n", __func__, __LINE__);
 	ret = create_root_hv_pci_bus(hbus);
 	if (ret)
 		goto free_windows;
@@ -3875,6 +3882,7 @@ static void hv_pci_remove(struct hv_device *hdev)
 {
 	struct hv_pcibus_device *hbus;
 
+	printk("cdx: 1: %s: line %d\n", __func__, __LINE__);
 	hbus = hv_get_drvdata(hdev);
 	if (hbus->state == hv_pcibus_installed) {
 		tasklet_disable(&hdev->channel->callback_event);
@@ -3889,13 +3897,16 @@ static void hv_pci_remove(struct hv_device *hdev)
 		 */
 
 		/* Remove the bus from PCI's point of view. */
+		printk("cdx: 2: %s: line %d\n", __func__, __LINE__);
 		pci_lock_rescan_remove();
 		pci_stop_root_bus(hbus->bridge->bus);
 		hv_pci_remove_slots(hbus);
 		pci_remove_root_bus(hbus->bridge->bus);
 		pci_unlock_rescan_remove();
+		printk("cdx: 3: %s: line %d\n", __func__, __LINE__);
 	}
 
+	printk("cdx: 4: %s: line %d\n", __func__, __LINE__);
 	hv_pci_bus_exit(hdev, false);
 
 	vmbus_close(hdev->channel);
