@@ -161,9 +161,9 @@ int hv_common_cpu_init(unsigned int cpu)
 			outputarg = (void **)this_cpu_ptr(hyperv_pcpu_output_arg);
 			*outputarg = (char *)(mem) + HV_HYP_PAGE_SIZE;
 		}
-	}
 
-	*inputarg = mem;
+		*inputarg = mem;
+	}
 
 	msr_vp_index = hv_get_register(HV_REGISTER_VP_INDEX);
 
