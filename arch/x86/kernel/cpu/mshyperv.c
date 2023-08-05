@@ -27,6 +27,7 @@
 #include <asm/irq_regs.h>
 #include <asm/i8259.h>
 #include <asm/apic.h>
+#include <asm/e820/api.h>
 #include <asm/timer.h>
 #include <asm/reboot.h>
 #include <asm/nmi.h>
@@ -599,3 +600,26 @@ const __initconst struct hypervisor_x86 x86_hyper_ms_hyperv = {
 	.runtime.sev_es_hcall_prepare = hv_sev_es_hcall_prepare,
 	.runtime.sev_es_hcall_finish = hv_sev_es_hcall_finish,
 };
+
+/*
+ * A Gen2 VM doesn't support legacy PCI/PCIe, so both raw_pci_ops and
+ * raw_pci_ext_ops are NULL, and pci_subsys_init() -> pcibios_init()
+ * doesn't call pcibios_resource_survey() -> e820__reserve_resources_late();
+ * as a result, any emulated persistent memory of E820_TYPE_PRAM (12) via
+ * the kernel parameter memmap=nn[KMG]!ss is not added into iomem_resource
+ * and hence can't be detected by register_e820_pmem(). Fix this by adding the
+ * subsys_initcall_sync, which runs just after subsys_initcall(pci_subsys_init).
+ * Note: hv_gen2_reserve_e820_resources() also adds any memory of E820_TYPE_PMEM
+ * (7) into iomem_resource, and acpi_nfit_register_region() ->
+ * acpi_nfit_insert_resource() -> region_intersects() returns REGION_INTERSECTS,
+ * so the memory of E820_TYPE_PMEM won't get added twice.
+ */
+static int __init hv_gen2_reserve_e820_resources(void)
+{
+	bool gen2vm = efi_enabled(EFI_BOOT);
+
+	if (x86_hyper_type == X86_HYPER_MS_HYPERV && gen2vm)
+		e820__reserve_resources_late();
+	return 0;
+}
+subsys_initcall_sync(hv_gen2_reserve_e820_resources);
