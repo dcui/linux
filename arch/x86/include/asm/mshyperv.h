@@ -72,7 +72,7 @@ static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
 		return U64_MAX;
 
 	__asm__ __volatile__("mov %[output], %%r8\n"
-			     ALTERNATIVE("vmmcall", CALL_NOSPEC, X86_FEATURE_SEV_ES)
+			     ALTERNATIVE(CALL_NOSPEC, "vmmcall", X86_FEATURE_SEV_ES)
 			     : "=a" (hv_status), ASM_CALL_CONSTRAINT,
 			     "+c" (control), "+d" (input_address)
 			     : [output] "r" (output_address),
@@ -113,7 +113,7 @@ static inline u64 _hv_do_fast_hypercall8(u64 control, u64 input1)
 #ifdef CONFIG_X86_64
 	{
 		__asm__ __volatile__("mov %[thunk_target], %%r8\n"
-				     ALTERNATIVE("vmmcall", CALL_NOSPEC, X86_FEATURE_SEV_ES)
+				     ALTERNATIVE(CALL_NOSPEC, "vmmcall", X86_FEATURE_SEV_ES)
 				     : "=a" (hv_status), ASM_CALL_CONSTRAINT,
 				       "+c" (control), "+d" (input1)
 				     : THUNK_TARGET(hv_hypercall_pg)
@@ -159,7 +159,7 @@ static inline u64 _hv_do_fast_hypercall16(u64 control, u64 input1, u64 input2)
 #ifdef CONFIG_X86_64
 	{
 		__asm__ __volatile__("mov %[output], %%r8\n"
-		     ALTERNATIVE("vmmcall", CALL_NOSPEC, X86_FEATURE_SEV_ES)
+		     ALTERNATIVE(CALL_NOSPEC, "vmmcall", X86_FEATURE_SEV_ES)
 		     : "=a" (hv_status), ASM_CALL_CONSTRAINT,
 		       "+c" (control), "+d" (input1)
 		     : [output] "r" (input2),
