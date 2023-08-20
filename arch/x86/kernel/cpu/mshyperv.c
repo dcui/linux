@@ -40,6 +40,12 @@ bool hv_root_partition;
 bool hv_nested;
 struct ms_hyperv_info ms_hyperv;
 
+/*
+ * Used in modules via hv_do_hypercall(): see arch/x86/include/asm/mshyperv.h.
+ * Exported in drivers/hv/hv_common.c to not break the ARM64 build.
+ */
+bool hyperv_paravisor_present __ro_after_init;
+
 #if IS_ENABLED(CONFIG_HYPERV)
 static inline unsigned int hv_get_nested_reg(unsigned int reg)
 {
@@ -429,6 +435,8 @@ static void __init ms_hyperv_init_platform(void)
 			ms_hyperv.shared_gpa_boundary =
 				BIT_ULL(ms_hyperv.shared_gpa_boundary_bits);
 
+		hyperv_paravisor_present = !!ms_hyperv.paravisor_present;
+
 		pr_info("Hyper-V: Isolation Config: Group A 0x%x, Group B 0x%x\n",
 			ms_hyperv.isolation_config_a, ms_hyperv.isolation_config_b);
 
@@ -443,7 +451,7 @@ static void __init ms_hyperv_init_platform(void)
 			/* A TDX VM must use x2APIC and doesn't use lazy EOI. */
 			ms_hyperv.hints &= ~HV_X64_APIC_ACCESS_RECOMMENDED;
 
-			if (!ms_hyperv.paravisor_present) {
+			if (!hyperv_paravisor_present) {
 				/* To be supported: more work is required.  */
 				ms_hyperv.features &= ~HV_MSR_REFERENCE_TSC_AVAILABLE;
 
@@ -525,8 +533,7 @@ static void __init ms_hyperv_init_platform(void)
 
 #if IS_ENABLED(CONFIG_HYPERV)
 	if ((hv_get_isolation_type() == HV_ISOLATION_TYPE_VBS) ||
-	    ((hv_get_isolation_type() == HV_ISOLATION_TYPE_SNP) &&
-	    ms_hyperv.paravisor_present))
+	    hyperv_paravisor_present)
 		hv_vtom_init();
 	/*
 	 * Setup the hook to get control post apic initialization.
