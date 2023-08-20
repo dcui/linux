@@ -392,7 +392,16 @@ static void __init hv_get_partition_id(void)
 	local_irq_restore(flags);
 }
 
-static u8 __init get_vtl(void)
+/*
+ * When the system runs in paravisor mode or as a fully enlightened SNP VM,
+ * invoke the hypercall to get the VTL and save it into ms_hyperv.vtl for use,
+ * e.g. in vmbus_negotiate_version() and hv_snp_boot_ap(). When the system
+ * runs in other modes, the hypercall may not be supported: ms_hyperv.vtl
+ * stays with its default value of 0 and vmbus_negotiate_version() still
+ * works because in those modes the msg->msg_vtl is a reserved field and it's
+ * correct to set the field to 0.
+ */
+static void __init hv_get_vtl(void)
 {
 	u64 control = HV_HYPERCALL_REP_COMP_1 | HVCALL_GET_VP_REGISTERS;
 	struct hv_get_vp_registers_input *input;
@@ -411,15 +420,15 @@ static u8 __init get_vtl(void)
 	input->element[0].name0 = HV_X64_REGISTER_VSM_VP_STATUS;
 
 	ret = hv_do_hypercall(control, input, output);
+
 	if (hv_result_success(ret)) {
-		ret = output->as64.low & HV_X64_VTL_MASK;
+		ms_hyperv.vtl = output->as64.low & HV_X64_VTL_MASK;
+		pr_notice("Hyper-V: VTL is %u\n", ms_hyperv.vtl);
 	} else {
-		pr_err("Failed to get VTL(%lld) and set VTL to zero by default.\n", ret);
-		ret = 0;
+		pr_notice("Hyper-V: VTL info is unavailable: %llu\n", ret);
 	}
 
 	local_irq_restore(flags);
-	return ret;
 }
 
 /*
@@ -550,9 +559,8 @@ void __init hyperv_init(void)
 	/* Query the VMs extended capability once, so that it can be cached. */
 	hv_query_ext_cap(0);
 
-	/* Find the VTL */
-	if (hv_isolation_type_en_snp())
-		ms_hyperv.vtl = get_vtl();
+	/* Save the VTL into ms_hyperv.vtl, if the hypercall is supported. */
+	hv_get_vtl();
 
 	return;
 
