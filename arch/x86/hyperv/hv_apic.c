@@ -179,7 +179,7 @@ static bool __send_ipi_mask(const struct cpumask *mask, int vector,
 
 	/* A fully enlightened TDX VM uses GHCI rather than hv_hypercall_pg. */
 	if (!hv_hypercall_pg) {
-		if (ms_hyperv.paravisor_present || !hv_isolation_type_tdx())
+		if (hyperv_paravisor_present || !hv_isolation_type_tdx())
 			return false;
 	}
 
@@ -239,7 +239,7 @@ static bool __send_ipi_one(int cpu, int vector)
 
 	/* A fully enlightened TDX VM uses GHCI rather than hv_hypercall_pg. */
 	if (!hv_hypercall_pg) {
-		if (ms_hyperv.paravisor_present || !hv_isolation_type_tdx())
+		if (hyperv_paravisor_present || !hv_isolation_type_tdx())
 			return false;
 	}
 
