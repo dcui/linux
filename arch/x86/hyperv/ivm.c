@@ -186,7 +186,49 @@ bool hv_ghcb_negotiate_protocol(void)
 	return true;
 }
 
-void hv_ghcb_msr_write(u64 msr, u64 value)
+#define EXIT_REASON_MSR_READ		31
+#define EXIT_REASON_MSR_WRITE		32
+
+static void hv_tdx_read_msr(u64 msr, u64 *val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_READ,
+		.r12 = msr,
+	};
+
+#ifdef CONFIG_INTEL_TDX_GUEST
+	u64 ret = __tdx_hypercall_ret(&args);
+#else
+	u64 ret = HV_STATUS_INVALID_PARAMETER;
+#endif
+
+	if (WARN_ONCE(ret, "Failed to emulate MSR read: %lld\n", ret))
+		*val = 0;
+	else
+		*val = args.r11;
+}
+
+static void hv_tdx_write_msr(u64 msr, u64 val)
+{
+	struct tdx_hypercall_args args = {
+		.r10 = TDX_HYPERCALL_STANDARD,
+		.r11 = EXIT_REASON_MSR_WRITE,
+		.r12 = msr,
+		.r13 = val,
+	};
+
+#ifdef CONFIG_INTEL_TDX_GUEST
+	u64 ret = __tdx_hypercall(&args);
+#else
+	u64 ret = HV_STATUS_INVALID_PARAMETER;
+	(void)args;
+#endif
+
+	WARN_ONCE(ret, "Failed to emulate MSR write: %lld\n", ret);
+}
+
+static void hv_ghcb_msr_write(u64 msr, u64 value)
 {
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
@@ -214,9 +256,20 @@ void hv_ghcb_msr_write(u64 msr, u64 value)
 
 	local_irq_restore(flags);
 }
-EXPORT_SYMBOL_GPL(hv_ghcb_msr_write);
 
-void hv_ghcb_msr_read(u64 msr, u64 *value)
+void hv_ivm_msr_write(u64 msr, u64 value)
+{
+	if (!hyperv_paravisor_present)
+		return;
+
+	if (hv_isolation_type_tdx())
+		hv_tdx_write_msr(msr, value);
+	else if (hv_isolation_type_snp())
+		hv_ghcb_msr_write(msr, value);
+}
+EXPORT_SYMBOL_GPL(hv_ivm_msr_write);
+
+static void hv_ghcb_msr_read(u64 msr, u64 *value)
 {
 	union hv_ghcb *hv_ghcb;
 	void **ghcb_base;
@@ -246,7 +299,18 @@ void hv_ghcb_msr_read(u64 msr, u64 *value)
 			| ((u64)lower_32_bits(hv_ghcb->ghcb.save.rdx) << 32);
 	local_irq_restore(flags);
 }
-EXPORT_SYMBOL_GPL(hv_ghcb_msr_read);
+
+void hv_ivm_msr_read(u64 msr, u64 *value)
+{
+	if (!hyperv_paravisor_present)
+		return;
+
+	if (hv_isolation_type_tdx())
+		hv_tdx_read_msr(msr, value);
+	else if (hv_isolation_type_snp())
+		hv_ghcb_msr_read(msr, value);
+}
+EXPORT_SYMBOL_GPL(hv_ivm_msr_read);
 
 /*
  * hv_mark_gpa_visibility - Set pages visible to host via hvcall.
