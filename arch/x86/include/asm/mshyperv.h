@@ -27,7 +27,6 @@
 union hv_ghcb;
 
 DECLARE_STATIC_KEY_FALSE(isolation_type_snp);
-DECLARE_STATIC_KEY_FALSE(isolation_type_en_snp);
 DECLARE_STATIC_KEY_FALSE(isolation_type_tdx);
 
 typedef int (*hyperv_fill_flush_list_func)(
@@ -51,7 +50,7 @@ extern u64 hv_current_partition_id;
 
 extern union hv_ghcb * __percpu *hv_ghcb_pg;
 
-extern bool hv_isolation_type_en_snp(void);
+bool hv_isolation_type_snp(void);
 bool hv_isolation_type_tdx(void);
 u64 hv_tdx_hypercall(u64 control, u64 param1, u64 param2);
 
@@ -80,7 +79,7 @@ static inline u64 hv_do_hypercall(u64 control, void *input, void *output)
 	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return hv_tdx_hypercall(control, input_address, output_address);
 
-	if (hv_isolation_type_en_snp()) {
+	if (hv_isolation_type_snp() && !hyperv_paravisor_present) {
 		__asm__ __volatile__("mov %4, %%r8\n"
 				     "vmmcall"
 				     : "=a" (hv_status), ASM_CALL_CONSTRAINT,
@@ -138,7 +137,7 @@ static inline u64 _hv_do_fast_hypercall8(u64 control, u64 input1)
 		 control == (HVCALL_SIGNAL_EVENT | HV_HYPERCALL_FAST_BIT)))
 		return hv_tdx_hypercall(control, input1, 0);
 
-	if (hv_isolation_type_en_snp()) {
+	if (hv_isolation_type_snp() && !hyperv_paravisor_present) {
 		__asm__ __volatile__(
 				"vmmcall"
 				: "=a" (hv_status), ASM_CALL_CONSTRAINT,
@@ -192,7 +191,7 @@ static inline u64 _hv_do_fast_hypercall16(u64 control, u64 input1, u64 input2)
 	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		return hv_tdx_hypercall(control, input1, input2);
 
-	if (hv_isolation_type_en_snp()) {
+	if (hv_isolation_type_snp() && !hyperv_paravisor_present) {
 		__asm__ __volatile__("mov %4, %%r8\n"
 				     "vmmcall"
 				     : "=a" (hv_status), ASM_CALL_CONSTRAINT,
@@ -292,8 +291,6 @@ static inline void hv_ghcb_terminate(unsigned int set, unsigned int reason) {}
 static inline void hv_vtom_init(void) {}
 static int hv_snp_boot_ap(int cpu, unsigned long start_ip) { return 0; }
 #endif
-
-extern bool hv_isolation_type_snp(void);
 
 static inline bool hv_is_synic_reg(unsigned int reg)
 {
