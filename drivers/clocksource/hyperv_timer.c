@@ -22,6 +22,7 @@
 #include <linux/irq.h>
 #include <linux/acpi.h>
 #include <linux/hyperv.h>
+#include <linux/set_memory.h>
 #include <clocksource/hyperv_timer.h>
 #include <asm/hyperv-tlfs.h>
 #include <asm/mshyperv.h>
@@ -364,8 +365,8 @@ EXPORT_SYMBOL_GPL(hv_stimer_global_cleanup);
 
 static union {
 	struct ms_hyperv_tsc_page page;
-	u8 reserved[PAGE_SIZE];
-} tsc_pg __bss_decrypted __aligned(PAGE_SIZE);
+	u8 reserved[SZ_2M];
+} tsc_pg __bss_decrypted __aligned(SZ_2M);
 
 static struct ms_hyperv_tsc_page *tsc_page = &tsc_pg.page;
 static unsigned long tsc_pfn;
@@ -505,6 +506,7 @@ static __always_inline void hv_setup_sched_clock(void *sched_clock) {}
 static bool __init hv_init_tsc_clocksource(void)
 {
 	union hv_reference_tsc_msr tsc_msr;
+	int ret;
 
 	if (!(ms_hyperv.features & HV_MSR_REFERENCE_TSC_AVAILABLE))
 		return false;
@@ -526,6 +528,12 @@ static bool __init hv_init_tsc_clocksource(void)
 	}
 
 	hv_read_reference_counter = read_hv_clock_tsc;
+
+	if (hv_isolation_type_tdx() && !ms_hyperv.paravisor_present) {
+		ret = set_memory_decrypted((unsigned long)tsc_page, SZ_2M/PAGE_SIZE);
+		BUG_ON(ret);
+		memset(tsc_page, 0, PAGE_SIZE);
+	}
 
 	/*
 	 * TSC page mapping works differently in root compared to guest.
