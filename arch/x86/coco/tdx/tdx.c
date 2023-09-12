@@ -173,7 +173,7 @@ static void tdx_parse_tdinfo(u64 *cc_mask)
 	 */
 	td_attr = out.rdx;
 	if (!(td_attr & ATTR_SEPT_VE_DISABLE))
-		panic("TD misconfiguration: SEPT_VE_DISABLE attibute must be set.\n");
+		pr_err("TD misconfiguration: SEPT_VE_DISABLE attibute must be set.\n");
 }
 
 /*
