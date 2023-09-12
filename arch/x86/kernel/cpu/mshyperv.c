@@ -451,6 +451,7 @@ static void __init ms_hyperv_init_platform(void)
 
 			/* A TDX VM must use x2APIC and doesn't use lazy EOI. */
 			ms_hyperv.hints &= ~HV_X64_APIC_ACCESS_RECOMMENDED;
+			ms_hyperv.hints &= ~HV_X64_REMOTE_TLB_FLUSH_RECOMMENDED;
 
 			if (!ms_hyperv.paravisor_present) {
 				/* To be supported: more work is required.  */
