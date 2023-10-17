@@ -75,6 +75,9 @@ static void print_mem_encrypt_feature_info(void)
 	pr_cont("\n");
 }
 
+void hv_print_mem_enc_feature_info(void);
+extern bool hyperv_paravisor_present;
+
 /* Architecture __weak replacement functions */
 void __init mem_encrypt_init(void)
 {
@@ -84,5 +87,8 @@ void __init mem_encrypt_init(void)
 	/* Call into SWIOTLB to update the SWIOTLB DMA buffers */
 	swiotlb_update_mem_attributes();
 
-	print_mem_encrypt_feature_info();
+	if (!hyperv_paravisor_present)
+		print_mem_encrypt_feature_info();
+	else
+		hv_print_mem_enc_feature_info();
 }
