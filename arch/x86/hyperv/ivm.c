@@ -450,6 +450,16 @@ static bool hv_is_private_mmio(u64 addr)
 	return false;
 }
 
+static void hv_print_mem_enc_feature_info(void)
+{
+	enum hv_isolation_type type = hv_get_isolation_type();
+
+	if (type == HV_ISOLATION_TYPE_SNP)
+		pr_info("Memory Encryption Features active: AMD SEV\n");
+	else if (type == HV_ISOLATION_TYPE_TDX)
+		pr_info("Memory Encryption Features active: Intel TDX\n");
+}
+
 void __init hv_vtom_init(void)
 {
 	enum hv_isolation_type type = hv_get_isolation_type();
@@ -479,6 +489,7 @@ void __init hv_vtom_init(void)
 	cc_set_mask(ms_hyperv.shared_gpa_boundary);
 	physical_mask &= ms_hyperv.shared_gpa_boundary - 1;
 
+	x86_platform.print_mem_enc_feature_info = hv_print_mem_enc_feature_info;
 	x86_platform.hyper.is_private_mmio = hv_is_private_mmio;
 	x86_platform.guest.enc_cache_flush_required = hv_vtom_cache_flush_required;
 	x86_platform.guest.enc_tlb_flush_required = hv_vtom_tlb_flush_required;

@@ -39,7 +39,7 @@ bool force_dma_unencrypted(struct device *dev)
 	return false;
 }
 
-static void print_mem_encrypt_feature_info(void)
+void print_mem_encrypt_feature_info(void)
 {
 	pr_info("Memory Encryption Features active:");
 
@@ -84,5 +84,5 @@ void __init mem_encrypt_init(void)
 	/* Call into SWIOTLB to update the SWIOTLB DMA buffers */
 	swiotlb_update_mem_attributes();
 
-	print_mem_encrypt_feature_info();
+	x86_platform.print_mem_enc_feature_info();
 }

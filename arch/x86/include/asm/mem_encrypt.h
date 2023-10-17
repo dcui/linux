@@ -19,6 +19,7 @@
 
 #ifdef CONFIG_X86_MEM_ENCRYPT
 void __init mem_encrypt_init(void);
+void print_mem_encrypt_feature_info(void);
 #else
 static inline void mem_encrypt_init(void) { }
 #endif
