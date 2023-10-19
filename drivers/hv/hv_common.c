@@ -149,7 +149,8 @@ int hv_common_cpu_init(unsigned int cpu)
 		if (!mem)
 			return -ENOMEM;
 
-		if (hv_isolation_type_tdx()) {
+		if (!ms_hyperv.paravisor_present &&
+			(hv_isolation_type_snp() || hv_isolation_type_tdx())) {
 			ret = set_memory_decrypted((unsigned long)mem, pgcount);
 
 			/* It may be unsafe to free mem upon error. */

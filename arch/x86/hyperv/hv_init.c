@@ -51,7 +51,7 @@ static int hyperv_init_ghcb(void)
 	void *ghcb_va;
 	void **ghcb_base;
 
-	if (!hv_isolation_type_snp())
+	if (!ms_hyperv.paravisor_present || !hv_isolation_type_snp())
 		return 0;
 
 	if (!hv_ghcb_pg)
@@ -457,7 +457,7 @@ void __init hyperv_init(void)
 			goto common_free;
 	}
 
-	if (hv_isolation_type_snp()) {
+	if (ms_hyperv.paravisor_present && hv_isolation_type_snp()) {
 		/* Negotiate GHCB Version. */
 		if (!hv_ghcb_negotiate_protocol())
 			hv_ghcb_terminate(SEV_TERM_SET_GEN,
@@ -468,36 +468,39 @@ void __init hyperv_init(void)
 			goto free_vp_assist_page;
 	}
 
+	cpuhp = cpuhp_setup_state(CPUHP_AP_HYPERV_ONLINE, "x86/hyperv_init:online",
+				  hv_cpu_init, hv_cpu_die);
+	if (cpuhp < 0)
+		goto free_ghcb_page;
+
 	/*
 	 * Setup the hypercall page and enable hypercalls.
 	 * 1. Register the guest ID
 	 * 2. Enable the hypercall and register the hypercall page
 	 *
-	 * A TDX VM with no paravisor uses GHCI rather than hv_hypercall_pg.
-	 * When the VM needs to pass an input page to Hyper-V, the page must
-	 * be a shared page, e.g. hv_post_message() uses the per-CPU shared
-	 * page hyperv_pcpu_input_arg.
+	 * A TDX VM with no paravisor only uses TDX GHCI rather than hv_hypercall_pg:
+	 * when the hypercall input is a page, such a VM must pass a decrypted
+	 * page to Hyper-V, e.g. hv_post_message() uses the per-CPU page
+	 * hyperv_pcpu_input_arg, which is decrypted if no paravisor is present.
 	 *
 	 * A TDX VM with the paravisor uses hv_hypercall_pg for most hypercalls,
-	 * which are handled by the paravisor and a private input page must be
-	 * used, e.g. see hv_mark_gpa_visibility(). The VM uses GHCI for
-	 * two hypercalls: HVCALL_SIGNAL_EVENT (see vmbus_set_event()) and
-	 * HVCALL_POST_MESSAGE (the input page must be a shared page, i.e.
-	 * hv_post_message() uses the per-CPU shared hyperv_pcpu_input_arg.)
-	 * NOTE: we must initialize hv_hypercall_pg before hv_cpu_init(),
-	 * because hv_cpu_init() -> hv_common_cpu_init() -> set_memory_decrypted()
-	 * -> ... -> hv_vtom_set_host_visibility() -> ... -> hv_do_hypercall()
-	 * needs to call the hv_hypercall_pg.
-	 */
-
-	/*
-	 * In the case of TDX with the paravisor, we should write the MSR
-	 * before hv_cpu_init(), which needs to call the paravisor-handled
-	 * HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY.
+	 * which are handled by the paravisor and the VM must use an encrypted
+	 * input page: in such a VM, the hyperv_pcpu_input_arg is encrypted and
+	 * used in the hypercalls, e.g. see hv_mark_gpa_visibility() and
+	 * hv_arch_irq_unmask(). Such a VM uses TDX GHCI for two hypercalls:
+	 * 1. HVCALL_SIGNAL_EVENT: see vmbus_set_event() and _hv_do_fast_hypercall8().
+	 * 2. HVCALL_POST_MESSAGE: the input page must be a decrypted page, i.e.
+	 * hv_post_message() in such a VM can't use the encrypted hyperv_pcpu_input_arg;
+	 * instead, hv_post_message() uses the post_msg_page, which is decrypted
+	 * in such a VM and is only used in such a VM.
 	 */
 	guest_id = hv_generate_guest_id(LINUX_VERSION_CODE);
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, guest_id);
 
+	/* With the paravisor, the VM must also write the ID via GHCB/GHCI */
+	hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, guest_id);
+
+	/* A TDX VM with no paravisor only uses TDX GHCI rather than hv_hypercall_pg */
 	if (hv_isolation_type_tdx() && !hyperv_paravisor_present)
 		goto skip_hypercall_pg_init;
 
@@ -506,7 +509,7 @@ void __init hyperv_init(void)
 			VM_FLUSH_RESET_PERMS, NUMA_NO_NODE,
 			__builtin_return_address(0));
 	if (hv_hypercall_pg == NULL)
-		goto free_ghcb_page;
+		goto clean_guest_os_id;
 
 	rdmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
 	hypercall_msr.enable = 1;
@@ -541,18 +544,6 @@ void __init hyperv_init(void)
 	}
 
 skip_hypercall_pg_init:
-	cpuhp = cpuhp_setup_state(CPUHP_AP_HYPERV_ONLINE, "x86/hyperv_init:online",
-				  hv_cpu_init, hv_cpu_die);
-	if (cpuhp < 0)
-		goto clean_guest_os_id;
-
-	/*
-	 * In the case of SNP with the paravisor, we must write the MSR to
-	 * the hypervisor after hv_cpu_init(), which maps the hv_ghcb_pg first.
-	 */
-	if (hyperv_paravisor_present)
-		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, guest_id);
-
 	/*
 	 * hyperv_init() is called before LAPIC is initialized: see
 	 * apic_intr_mode_init() -> x86_platform.apic_post_init() and
@@ -592,8 +583,8 @@ skip_hypercall_pg_init:
 
 clean_guest_os_id:
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);
-	if (hyperv_paravisor_present)
-		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
+	hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
+	cpuhp_remove_state(cpuhp);
 free_ghcb_page:
 	free_percpu(hv_ghcb_pg);
 free_vp_assist_page:
@@ -613,8 +604,7 @@ void hyperv_cleanup(void)
 
 	/* Reset our OS id */
 	wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);
-	if (hyperv_paravisor_present)
-		hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
+	hv_ivm_msr_write(HV_X64_MSR_GUEST_OS_ID, 0);
 
 	/*
 	 * Reset hypercall page reference before reset the page,
