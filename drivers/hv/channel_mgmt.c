@@ -574,6 +574,7 @@ err_deq_chan:
 	free_channel(newchannel);
 }
 
+static const struct { guid_t guid; } netvsc_guid = { HV_NIC_GUID };
 /*
  * vmbus_process_offer - Process the offer by creating a channel/device
  * associated with this offer
@@ -633,6 +634,15 @@ static void vmbus_process_offer(struct vmbus_channel *newchannel)
 	 * we can release the potentially racing rescind thread.
 	 */
 	atomic_dec(&vmbus_connection.offer_in_progress);
+
+	if (guid_equal(&netvsc_guid.guid, &newchannel->offermsg.offer.if_type)) {
+		if (fnew)
+			printk("cdx: %s: line %d, relid=%d (primary)\n", __func__, __LINE__,
+				newchannel->offermsg.child_relid);
+		else
+			printk("cdx: %s: line %d, relid=%d, parent_relid=%d\n", __func__, __LINE__,
+				newchannel->offermsg.child_relid, newchannel->primary_channel->offermsg.child_relid);
+	}
 
 	if (fnew) {
 		list_add_tail(&newchannel->listentry,

@@ -1302,6 +1302,9 @@ int rndis_set_subchannel(struct net_device *ndev,
 						nvdev->num_chn - 1;
 	trace_nvsp_send(ndev, init_packet);
 
+	printk("cdx: relid=%d, %s: line %d: creating sc=%u (actual=%d)\n", hv_dev->channel->offermsg.child_relid, __func__, __LINE__,
+			nvdev->num_chn - 1,
+			init_packet->msg.v5_msg.subchn_req.num_subchannels);
 	ret = vmbus_sendpacket(hv_dev->channel, init_packet,
 			       sizeof(struct nvsp_message),
 			       (unsigned long)init_packet,
@@ -1318,6 +1321,9 @@ int rndis_set_subchannel(struct net_device *ndev,
 		return -EIO;
 	}
 
+	printk("cdx: relid=%d, %s: line %d: creating sc=%u, got=%u\n", hv_dev->channel->offermsg.child_relid,__func__, __LINE__,
+			init_packet->msg.v5_msg.subchn_req.num_subchannels,
+			init_packet->msg.v5_msg.subchn_comp.num_subchannels);
 	/* Check that number of allocated sub channel is within the expected range */
 	if (init_packet->msg.v5_msg.subchn_comp.num_subchannels > nvdev->num_chn - 1) {
 		netdev_err(ndev, "invalid number of allocated sub channel\n");
@@ -1327,8 +1333,14 @@ int rndis_set_subchannel(struct net_device *ndev,
 		init_packet->msg.v5_msg.subchn_comp.num_subchannels;
 
 	/* wait for all sub channels to open */
+	printk("cdx: relid=%d, %s: line %d: waiting...: %d, %d\n", hv_dev->channel->offermsg.child_relid, __func__, __LINE__,
+		atomic_read(&nvdev->open_chn), nvdev->num_chn);
+	ssleep(1);
+	printk("cdx: relid=%d, %s: line %d: waiting...: %d, %d\n", hv_dev->channel->offermsg.child_relid, __func__, __LINE__,
+		atomic_read(&nvdev->open_chn), nvdev->num_chn);
 	wait_event(nvdev->subchan_open,
 		   atomic_read(&nvdev->open_chn) == nvdev->num_chn);
+	printk("cdx: relid=%d, %s: line %d: waiting... done\n", hv_dev->channel->offermsg.child_relid, __func__, __LINE__);
 
 	for (i = 0; i < VRSS_SEND_TAB_SIZE; i++)
 		ndev_ctx->tx_table[i] = i % nvdev->num_chn;
@@ -1561,14 +1573,22 @@ struct netvsc_device *rndis_filter_device_add(struct hv_device *dev,
 		goto err_dev_remv;
 	}
 
+	//cdx: rsscap.num_recv_que = 4;
 	/* This guarantees that num_possible_rss_qs <= num_online_cpus */
 	num_possible_rss_qs = min_t(u32, num_online_cpus(),
 				    rsscap.num_recv_que);
 
 	net_device->max_chn = min_t(u32, VRSS_CHANNEL_MAX, num_possible_rss_qs);
+	printk("cdx: relid=%d, %s: line %d: rsscap.num_recv_que=%u, num_possible_rss_qs=%u, nr_cpu=%d, net_device->max_chn=%u\n",
+			dev->channel->offermsg.child_relid,
+			__func__, __LINE__,
+			rsscap.num_recv_que, num_possible_rss_qs, num_online_cpus(), net_device->max_chn
+			);
 
 	/* We will use the given number of channels if available. */
 	net_device->num_chn = min(net_device->max_chn, device_info->num_chn);
+	printk("cdx: relid=%d, %s: line %d: %d, %d, %d\n", dev->channel->offermsg.child_relid,
+		 __func__, __LINE__, net_device->max_chn, device_info->num_chn, net_device->num_chn);
 
 	if (!netif_is_rxfh_configured(net)) {
 		for (i = 0; i < ndc->rx_table_sz; i++)
