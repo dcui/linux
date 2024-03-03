@@ -688,40 +688,52 @@ static struct io_tlb_pool *swiotlb_alloc_pool(struct device *dev,
 	size_t pool_size;
 	size_t tlb_size;
 
+	trace_printk("cdx: 1: nslabs=%ld, dev=%px, nareas=%d\n", nslabs, dev, nareas);
 	if (nslabs > SLABS_PER_PAGE << MAX_ORDER) {
 		nslabs = SLABS_PER_PAGE << MAX_ORDER;
+		trace_printk("cdx: 1: a: nslabs=%ld, nareas=%d\n", nslabs, nareas);
 		nareas = limit_nareas(nareas, nslabs);
+		trace_printk("cdx: 1: b: nslabs=%ld, nareas=%d\n", nslabs, nareas);
 	}
 
 	pool_size = sizeof(*pool) + array_size(sizeof(*pool->areas), nareas);
 	pool = kzalloc(pool_size, gfp);
+	trace_printk("cdx: 2: pool_size=0x%lx, pool=%px\n", pool_size, pool);
 	if (!pool)
 		goto error;
 	pool->areas = (void *)pool + sizeof(*pool);
 
 	tlb_size = nslabs << IO_TLB_SHIFT;
+	trace_printk("cdx: 3: tlb_size=0x%lx\n", tlb_size);
 	while (!(tlb = swiotlb_alloc_tlb(dev, tlb_size, phys_limit, gfp))) {
+		trace_printk("cdx: 4.1: dev=%px, phys_limit=0x%llx\n", dev, phys_limit);
 		if (nslabs <= minslabs)
 			goto error_tlb;
 		nslabs = ALIGN(nslabs >> 1, IO_TLB_SEGSIZE);
 		nareas = limit_nareas(nareas, nslabs);
 		tlb_size = nslabs << IO_TLB_SHIFT;
+		trace_printk("cdx: 4.2: dev=%px, nslabs=%ld, nareas=%d, tlb_size=0x%lx\n", dev, nslabs, nareas, tlb_size);
 	}
 
 	slot_order = get_order(array_size(sizeof(*pool->slots), nslabs));
+	trace_printk("cdx: 5: tlb=%px, dev=%px, slot_order=%d, nslabs=%ld\n", tlb, dev, slot_order, nslabs);
 	pool->slots = (struct io_tlb_slot *)
 		__get_free_pages(gfp, slot_order);
 	if (!pool->slots)
 		goto error_slots;
 
 	swiotlb_init_io_tlb_pool(pool, page_to_phys(tlb), nslabs, true, nareas);
+	trace_printk("cdx: 9: pool=%px, pool->nareas=%d\n", pool, pool->nareas);
 	return pool;
 
 error_slots:
+	trace_printk("cdx: e3: nslabs=%ld\n", nslabs);
 	swiotlb_free_tlb(page_address(tlb), tlb_size);
 error_tlb:
+	trace_printk("cdx: e2: nslabs=%ld\n", nslabs);
 	kfree(pool);
 error:
+	trace_printk("cdx: e1: nslabs=%ld\n", nslabs);
 	return NULL;
 }
 
@@ -735,14 +747,18 @@ static void swiotlb_dyn_alloc(struct work_struct *work)
 		container_of(work, struct io_tlb_mem, dyn_alloc);
 	struct io_tlb_pool *pool;
 
+	trace_printk("cdx: allocate new pool: starting to try:  default: nslabs=%ld, area=%ld --------------\n",
+		default_nslabs, default_nareas);
 	pool = swiotlb_alloc_pool(NULL, IO_TLB_MIN_SLABS, default_nslabs,
 				  default_nareas, mem->phys_limit, GFP_KERNEL);
 	if (!pool) {
-		pr_warn_ratelimited("Failed to allocate new pool");
+		pr_warn_ratelimited("Failed to allocate new pool\n");
+		trace_printk("Failed to allocate new pool =======\n");
 		return;
 	}
 
 	add_mem_pool(mem, pool);
+	trace_printk("cdx: allocate new pool: success: pool->nareas=%d, pool=%px  =======\n", pool->nareas, pool);
 }
 
 /**
@@ -1092,6 +1108,8 @@ static int swiotlb_pool_find_slots(struct device *dev, struct io_tlb_pool *pool,
 	do {
 		index = swiotlb_area_find_slots(dev, pool, i, orig_addr,
 						alloc_size, alloc_align_mask);
+		trace_printk("cdx: i=%d/%d/%d, alloc_sz=%lx, pool=%px, index=%d, mask=%x\n", i, pool->nareas, pool->area_nslabs,
+				 alloc_size, pool, index, alloc_align_mask);
 		if (index >= 0)
 			return index;
 		if (++i >= pool->nareas)
@@ -1130,8 +1148,10 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(pool, &mem->pools, node) {
+		trace_printk("cdx: 1.1: pool=%px, alloc_sz=%lx, allo_mask=%x, mem=%px\n", pool, alloc_size, alloc_align_mask, mem);
 		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
 						alloc_size, alloc_align_mask);
+		trace_printk("cdx: 1.2: pool=%px, alloc_sz=%lx, allo_mask=%x, index=%d\n", pool, alloc_size, alloc_align_mask, index);
 		if (index >= 0) {
 			rcu_read_unlock();
 			goto found;
@@ -1145,13 +1165,16 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 
 	nslabs = nr_slots(alloc_size);
 	phys_limit = min_not_zero(*dev->dma_mask, dev->bus_dma_limit);
+	trace_printk("cdx: 2.1: nslabs=%lx, alloc_sz=%lx, mem=%px\n", nslabs, alloc_size, mem);
 	pool = swiotlb_alloc_pool(dev, nslabs, nslabs, 1, phys_limit,
 				  GFP_NOWAIT | __GFP_NOWARN);
+	trace_printk("cdx: 2.2: nslabs=%lx, alloc_sz=%lx, mem=%px, pool=%px\n", nslabs, alloc_size, mem, pool);
 	if (!pool)
 		return -1;
 
 	index = swiotlb_pool_find_slots(dev, pool, orig_addr,
 					alloc_size, alloc_align_mask);
+	trace_printk("cdx: 2.3: nslabs=%lx, alloc_sz=%lx, mem=%px, pool=%px, index=%d\n", nslabs, alloc_size, mem, pool, index);
 	if (index < 0) {
 		swiotlb_dyn_free(&pool->rcu);
 		return -1;
@@ -1292,8 +1315,10 @@ phys_addr_t swiotlb_tbl_map_single(struct device *dev, phys_addr_t orig_addr,
 		return (phys_addr_t)DMA_MAPPING_ERROR;
 	}
 
+	trace_printk("cdx: 1: orig_pa=%llx, sz=%lx, alloc_sz=%lx\n", orig_addr, mapping_size, alloc_size);
 	index = swiotlb_find_slots(dev, orig_addr,
 				   alloc_size + offset, alloc_align_mask, &pool);
+	trace_printk("cdx: 2: orig_pa=%llx, sz=%lx, alloc_sz=%lx, index=%d\n", orig_addr, mapping_size, alloc_size, index);
 	if (index == -1) {
 		if (!(attrs & DMA_ATTR_NO_WARN))
 			dev_warn_ratelimited(dev,
@@ -1602,6 +1627,7 @@ static inline void swiotlb_create_debugfs_files(struct io_tlb_mem *mem,
 #endif	/* CONFIG_DEBUG_FS */
 
 #ifdef CONFIG_DMA_RESTRICTED_POOL
+#error kkkkkkkkkkkk 1
 
 struct page *swiotlb_alloc(struct device *dev, size_t size)
 {

@@ -272,11 +272,14 @@ struct page *dma_alloc_from_pool(struct device *dev, size_t size,
 	while ((pool = dma_guess_pool(pool, gfp))) {
 		page = __dma_alloc_from_pool(dev, size, pool, cpu_addr,
 					     phys_addr_ok);
+		trace_printk("cdx: got pg=%px from pool=%s for dev=%s\n", page, pool->name, dev_name(dev));
 		if (page)
 			return page;
 	}
 
-	WARN(1, "Failed to get suitable pool for %s\n", dev_name(dev));
+	//WARN(1, "Failed to get suitable pool for %s\n", dev_name(dev));
+	pr_warn_ratelimited("Failed to get suitable pool for %s\n", dev_name(dev));
+	trace_printk("cdx: Failed to get suitable pool for %s\n", dev_name(dev));
 	return NULL;
 }
 
