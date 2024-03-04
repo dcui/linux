@@ -306,6 +306,7 @@ static void add_mem_pool(struct io_tlb_mem *mem, struct io_tlb_pool *pool)
 #ifdef CONFIG_SWIOTLB_DYNAMIC
 	spin_lock(&mem->lock);
 	list_add_rcu(&pool->node, &mem->pools);
+	//list_add_tail_rcu(&pool->node, &mem->pools);
 	mem->nslabs += pool->nslabs;
 	spin_unlock(&mem->lock);
 #else
@@ -1156,9 +1157,23 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 	rcu_read_lock();
 
 	list_for_each_entry_rcu(pool, &mem->pools, node) {
-		pool_num++;
-		if (pool_num % 64 != raw_smp_processor_id())
+		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
+						alloc_size, alloc_align_mask);
+		if (index >= 0) {
+			rcu_read_unlock();
+			goto found;
+		}
+
+		//cdx: only try the default pool.
+		break;
+	}
+
+
+	list_for_each_entry_rcu(pool, &mem->pools, node) {
+		if (pool_num % 64 != raw_smp_processor_id()) {
+			pool_num++;
 			continue;
+		}
 
 		trace_printk("cdx: 1.1: pool=%px, alloc_sz=%lx, allo_mask=%x, mem=%px\n", pool, alloc_size, alloc_align_mask, mem);
 		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
@@ -1171,10 +1186,8 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 	}
 
 	list_for_each_entry_rcu(pool, &mem->pools, node) {
-		trace_printk("cdx: cnk: 1.1: pool=%px, alloc_sz=%lx, allo_mask=%x, mem=%px\n", pool, alloc_size, alloc_align_mask, mem);
 		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
 						alloc_size, alloc_align_mask);
-		trace_printk("cdx: cnk: 1.2: pool=%px, alloc_sz=%lx, allo_mask=%x, index=%d\n", pool, alloc_size, alloc_align_mask, index);
 		if (index >= 0) {
 			rcu_read_unlock();
 			goto found;
@@ -1239,6 +1252,7 @@ found:
 }
 
 #else  /* !CONFIG_SWIOTLB_DYNAMIC */
+#error aaa222222222222
 
 static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 		size_t alloc_size, unsigned int alloc_align_mask,
@@ -1268,6 +1282,7 @@ static unsigned long mem_used(struct io_tlb_mem *mem)
 }
 
 #else /* !CONFIG_DEBUG_FS */
+#error ppppppppppppppppp
 
 /**
  * mem_pool_used() - get number of used slots in a memory pool
