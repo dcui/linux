@@ -749,16 +749,22 @@ static void swiotlb_dyn_alloc(struct work_struct *work)
 
 	trace_printk("cdx: allocate new pool: starting to try:  default: nslabs=%ld, area=%ld --------------\n",
 		default_nslabs, default_nareas);
+	pr_warn_ratelimited("cdx: allocate new pool: starting to try:  default: nslabs=%ld, area=%ld --------------\n",
+		default_nslabs, default_nareas);
 	pool = swiotlb_alloc_pool(NULL, IO_TLB_MIN_SLABS, default_nslabs,
 				  default_nareas, mem->phys_limit, GFP_KERNEL);
 	if (!pool) {
 		pr_warn_ratelimited("Failed to allocate new pool\n");
 		trace_printk("Failed to allocate new pool =======\n");
+		printk("Failed to allocate new pool =======\n");
 		return;
 	}
 
 	add_mem_pool(mem, pool);
-	trace_printk("cdx: allocate new pool: success: pool->nareas=%d, pool=%px  =======\n", pool->nareas, pool);
+	trace_printk("cdx: allocate new pool: success: pool->nareas=%d/%d pool=%px  =======\n",
+		pool->nareas, pool->area_nslabs, pool);
+	printk("cdx: allocate new pool: success: pool->nareas=%d/%d pool=%px  =======\n",
+		pool->nareas, pool->area_nslabs, pool);
 }
 
 /**
@@ -1145,9 +1151,15 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 	unsigned long flags;
 	u64 phys_limit;
 	int index;
+	int pool_num = 0;
 
 	rcu_read_lock();
+
 	list_for_each_entry_rcu(pool, &mem->pools, node) {
+		pool_num++;
+		if (pool_num % 64 != raw_smp_processor_id())
+			continue;
+
 		trace_printk("cdx: 1.1: pool=%px, alloc_sz=%lx, allo_mask=%x, mem=%px\n", pool, alloc_size, alloc_align_mask, mem);
 		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
 						alloc_size, alloc_align_mask);
@@ -1157,7 +1169,22 @@ static int swiotlb_find_slots(struct device *dev, phys_addr_t orig_addr,
 			goto found;
 		}
 	}
+
+	list_for_each_entry_rcu(pool, &mem->pools, node) {
+		trace_printk("cdx: cnk: 1.1: pool=%px, alloc_sz=%lx, allo_mask=%x, mem=%px\n", pool, alloc_size, alloc_align_mask, mem);
+		index = swiotlb_pool_find_slots(dev, pool, orig_addr,
+						alloc_size, alloc_align_mask);
+		trace_printk("cdx: cnk: 1.2: pool=%px, alloc_sz=%lx, allo_mask=%x, index=%d\n", pool, alloc_size, alloc_align_mask, index);
+		if (index >= 0) {
+			rcu_read_unlock();
+			goto found;
+		}
+	}
+
 	rcu_read_unlock();
+
+
+
 	if (!mem->can_grow)
 		return -1;
 
