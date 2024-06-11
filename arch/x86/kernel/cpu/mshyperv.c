@@ -581,6 +581,27 @@ static void __init ms_hyperv_init_platform(void)
 	if (!(ms_hyperv.features & HV_ACCESS_TSC_INVARIANT))
 		mark_tsc_unstable("running on Hyper-V");
 
+	/*
+	 * Mask CET Shadow Stack on SEV-SNP due to a CPUID emulation bug in
+	 * the paravisor on old Azure SEV-SNP hosts, e.g., 10.0.20348.2867-2-0.
+	 * Due to the bug, paranoid_xstate_size_valid() in a v6.6 or newer
+	 * kernel prints a warning "XSAVE consistency problem: size 848 != kernel_size 832"
+	 * and the kernel disables XSAVE completely; the early 'init' program or
+	 * any later program may get core-dumped due to "invalid opcode", if
+	 * they assume XSAVE is available (e.g., it looks like
+	 * libgnutls.so.30.27.0 tries to unconditionally use XSAVE.
+	 *
+	 * Note: the SNP paravisor bug only affects a v6.6+ Linux kernel
+	 * (CET Shadow Stack is firstly enabled in v6.6) when the VM is a "v5"
+	 * SNP VM on Azure. A "v6" SNP VM is not affected, and a TDX VM is also
+	 * not affectd since the versions of paravisor for them are already
+	 * fixed. The fix for the "v5" VMs would roll out around September or
+	 * October, 2024.
+	 */
+       if (ms_hyperv.paravisor_present &&
+	   hv_get_isolation_type() == HV_ISOLATION_TYPE_SNP)
+                setup_clear_cpu_cap(X86_FEATURE_SHSTK);
+
 	hardlockup_detector_disable();
 }
 
