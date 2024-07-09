@@ -1997,7 +1997,10 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
 	hv_pci_assign_numa_node(hbus);
 	pci_bus_assign_resources(bridge->bus);
 	hv_pci_assign_slots(hbus);
+	//WARN(1, "cdx: %s: line %d: calling pci_bus_add_devices:\n", __func__, __LINE__);
+	printk("cdx: %s: line %d: calling pci_bus_add_devices:\n", __func__, __LINE__);
 	pci_bus_add_devices(bridge->bus);
+	printk("cdx: %s: line %d: calling pci_bus_add_devices: done\n", __func__, __LINE__);
 	pci_unlock_rescan_remove();
 	hbus->state = hv_pcibus_installed;
 	return 0;
@@ -3638,6 +3641,9 @@ static struct hv_driver hv_pci_drv = {
 	.remove		= hv_pci_remove,
 	.suspend	= hv_pci_suspend,
 	.resume		= hv_pci_resume,
+	.driver = {
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+	}
 };
 
 static void __exit exit_hv_pci_drv(void)

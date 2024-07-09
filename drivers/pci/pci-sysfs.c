@@ -28,6 +28,8 @@
 #include <linux/pm_runtime.h>
 #include <linux/of.h>
 #include "pci.h"
+#include <linux/delay.h> //cdx
+
 
 static int sysfs_initialized;	/* = 0 */
 
@@ -1381,9 +1383,13 @@ static const struct attribute_group pci_dev_reset_attr_group = {
 
 int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
 {
+	//WARN(1, "cdx: %s: line %d: sleeping 5s: sysfs_initialized=%d\n", __func__, __LINE__, sysfs_initialized);
+	printk("cdx: %s: line %d: sleeping 5s: sysfs_initialized=%d\n", __func__, __LINE__, sysfs_initialized);
+	ssleep(5);
 	if (!sysfs_initialized)
 		return -EACCES;
 
+	printk("cdx: %s: line %d: sleeping 5s: sysfs_initialized=%d: done: calling pci_create_resource_files:\n", __func__, __LINE__, sysfs_initialized);
 	return pci_create_resource_files(pdev);
 }
 
@@ -1408,6 +1414,10 @@ static int __init pci_sysfs_init(void)
 	int retval;
 
 	sysfs_initialized = 1;
+	printk("cdx: %s: line %d: sleeping 10s\n", __func__, __LINE__);
+	ssleep(10);
+	printk("cdx: %s: line %d: sleeping 10s: done: calling for_each: pci_create_sysfs_dev_files\n", __func__, __LINE__);
+
 	for_each_pci_dev(pdev) {
 		retval = pci_create_sysfs_dev_files(pdev);
 		if (retval) {
