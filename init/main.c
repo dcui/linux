@@ -1549,6 +1549,7 @@ static noinline void __init kernel_init_freeable(void)
 {
 	/* Now the scheduler is fully set up and can do blocking allocations */
 	gfp_allowed_mask = __GFP_BITS_MASK;
+	printk("cdx: %s: line %d: \n", __func__, __LINE__);
 
 	/*
 	 * init can allocate pages on any node
@@ -1559,7 +1560,9 @@ static noinline void __init kernel_init_freeable(void)
 
 	smp_prepare_cpus(setup_max_cpus);
 
+	printk("cdx: %s: line %d: \n", __func__, __LINE__);
 	workqueue_init();
+	printk("cdx: %s: line %d: \n", __func__, __LINE__);
 
 	init_mm_internals();
 
@@ -1601,4 +1604,5 @@ static noinline void __init kernel_init_freeable(void)
 	 */
 
 	integrity_load_keys();
+	printk("cdx: %s: line %d: \n", __func__, __LINE__);
 }

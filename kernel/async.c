@@ -44,6 +44,7 @@ asynchronous and synchronous parts of the kernel.
 
 */
 
+#define DEBUG 1
 #include <linux/async.h>
 #include <linux/atomic.h>
 #include <linux/export.h>
@@ -281,7 +282,10 @@ bool async_schedule_dev_nocall(async_func_t func, struct device *dev)
  */
 void async_synchronize_full(void)
 {
+	printk("cdx: %s: line %d -------------->\n", __func__, __LINE__);
 	async_synchronize_full_domain(NULL);
+	//printk("cdx: %s: line %d\n", __func__, __LINE__);
+	printk("cdx: %s: line %d <==================\n", __func__, __LINE__);
 }
 EXPORT_SYMBOL_GPL(async_synchronize_full);
 
@@ -294,7 +298,9 @@ EXPORT_SYMBOL_GPL(async_synchronize_full);
  */
 void async_synchronize_full_domain(struct async_domain *domain)
 {
+	printk("cdx: %s: line %d: domain=%px\n", __func__, __LINE__, domain);
 	async_synchronize_cookie_domain(ASYNC_COOKIE_MAX, domain);
+	printk("cdx: %s: line %d: domain=%px\n", __func__, __LINE__, domain);
 }
 EXPORT_SYMBOL_GPL(async_synchronize_full_domain);
 
@@ -311,13 +317,15 @@ void async_synchronize_cookie_domain(async_cookie_t cookie, struct async_domain 
 {
 	ktime_t starttime;
 
-	pr_debug("async_waiting @ %i\n", task_pid_nr(current));
+	printk("cdx: %s: line %d: cookie=%lld, domain=%px\n", __func__, __LINE__, cookie, domain);
+	pr_debug("async_waiting @ %i: cookie=%lld\n", task_pid_nr(current), cookie);
 	starttime = ktime_get();
 
 	wait_event(async_done, lowest_in_progress(domain) >= cookie);
 
-	pr_debug("async_continuing @ %i after %lli usec\n", task_pid_nr(current),
-		 microseconds_since(starttime));
+	pr_debug("async_continuing @ %i after %lli usec: cookie=%lld\n", task_pid_nr(current),
+		 microseconds_since(starttime), cookie);
+	printk("cdx: %s: line %d: cooke=%lld, domain=%px\n", __func__, __LINE__, cookie, domain);
 }
 EXPORT_SYMBOL_GPL(async_synchronize_cookie_domain);
 
@@ -330,7 +338,9 @@ EXPORT_SYMBOL_GPL(async_synchronize_cookie_domain);
  */
 void async_synchronize_cookie(async_cookie_t cookie)
 {
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 	async_synchronize_cookie_domain(cookie, &async_dfl_domain);
+	printk("cdx: %s: line %d\n", __func__, __LINE__);
 }
 EXPORT_SYMBOL_GPL(async_synchronize_cookie);
 

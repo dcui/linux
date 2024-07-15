@@ -2644,6 +2644,7 @@ static int __init hv_acpi_init(void)
 
 	hv_debug_init();
 
+	printk("cdx: hv_acpi_init\n");
 	ret = vmbus_bus_init();
 	if (ret)
 		goto cleanup;
@@ -2652,6 +2653,7 @@ static int __init hv_acpi_init(void)
 	hv_setup_crash_handler(hv_crash_handler);
 
 	register_syscore_ops(&hv_synic_syscore_ops);
+	printk("cdx: hv_acpi_init: done\n");
 
 	return 0;
 

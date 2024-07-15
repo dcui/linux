@@ -2566,8 +2566,10 @@ static noinline int do_init_module(struct module *mod)
 	 * See commit 0fdff3ec6d87 ("async, kmod: warn on synchronous
 	 * request_module() from async workers") for more details.
 	 */
+	printk("cdx: %s: A: line %d: mod: name=%s, init=%pS, async=%d\n", __func__, __LINE__, mod->name, mod->init, mod->async_probe_requested);
 	if (!mod->async_probe_requested)
 		async_synchronize_full();
+	printk("cdx: %s: B: line %d: mod: name=%s, init=%pS, async=%d\n", __func__, __LINE__, mod->name, mod->init, mod->async_probe_requested);
 
 	ftrace_free_mem(mod, mod->mem[MOD_INIT_TEXT].base,
 			mod->mem[MOD_INIT_TEXT].base + mod->mem[MOD_INIT_TEXT].size);
