@@ -114,7 +114,6 @@ static void kvp_poll_wrapper(void *channel)
 	/* Transaction is finished, reset the state here to avoid races. */
 	kvp_transaction.state = HVUTIL_READY;
 	tasklet_schedule(&((struct vmbus_channel *)channel)->callback_event);
-	printk("cdx: kvp_poll_wrapper: is called!!!\n");
 }
 
 static void kvp_register_done(void)
@@ -126,7 +125,6 @@ static void kvp_register_done(void)
 	pr_debug("KVP: userspace daemon registered\n");
 	cancel_delayed_work_sync(&kvp_host_handshake_work);
 	hv_poll_channel(kvp_transaction.recv_channel, kvp_poll_wrapper);
-	printk("cdx: kvp_register_done: is called!!!\n");
 }
 
 static void
@@ -143,10 +141,8 @@ kvp_register(int reg_value)
 		kvp_msg->kvp_hdr.operation = reg_value;
 		strcpy(version, HV_DRV_VERSION);
 
-		printk("cdx: kvp_register: 1: is called\n");
 		hvutil_transport_send(hvt, kvp_msg, sizeof(*kvp_msg),
 				      kvp_register_done);
-		printk("cdx: kvp_register: 2: is called\n");
 		kfree(kvp_msg);
 	}
 }
@@ -191,7 +187,6 @@ static int kvp_handle_handshake(struct hv_kvp_msg *msg)
 	pr_debug("KVP: userspace daemon ver. %d connected\n",
 		 msg->kvp_hdr.operation);
 	kvp_register(dm_reg_value);
-	printk("cdx: kvp_handle_handshake is called\n");
 
 	return 0;
 }
@@ -215,12 +210,9 @@ static int kvp_on_msg(void *msg, int len)
 	 * with the daemon; handle that first.
 	 */
 
-	printk("cdx: kvp_on_msg: 1: is called\n");
 	if (kvp_transaction.state < HVUTIL_READY) {
 		return kvp_handle_handshake(message);
 	}
-
-	printk("cdx: kvp_on_msg: 2: is called\n");
 
 	/* We didn't send anything to userspace so the reply is spurious */
 	if (kvp_transaction.state < HVUTIL_USERSPACE_REQ)
@@ -654,7 +646,6 @@ void hv_kvp_onchannelcallback(void *context)
 		     NEGO_IN_PROGRESS,
 		     NEGO_FINISHED} host_negotiatied = NEGO_NOT_STARTED;
 
-	printk("cdx: hv_kvp_onchannelcallback:  1: state=%d\n", kvp_transaction.state);
 	if (kvp_transaction.state < HVUTIL_READY) {
 		/*
 		 * If userspace daemon is not connected and host is asking
@@ -668,12 +659,9 @@ void hv_kvp_onchannelcallback(void *context)
 		}
 		return;
 	}
-
-	printk("cdx: hv_kvp_onchannelcallback:  2: state=%d\n", kvp_transaction.state);
 	if (kvp_transaction.state > HVUTIL_READY)
 		return;
 
-	printk("cdx: hv_kvp_onchannelcallback:  3: state=%d\n", kvp_transaction.state);
 	if (vmbus_recvpacket(channel, recv_buffer, HV_HYP_PAGE_SIZE * 4, &recvlen, &requestid)) {
 		pr_err_ratelimited("KVP request received. Could not read into recv buf\n");
 		return;
@@ -762,7 +750,6 @@ static void kvp_on_reset(void)
 	if (cancel_delayed_work_sync(&kvp_timeout_work))
 		kvp_respond_to_host(NULL, HV_E_FAIL);
 	kvp_transaction.state = HVUTIL_DEVICE_INIT;
-	printk("cdx: kvp_on_reset is called\n");
 }
 
 int
@@ -782,7 +769,6 @@ hv_kvp_init(struct hv_util_service *srv)
 
 	hvt = hvutil_transport_init(kvp_devname, CN_KVP_IDX, CN_KVP_VAL,
 				    kvp_on_msg, kvp_on_reset);
-	printk("cdx: hv_kvp_init:: /dev/vmbus/hv_kvp is created.\n");
 	if (!hvt)
 		return -EFAULT;
 

@@ -62,10 +62,8 @@ static ssize_t hvt_op_read(struct file *file, char __user *buf,
 	hvt->outmsg = NULL;
 	hvt->outmsg_len = 0;
 
-	printk("cdx: hvt_op_read: 1: %pS\n", hvt->on_read);
 	if (hvt->on_read)
 		hvt->on_read();
-	printk("cdx: hvt_op_read: 2: %pS\n", hvt->on_read);
 	hvt->on_read = NULL;
 
 out_unlock:
@@ -222,7 +220,6 @@ int hvutil_transport_send(struct hvutil_transport *hvt, void *msg, int len,
 	struct cn_msg *cn_msg;
 	int ret = 0;
 
-	printk("cdx: hvutil_transport_send: 1: hvt=%px, len=%d, mode=%d, on_read_cb=%pS\n", hvt, len, hvt->mode, on_read_cb);
 	if (hvt->mode == HVUTIL_TRANSPORT_INIT ||
 	    hvt->mode == HVUTIL_TRANSPORT_DESTROY) {
 		return -EINVAL;
