@@ -725,6 +725,8 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 		goto error_clean_msglist;
 	}
 
+	tasklet_disable(&newchannel->callback_event);
+
 	err = vmbus_post_msg(open_msg,
 			     sizeof(struct vmbus_channel_open_channel), true);
 
@@ -750,9 +752,13 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 	}
 
 	newchannel->state = CHANNEL_OPENED_STATE;
+
+	tasklet_enable(&newchannel->callback_event);
+
 	kfree(open_info);
 	return 0;
 
+/* FIXME: call tasklet_enable() in the error handling... */
 error_clean_msglist:
 	spin_lock_irqsave(&vmbus_connection.channelmsg_lock, flags);
 	list_del(&open_info->msglistentry);
