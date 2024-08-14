@@ -1,0 +1,130 @@
+[   31.903970] hv_utils: De-Registered HyperV Utility Driver
+[   31.907822] hv_vmbus: unregistering driver hv_utils
+[   50.728716] hv_balloon: Max. dynamic memory size: 20480 MB
+
+[   73.378584] hv_utils: module verification failed: signature and/or required key missing - tainting kernel
+[   73.392716] hv_utils: Registering HyperV Utility Driver
+[   73.397619] hv_vmbus: registering driver hv_utils
+[   73.400876] cdx: hv_kvp_init:: /dev/vmbus/hv_kvp is created.
+[   73.404074] cdx: KVP: sleeping 10s before calling hv_ringbuffer_init()...
+[   77.277948] cdx: kvp_on_msg: 1: is called
+[   77.281403] cdx: kvp_register: 1: is called
+[   77.286604] cdx: hvutil_transport_send: 1: hvt=ffff972b862a5400, len=7432, mode=2, on_read_cb=kvp_register_done+0x0/0x50 [hv_utils]
+[   77.295651] cdx: kvp_register: 2: is called
+[   77.298566] cdx: kvp_handle_handshake is called
+[   77.301206] cdx: hvt_op_read: 1: kvp_register_done+0x0/0x50 [hv_utils]
+[   77.305393] cdx: kvp_poll_wrapper: is called!!!
+[   77.308348] cdx: kvp_register_done: is called!!!
+[   77.310878] cdx: hv_kvp_onchannelcallback:  1: state=1
+[   77.310880] cdx: hv_kvp_onchannelcallback:  2: state=1
+[   77.310881] cdx: hv_kvp_onchannelcallback:  3: state=1
+[   77.310885] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[   77.310887] #PF: supervisor read access in kernel mode
+[   77.310890] #PF: error_code(0x0000) - not-present page
+[   77.310892] PGD 0 P4D 0
+[   77.310897] Oops: Oops: 0000 [#1] SMP NOPTI
+[   77.310902] CPU: 44 UID: 0 PID: 2552 Comm: hv_kvp_daemon Tainted: G            E      6.11.0-rc3-decui-dirty #1
+[   77.310909] Tainted: [E]=UNSIGNED_MODULE
+[   77.310911] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 05/09/2024
+[   77.310913] RIP: 0010:hv_pkt_iter_first+0x12/0xd0
+[   77.310920] Code: 0f 1f 84 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 48 8b 87 80 01 00 00 8b 97 9c 01 00 00 <8b> 00 39 c2 0f 87 80 00 00 00 29 d0 83 f8 0f 0f 86 86 00 00 00 55
+[   77.310924] RSP: 0018:ffffa497c0960e78 EFLAGS: 00010282
+[   77.310928] RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffffa497c0960ed8
+[   77.310930] RDX: 0000000000000000 RSI: ffff972b91224000 RDI: ffff972b919b0000
+[   77.310933] RBP: ffffa497c0960eb8 R08: ffffa497c0960ee0 R09: 0000000000000000
+[   77.310936] R10: 0000000000ffff0a R11: 000000000000002c R12: ffff972b919b0000
+[   77.310938] R13: ffff972b919b0000 R14: ffff972b91224000 R15: 0000000000004000
+[   77.310943] FS:  00007f755d567580(0000) GS:ffff972f80c00000(0000) knlGS:0000000000000000
+[   77.310947] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   77.310950] CR2: 0000000000000000 CR3: 000000010cf46001 CR4: 0000000000370ef0
+[   77.310954] Call Trace:
+[   77.310957]  <IRQ>
+[   77.310961]  ? show_regs+0x67/0x70
+[   77.310968]  ? __die_body+0x20/0x70
+[   77.310974]  ? __die+0x2b/0x40
+[   77.310980]  ? page_fault_oops+0x274/0x4e0
+[   77.310987]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.310993]  ? desc_update_last_finalized+0x51/0x90
+[   77.310999]  ? do_user_addr_fault+0x3de/0x7f0
+[   77.311005]  ? exc_page_fault+0x73/0x160
+[   77.311012]  ? asm_exc_page_fault+0x27/0x30
+[   77.311018]  ? hv_pkt_iter_first+0x12/0xd0
+[   77.311023]  ? _printk+0x58/0x80
+[   77.311027]  ? hv_ringbuffer_read+0x44/0xe0
+[   77.311032]  vmbus_recvpacket+0x11/0x20
+[   77.311038]  hv_kvp_onchannelcallback+0xa1/0x2c0 [hv_utils]
+[   77.311047]  vmbus_on_event+0x27/0xd0
+[   77.311051]  tasklet_action_common.isra.0+0xdf/0x180
+[   77.311059]  tasklet_action+0x29/0x30
+[   77.311063]  handle_softirqs+0xc0/0x2d0
+[   77.311070]  irq_exit_rcu+0xb0/0xd0
+[   77.311075]  sysvec_hyperv_stimer0+0x81/0xa0
+[   77.311080]  </IRQ>
+[   77.311082]  <TASK>
+[   77.311085]  asm_sysvec_hyperv_stimer0+0x1b/0x20
+[   77.311090] RIP: 0010:console_flush_all+0x21f/0x380
+[   77.311095] Code: c7 80 3f 37 b8 88 55 9d e8 ae 7f 01 00 0f b6 55 9d 41 88 14 24 e8 d1 17 00 00 48 f7 45 a0 00 02 00 00 74 01 fb 41 0f b6 04 24 <3c> 01 0f 87 73 fa da 00 83 e0 01 0f 85 0d 01 00 00 49 8b 56 58 49
+[   77.311099] RSP: 0018:ffffa497c3687b28 EFLAGS: 00000206
+[   77.311102] RAX: 0000000000000000 RBX: 0000000000000001 RCX: 0000000000000000
+[   77.311104] RDX: 0000000000000000 RSI: 0000000000000046 RDI: ffffffffb8b22f38
+[   77.311106] RBP: ffffa497c3687b90 R08: 6765725f70766b20 R09: 000000000000000f
+[   77.311109] R10: 000000003a786463 R11: 000000003a786463 R12: ffffa497c3687ba7
+[   77.311111] R13: ffffa497c3687ba8 R14: ffffffffb84fab40 R15: 0000000000000000
+[   77.311117]  ? console_flush_all+0x20f/0x380
+[   77.311123]  console_unlock+0x73/0xf0
+[   77.311129]  vprintk_emit+0x186/0x270
+[   77.311134]  vprintk_default+0x1d/0x30
+[   77.311139]  vprintk+0x3b/0x70
+[   77.311144]  _printk+0x58/0x80
+[   77.311149]  kvp_register_done+0x34/0x50 [hv_utils]
+[   77.311154]  hvt_op_read+0x122/0x200 [hv_utils]
+[   77.311161]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311164]  ? apparmor_file_permission+0x1c/0x30
+[   77.311169]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311172]  ? security_file_permission+0x2f/0x50
+[   77.311178]  vfs_read+0xc3/0x350
+[   77.311184]  ? vfs_write+0x14f/0x400
+[   77.311188]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311191]  ? vfs_write+0x14f/0x400
+[   77.311196]  ksys_read+0x67/0xf0
+[   77.311201]  __x64_sys_read+0x1a/0x20
+[   77.311205]  x64_sys_call+0x1715/0x20d0
+[   77.311209]  do_syscall_64+0x77/0x150
+[   77.311213]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311216]  ? do_syscall_64+0x83/0x150
+[   77.311218]  ? syscall_exit_to_user_mode+0x1c8/0x1f0
+[   77.311223]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311226]  ? do_syscall_64+0x83/0x150
+[   77.311230]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311233]  ? syscall_exit_to_user_mode+0x40/0x1f0
+[   77.311237]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311240]  ? do_syscall_64+0x83/0x150
+[   77.311243]  ? srso_alias_return_thunk+0x5/0xfbef5
+[   77.311246]  ? do_syscall_64+0x83/0x150
+[   77.311249]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[   77.311252] RIP: 0033:0x7f755d4821f2
+[   77.311254] Code: c0 e9 c2 fe ff ff 50 48 8d 3d 8a c9 0a 00 e8 d5 1a 02 00 0f 1f 44 00 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 0f 05 <48> 3d 00 f0 ff ff 77 56 c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
+[   77.311257] RSP: 002b:00007ffe3ead7618 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[   77.311260] RAX: ffffffffffffffda RBX: 000055e48ac28318 RCX: 00007f755d4821f2
+[   77.311262] RDX: 0000000000001d08 RSI: 00007ffe3ead76f0 RDI: 0000000000000009
+[   77.311263] RBP: 0000000000000005 R08: 00007ffe3ead75d0 R09: 000000000000007c
+[   77.311265] R10: 0000000000000000 R11: 0000000000000246 R12: 000055e48ac25190
+[   77.311267] R13: 000055e48ac282b4 R14: 0000000000000000 R15: 0000000000000000
+[   77.311272]  </TASK>
+[   77.311273] Modules linked in: hv_utils(E) hyperv_fb hv_netvsc [last unloaded: hv_utils]
+[   77.311282] CR2: 0000000000000000
+[   77.311285] ---[ end trace 0000000000000000 ]---
+[   77.311287] RIP: 0010:hv_pkt_iter_first+0x12/0xd0
+[   77.311290] Code: 0f 1f 84 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 48 8b 87 80 01 00 00 8b 97 9c 01 00 00 <8b> 00 39 c2 0f 87 80 00 00 00 29 d0 83 f8 0f 0f 86 86 00 00 00 55
+[   77.311292] RSP: 0018:ffffa497c0960e78 EFLAGS: 00010282
+[   77.311295] RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffffa497c0960ed8
+[   77.311297] RDX: 0000000000000000 RSI: ffff972b91224000 RDI: ffff972b919b0000
+[   77.311299] RBP: ffffa497c0960eb8 R08: ffffa497c0960ee0 R09: 0000000000000000
+[   77.311301] R10: 0000000000ffff0a R11: 000000000000002c R12: ffff972b919b0000
+[   77.311303] R13: ffff972b919b0000 R14: ffff972b91224000 R15: 0000000000004000
+[   77.311305] FS:  00007f755d567580(0000) GS:ffff972f80c00000(0000) knlGS:0000000000000000
+[   77.311308] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   77.311310] CR2: 0000000000000000 CR3: 000000010cf46001 CR4: 0000000000370ef0
+[   77.311313] Kernel panic - not syncing: Fatal exception in interrupt
+[   77.314924] Kernel Offset: 0x35200000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[   77.701335] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---

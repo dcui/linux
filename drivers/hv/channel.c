@@ -17,6 +17,7 @@
 #include <linux/hyperv.h>
 #include <linux/uio.h>
 #include <linux/interrupt.h>
+#include <linux/delay.h>
 #include <linux/set_memory.h>
 #include <asm/page.h>
 #include <asm/mshyperv.h>
@@ -642,6 +643,12 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 	unsigned long flags;
 	int err;
 
+	struct {
+		guid_t guid;
+	} kvp_guid = { HV_KVP_GUID };
+
+	bool is_kvp = guid_equal(&kvp_guid.guid, &newchannel->offermsg.offer.if_type);
+
 	if (userdatalen > MAX_USER_DEFINED_BYTES)
 		return -EINVAL;
 
@@ -660,6 +667,12 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
 	newchannel->state = CHANNEL_OPENING_STATE;
 	newchannel->onchannel_callback = onchannelcallback;
 	newchannel->channel_callback_context = context;
+
+	if (is_kvp) {
+		printk("cdx: KVP: sleeping 10s before calling hv_ringbuffer_init()...\n");
+		ssleep(10);
+		printk("cdx: KVP: sleeping 10s before calling hv_ringbuffer_init()... Done.\n");
+	}
 
 	if (!newchannel->max_pkt_size)
 		newchannel->max_pkt_size = VMBUS_DEFAULT_MAX_PKT_SIZE;
