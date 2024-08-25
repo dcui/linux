@@ -1,0 +1,2403 @@
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd490]
+[    0.000000] Linux version 6.5.13-decui+ (root@lisa--526-e0-n0) (gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #5 SMP Sat Aug 24 07:03:18 UTC 2024 (Ubuntu 6.5.0-1025.26~22.04.1-azure 6.5.13)
+[    0.000000] KASLR enabled
+[    0.000000] earlycon: pl11 at MMIO 0x00000000effec000 (options '')
+[    0.000000] printk: bootconsole [pl11] enabled
+[    0.000000] printk: debug: ignoring loglevel setting.
+[    0.000000] efi: EFI v2.7 by EDK II
+[    0.000000] efi: ACPI 2.0=0x3fd5f018 SMBIOS=0x3e580000 SMBIOS 3.0=0x3e560000 MEMATTR=0x3f210018 MOKvar=0x3da10000 RNG=0x3fd5f818 MEMRESERVE=0x3da2d118 
+[    0.000000] random: crng init done
+[    0.000000] secureboot: Secure boot disabled
+[    0.000000] ACPI: Early table checksum verification disabled
+[    0.000000] ACPI: RSDP 0x000000003FD5F018 000024 (v02 VRTUAL)
+[    0.000000] ACPI: XSDT 0x000000003FD5FF18 00006C (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: FACP 0x000000003FD5FC18 000114 (v06 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: DSDT 0x000000003FD40018 01E296 (v02 MSFTVM DSDT01   00000001 MSFT 05000000)
+[    0.000000] ACPI: DBG2 0x000000003FD5FB18 000072 (v00 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: GTDT 0x000000003FD5FD98 000060 (v02 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: OEM0 0x000000003FD5F098 000064 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: SPCR 0x000000003FD5FA98 000050 (v02 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: APIC 0x000000003FD3F018 000F5C (v04 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: SRAT 0x000000003FD5F198 000570 (v03 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: PPTT 0x000000003FD3D018 001318 (v01 VRTUAL MICROSFT 00000000 MSFT 00000000)
+[    0.000000] ACPI: BGRT 0x000000003FD5FE98 000038 (v01 VRTUAL MICROSFT 00000001 MSFT 00000001)
+[    0.000000] ACPI: SPCR: console: pl011,mmio32,0xeffec000,115200
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x00000000-0x3fffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0xfbfffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x1000000000-0x18ffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x1900000000-0xffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x10000000000-0x1ffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x20000000000-0x3ffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x40000000000-0x7ffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x80000000000-0xfffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000000-0x1fffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x200000000000-0x3fffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x400000000000-0x7fffffffffff] hotplug
+[    0.000000] ACPI: SRAT: Node 0 PXM 0 [mem 0x800000000000-0xffffffffffff] hotplug
+[    0.000000] NUMA: NODE_DATA [mem 0x18f3f9c5c0-0x18f3fa1fff]
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000000000000-0x00000000ffffffff]
+[    0.000000]   DMA32    empty
+[    0.000000]   Normal   [mem 0x0000000100000000-0x00000018ffffffff]
+[    0.000000]   Device   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x00000000007fffff]
+[    0.000000]   node   0: [mem 0x0000000000824000-0x000000003da0ffff]
+[    0.000000]   node   0: [mem 0x000000003da10000-0x000000003da1ffff]
+[    0.000000]   node   0: [mem 0x000000003da20000-0x000000003e54ffff]
+[    0.000000]   node   0: [mem 0x000000003e550000-0x000000003e87ffff]
+[    0.000000]   node   0: [mem 0x000000003e880000-0x000000003fc7ffff]
+[    0.000000]   node   0: [mem 0x000000003fc80000-0x000000003fcfffff]
+[    0.000000]   node   0: [mem 0x000000003fd00000-0x000000003fffffff]
+[    0.000000]   node   0: [mem 0x0000000100000000-0x0000000fbfffffff]
+[    0.000000]   node   0: [mem 0x0000001000000000-0x00000018ffffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x00000018ffffffff]
+[    0.000000] On node 0, zone DMA: 36 pages in unavailable ranges
+[    0.000000] cma: Reserved 32 MiB at 0x000000003ba00000
+[    0.000000] psci: probing for conduit method from ACPI.
+[    0.000000] psci: PSCIv1.1 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: MIGRATE_INFO_TYPE not supported.
+[    0.000000] psci: SMC Calling Convention v1.4
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x0 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x1 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x2 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x3 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x4 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x5 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x6 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x7 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x8 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x9 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xa -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xb -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xc -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xd -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xe -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0xf -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x100 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x101 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x102 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x103 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x104 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x105 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x106 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x107 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x108 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x109 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10a -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10b -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10c -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10d -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10e -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x10f -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x200 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x201 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x202 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x203 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x204 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x205 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x206 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x207 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x208 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x209 -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20a -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20b -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20c -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20d -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20e -> Node 0
+[    0.000000] ACPI: NUMA: SRAT: PXM 0 -> MPIDR 0x20f -> Node 0
+[    0.000000] percpu: Embedded 32 pages/cpu s92200 r8192 d30680 u131072
+[    0.000000] pcpu-alloc: s92200 r8192 d30680 u131072 alloc=32*4096
+[    0.000000] pcpu-alloc: [0] 00 [0] 01 [0] 02 [0] 03 [0] 04 [0] 05 [0] 06 [0] 07 
+[    0.000000] pcpu-alloc: [0] 08 [0] 09 [0] 10 [0] 11 [0] 12 [0] 13 [0] 14 [0] 15 
+[    0.000000] pcpu-alloc: [0] 16 [0] 17 [0] 18 [0] 19 [0] 20 [0] 21 [0] 22 [0] 23 
+[    0.000000] pcpu-alloc: [0] 24 [0] 25 [0] 26 [0] 27 [0] 28 [0] 29 [0] 30 [0] 31 
+[    0.000000] pcpu-alloc: [0] 32 [0] 33 [0] 34 [0] 35 [0] 36 [0] 37 [0] 38 [0] 39 
+[    0.000000] pcpu-alloc: [0] 40 [0] 41 [0] 42 [0] 43 [0] 44 [0] 45 [0] 46 [0] 47 
+[    0.000000] Detected PIPT I-cache on CPU0
+[    0.000000] CPU features: detected: Address authentication (architected QARMA5 algorithm)
+[    0.000000] CPU features: detected: GIC system register CPU interface
+[    0.000000] CPU features: detected: Hardware dirty bit management
+[    0.000000] CPU features: detected: Spectre-v4
+[    0.000000] CPU features: detected: Spectre-BHB
+[    0.000000] CPU features: kernel page table isolation forced ON by KASLR
+[    0.000000] CPU features: detected: Kernel page table isolation (KPTI)
+[    0.000000] CPU features: detected: ARM erratum 2067961 or 2054223
+[    0.000000] alternatives: applying boot alternatives
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-6.5.13-decui+ root=UUID=59c7d2d8-9b48-490d-b35a-6a8cb3aebca4 ro console=tty1 console=ttyAMA0 earlycon=pl011,0xeffec000 initcall_blacklist=arm_pmu_acpi_init nvme_core.io_timeout=240 ignore_loglevel sysrq_always_enabled
+[    0.000000] blacklisting initcall arm_pmu_acpi_init
+[    0.000000] sysrq: sysrq always enabled.
+[    0.000000] Unknown kernel command line parameters "BOOT_IMAGE=/boot/vmlinuz-6.5.13-decui+", will be passed to user space.
+[    0.000000] printk: log_buf_len individual max cpu contribution: 4096 bytes
+[    0.000000] printk: log_buf_len total cpu_extra contributions: 192512 bytes
+[    0.000000] printk: log_buf_len min size: 262144 bytes
+[    0.000000] printk: log_buf_len: 524288 bytes
+[    0.000000] printk: early log buf free: 253224(96%)
+[    0.000000] Dentry cache hash table entries: 8388608 (order: 14, 67108864 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 4194304 (order: 13, 33554432 bytes, linear)
+[    0.000000] Fallback order for Node 0: 0 
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 24768476
+[    0.000000] Policy zone: Normal
+[    0.000000] mem auto-init: stack:off, heap alloc:on, heap free:off
+[    0.000000] software IO TLB: area num 64.
+[    0.000000] software IO TLB: mapped [mem 0x0000000031ce0000-0x0000000035ce0000] (64MB)
+[    0.000000] Memory: 98614792K/100663152K available (18880K kernel code, 4942K rwdata, 14828K rodata, 11648K init, 1320K bss, 2015592K reserved, 32768K cma-reserved)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=48, Nodes=1
+[    0.000000] ftrace: allocating 56853 entries in 223 pages
+[    0.000000] ftrace: allocated 223 pages with 7 groups
+[    0.000000] trace event string verifier disabled
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=256 to nr_cpu_ids=48.
+[    0.000000] 	Rude variant of Tasks RCU enabled.
+[    0.000000] 	Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=48
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] GICv3: 960 SPIs implemented
+[    0.000000] GICv3: 0 Extended SPIs implemented
+[    0.000000] Root IRQ handler: gic_handle_irq
+[    0.000000] GICv3: GICv3 features: 16 PPIs, RSS
+[    0.000000] GICv3: CPU0: found redistributor 0 region 0:0x00000000effee000
+[    0.000000] ITS: No ITS available, not enabling LPIs
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer(s) running at 1000.00MHz (virt).
+[    0.000000] clocksource: arch_sys_counter: mask: 0x1fffffffffffffff max_cycles: 0x1cd42e4dffb, max_idle_ns: 881590591483 ns
+[    0.000000] sched_clock: 61 bits at 1000MHz, resolution 1ns, wraps every 4398046511103ns
+[    0.005744] Console: colour dummy device 80x25
+[    0.008704] printk: console [tty1] enabled
+[    0.011647] ACPI: Core revision 20230331
+[    0.014294] Calibrating delay loop (skipped), value calculated using timer frequency.. 2000.00 BogoMIPS (lpj=4000000)
+[    0.021628] pid_max: default: 49152 minimum: 384
+[    0.024941] LSM: initializing lsm=lockdown,capability,landlock,yama,apparmor,integrity
+[    0.030513] landlock: Up and running.
+[    0.032902] Yama: becoming mindful.
+[    0.035174] AppArmor: AppArmor initialized
+[    0.041460] Mount-cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)
+[    0.046626] Mountpoint-cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)
+[    0.053204] RCU Tasks Rude: Setting shift to 6 and lim to 1 rcu_task_cb_adjust=1.
+[    0.058425] RCU Tasks Trace: Setting shift to 6 and lim to 1 rcu_task_cb_adjust=1.
+[    0.063489] Hyper-V: privilege flags low 0x2e7f, high 0x3b8030, hints 0x1e0000e, misc 0x31e1
+[    0.069467] Hyper-V: Host Build 10.0.26100.1048-1-0
+[    0.072569] Hyper-V: enabling crash_kexec_post_notifiers
+[    0.076117] rcu: Hierarchical SRCU implementation.
+[    0.079196] rcu: 	Max phase no-delay instances is 1000.
+[    0.082788] Remapping and enabling EFI services.
+[    0.089778] smp: Bringing up secondary CPUs ...
+[    0.093089] Detected PIPT I-cache on CPU1
+[    0.093149] GICv3: CPU1: found redistributor 1 region 1:0x00000000f000e000
+[    0.093182] CPU1: Booted secondary processor 0x0000000001 [0x410fd490]
+[    0.093429] Detected PIPT I-cache on CPU2
+[    0.093581] GICv3: CPU2: found redistributor 2 region 2:0x00000000f002e000
+[    0.093608] CPU2: Booted secondary processor 0x0000000002 [0x410fd490]
+[    0.093832] Detected PIPT I-cache on CPU3
+[    0.093995] GICv3: CPU3: found redistributor 3 region 3:0x00000000f004e000
+[    0.094021] CPU3: Booted secondary processor 0x0000000003 [0x410fd490]
+[    0.094234] Detected PIPT I-cache on CPU4
+[    0.094422] GICv3: CPU4: found redistributor 4 region 4:0x00000000f006e000
+[    0.094449] CPU4: Booted secondary processor 0x0000000004 [0x410fd490]
+[    0.094663] Detected PIPT I-cache on CPU5
+[    0.094858] GICv3: CPU5: found redistributor 5 region 5:0x00000000f008e000
+[    0.094884] CPU5: Booted secondary processor 0x0000000005 [0x410fd490]
+[    0.095094] Detected PIPT I-cache on CPU6
+[    0.095306] GICv3: CPU6: found redistributor 6 region 6:0x00000000f00ae000
+[    0.095332] CPU6: Booted secondary processor 0x0000000006 [0x410fd490]
+[    0.095544] Detected PIPT I-cache on CPU7
+[    0.095780] GICv3: CPU7: found redistributor 7 region 7:0x00000000f00ce000
+[    0.095806] CPU7: Booted secondary processor 0x0000000007 [0x410fd490]
+[    0.096018] Detected PIPT I-cache on CPU8
+[    0.096272] GICv3: CPU8: found redistributor 8 region 8:0x00000000f00ee000
+[    0.096299] CPU8: Booted secondary processor 0x0000000008 [0x410fd490]
+[    0.096510] Detected PIPT I-cache on CPU9
+[    0.096780] GICv3: CPU9: found redistributor 9 region 9:0x00000000f010e000
+[    0.096806] CPU9: Booted secondary processor 0x0000000009 [0x410fd490]
+[    0.097028] Detected PIPT I-cache on CPU10
+[    0.097326] GICv3: CPU10: found redistributor a region 10:0x00000000f012e000
+[    0.097354] CPU10: Booted secondary processor 0x000000000a [0x410fd490]
+[    0.097584] Detected PIPT I-cache on CPU11
+[    0.097894] GICv3: CPU11: found redistributor b region 11:0x00000000f014e000
+[    0.097921] CPU11: Booted secondary processor 0x000000000b [0x410fd490]
+[    0.098143] Detected PIPT I-cache on CPU12
+[    0.098472] GICv3: CPU12: found redistributor c region 12:0x00000000f016e000
+[    0.098498] CPU12: Booted secondary processor 0x000000000c [0x410fd490]
+[    0.098715] Detected PIPT I-cache on CPU13
+[    0.099069] GICv3: CPU13: found redistributor d region 13:0x00000000f018e000
+[    0.099096] CPU13: Booted secondary processor 0x000000000d [0x410fd490]
+[    0.099312] Detected PIPT I-cache on CPU14
+[    0.099677] GICv3: CPU14: found redistributor e region 14:0x00000000f01ae000
+[    0.099705] CPU14: Booted secondary processor 0x000000000e [0x410fd490]
+[    0.099926] Detected PIPT I-cache on CPU15
+[    0.100321] GICv3: CPU15: found redistributor f region 15:0x00000000f01ce000
+[    0.100348] CPU15: Booted secondary processor 0x000000000f [0x410fd490]
+[    0.100567] Detected PIPT I-cache on CPU16
+[    0.100956] GICv3: CPU16: found redistributor 100 region 16:0x00000000f01ee000
+[    0.100981] CPU16: Booted secondary processor 0x0000000100 [0x410fd490]
+[    0.101188] Detected PIPT I-cache on CPU17
+[    0.101593] GICv3: CPU17: found redistributor 101 region 17:0x00000000f020e000
+[    0.101619] CPU17: Booted secondary processor 0x0000000101 [0x410fd490]
+[    0.101832] Detected PIPT I-cache on CPU18
+[    0.102269] GICv3: CPU18: found redistributor 102 region 18:0x00000000f022e000
+[    0.102294] CPU18: Booted secondary processor 0x0000000102 [0x410fd490]
+[    0.102525] Detected PIPT I-cache on CPU19
+[    0.102978] GICv3: CPU19: found redistributor 103 region 19:0x00000000f024e000
+[    0.103003] CPU19: Booted secondary processor 0x0000000103 [0x410fd490]
+[    0.103219] Detected PIPT I-cache on CPU20
+[    0.103684] GICv3: CPU20: found redistributor 104 region 20:0x00000000f026e000
+[    0.103709] CPU20: Booted secondary processor 0x0000000104 [0x410fd490]
+[    0.103936] Detected PIPT I-cache on CPU21
+[    0.104420] GICv3: CPU21: found redistributor 105 region 21:0x00000000f028e000
+[    0.104446] CPU21: Booted secondary processor 0x0000000105 [0x410fd490]
+[    0.104580] Detected PIPT I-cache on CPU22
+[    0.105043] GICv3: CPU22: found redistributor 106 region 22:0x00000000f02ae000
+[    0.105059] CPU22: Booted secondary processor 0x0000000106 [0x410fd490]
+[    0.105263] Detected PIPT I-cache on CPU23
+[    0.105786] GICv3: CPU23: found redistributor 107 region 23:0x00000000f02ce000
+[    0.105811] CPU23: Booted secondary processor 0x0000000107 [0x410fd490]
+[    0.106029] Detected PIPT I-cache on CPU24
+[    0.106547] GICv3: CPU24: found redistributor 108 region 24:0x00000000f02ee000
+[    0.106572] CPU24: Booted secondary processor 0x0000000108 [0x410fd490]
+[    0.106782] Detected PIPT I-cache on CPU25
+[    0.107328] GICv3: CPU25: found redistributor 109 region 25:0x00000000f030e000
+[    0.107354] CPU25: Booted secondary processor 0x0000000109 [0x410fd490]
+[    0.107567] Detected PIPT I-cache on CPU26
+[    0.108133] GICv3: CPU26: found redistributor 10a region 26:0x00000000f032e000
+[    0.108158] CPU26: Booted secondary processor 0x000000010a [0x410fd490]
+[    0.108371] Detected PIPT I-cache on CPU27
+[    0.108935] GICv3: CPU27: found redistributor 10b region 27:0x00000000f034e000
+[    0.108960] CPU27: Booted secondary processor 0x000000010b [0x410fd490]
+[    0.109173] Detected PIPT I-cache on CPU28
+[    0.109790] GICv3: CPU28: found redistributor 10c region 28:0x00000000f036e000
+[    0.109816] CPU28: Booted secondary processor 0x000000010c [0x410fd490]
+[    0.110035] Detected PIPT I-cache on CPU29
+[    0.110678] GICv3: CPU29: found redistributor 10d region 29:0x00000000f038e000
+[    0.110705] CPU29: Booted secondary processor 0x000000010d [0x410fd490]
+[    0.110920] Detected PIPT I-cache on CPU30
+[    0.111570] GICv3: CPU30: found redistributor 10e region 30:0x00000000f03ae000
+[    0.111597] CPU30: Booted secondary processor 0x000000010e [0x410fd490]
+[    0.111816] Detected PIPT I-cache on CPU31
+[    0.112488] GICv3: CPU31: found redistributor 10f region 31:0x00000000f03ce000
+[    0.112514] CPU31: Booted secondary processor 0x000000010f [0x410fd490]
+[    0.112739] Detected PIPT I-cache on CPU32
+[    0.113414] GICv3: CPU32: found redistributor 200 region 32:0x00000000f03ee000
+[    0.113439] CPU32: Booted secondary processor 0x0000000200 [0x410fd490]
+[    0.113655] Detected PIPT I-cache on CPU33
+[    0.114335] GICv3: CPU33: found redistributor 201 region 33:0x00000000f040e000
+[    0.114361] CPU33: Booted secondary processor 0x0000000201 [0x410fd490]
+[    0.114572] Detected PIPT I-cache on CPU34
+[    0.115279] GICv3: CPU34: found redistributor 202 region 34:0x00000000f042e000
+[    0.115304] CPU34: Booted secondary processor 0x0000000202 [0x410fd490]
+[    0.115520] Detected PIPT I-cache on CPU35
+[    0.116247] GICv3: CPU35: found redistributor 203 region 35:0x00000000f044e000
+[    0.116274] CPU35: Booted secondary processor 0x0000000203 [0x410fd490]
+[    0.116500] Detected PIPT I-cache on CPU36
+[    0.117235] GICv3: CPU36: found redistributor 204 region 36:0x00000000f046e000
+[    0.117260] CPU36: Booted secondary processor 0x0000000204 [0x410fd490]
+[    0.117481] Detected PIPT I-cache on CPU37
+[    0.118233] GICv3: CPU37: found redistributor 205 region 37:0x00000000f048e000
+[    0.118258] CPU37: Booted secondary processor 0x0000000205 [0x410fd490]
+[    0.118481] Detected PIPT I-cache on CPU38
+[    0.119265] GICv3: CPU38: found redistributor 206 region 38:0x00000000f04ae000
+[    0.119290] CPU38: Booted secondary processor 0x0000000206 [0x410fd490]
+[    0.119517] Detected PIPT I-cache on CPU39
+[    0.120340] GICv3: CPU39: found redistributor 207 region 39:0x00000000f04ce000
+[    0.120367] CPU39: Booted secondary processor 0x0000000207 [0x410fd490]
+[    0.120586] Detected PIPT I-cache on CPU40
+[    0.121409] GICv3: CPU40: found redistributor 208 region 40:0x00000000f04ee000
+[    0.121435] CPU40: Booted secondary processor 0x0000000208 [0x410fd490]
+[    0.121668] Detected PIPT I-cache on CPU41
+[    0.122520] GICv3: CPU41: found redistributor 209 region 41:0x00000000f050e000
+[    0.122547] CPU41: Booted secondary processor 0x0000000209 [0x410fd490]
+[    0.122776] Detected PIPT I-cache on CPU42
+[    0.123664] GICv3: CPU42: found redistributor 20a region 42:0x00000000f052e000
+[    0.123691] CPU42: Booted secondary processor 0x000000020a [0x410fd490]
+[    0.123914] Detected PIPT I-cache on CPU43
+[    0.124804] GICv3: CPU43: found redistributor 20b region 43:0x00000000f054e000
+[    0.124831] CPU43: Booted secondary processor 0x000000020b [0x410fd490]
+[    0.125053] Detected PIPT I-cache on CPU44
+[    0.125962] GICv3: CPU44: found redistributor 20c region 44:0x00000000f056e000
+[    0.125988] CPU44: Booted secondary processor 0x000000020c [0x410fd490]
+[    0.126224] Detected PIPT I-cache on CPU45
+[    0.127147] GICv3: CPU45: found redistributor 20d region 45:0x00000000f058e000
+[    0.127173] CPU45: Booted secondary processor 0x000000020d [0x410fd490]
+[    0.127386] Detected PIPT I-cache on CPU46
+[    0.128321] GICv3: CPU46: found redistributor 20e region 46:0x00000000f05ae000
+[    0.128347] CPU46: Booted secondary processor 0x000000020e [0x410fd490]
+[    0.128565] Detected PIPT I-cache on CPU47
+[    0.129504] GICv3: CPU47: found redistributor 20f region 47:0x00000000f05ce000
+[    0.129530] CPU47: Booted secondary processor 0x000000020f [0x410fd490]
+[    0.129587] smp: Brought up 1 node, 48 CPUs
+[    0.781837] SMP: Total of 48 processors activated.
+[    0.785098] CPU features: detected: 32-bit EL0 Support
+[    0.788451] CPU features: detected: Instruction cache invalidation not required for I/D coherence
+[    0.798273] CPU features: detected: Data cache clean to the PoU not required for I/D coherence
+[    0.803814] CPU features: detected: Common not Private translations
+[    0.808575] CPU features: detected: CRC32 instructions
+[    0.812115] CPU features: detected: Data cache clean to Point of Deep Persistence
+[    0.817561] CPU features: detected: Data cache clean to Point of Persistence
+[    0.822322] CPU features: detected: Generic authentication (architected QARMA5 algorithm)
+[    0.828258] CPU features: detected: RCpc load-acquire (LDAPR)
+[    0.832141] CPU features: detected: LSE atomic instructions
+[    0.835742] CPU features: detected: Privileged Access Never
+[    0.842376] CPU features: detected: Speculation barrier (SB)
+[    0.846106] CPU features: detected: TLB range maintenance instructions
+[    0.850821] CPU features: detected: Speculative Store Bypassing Safe (SSBS)
+[    0.855521] CPU features: detected: Scalable Vector Extension
+[    0.859914] SVE: maximum available vector length 16 bytes per vector
+[    0.864046] SVE: default vector length 16 bytes per vector
+[    0.867879] CPU: All CPU(s) started at EL1
+[    0.870652] alternatives: applying system-wide alternatives
+[    0.878823] devtmpfs: initialized
+[    0.885759] setend instruction emulation is not supported on this system
+[    0.891697] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.898017] futex hash table entries: 16384 (order: 8, 1048576 bytes, linear)
+[    0.903039] pinctrl core: initialized pinctrl subsystem
+[    0.906613] SMBIOS 3.1.0 present.
+[    0.908743] DMI: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 06/20/2024
+[    0.916413] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.924436] DMA: preallocated 16384 KiB GFP_KERNEL pool for atomic allocations
+[    0.931658] DMA: preallocated 16384 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+[    0.937986] cma: cma_alloc: reserved: alloc failed, req-size: 4096 pages, ret: -12
+[    0.945848] DMA: preallocated 16384 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+[    0.956588] audit: initializing netlink subsys (disabled)
+[    0.961654] audit: type=2000 audit(0.604:1): state=initialized audit_enabled=0 res=1
+[    0.961829] thermal_sys: Registered thermal governor 'fair_share'
+[    0.968383] thermal_sys: Registered thermal governor 'bang_bang'
+[    0.974272] thermal_sys: Registered thermal governor 'step_wise'
+[    0.978784] thermal_sys: Registered thermal governor 'user_space'
+[    0.983797] thermal_sys: Registered thermal governor 'power_allocator'
+[    0.987942] cpuidle: using governor ladder
+[    0.997773] cpuidle: using governor menu
+[    1.000364] hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+[    1.007831] ASID allocator initialised with 32768 entries
+[    1.011764] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+[    1.016227] Serial: AMBA PL011 UART driver
+[    1.019432] Modules: 2G module region forced by RANDOMIZE_MODULE_REGION_FULL
+[    1.024112] Modules: 0 pages in range for non-PLT usage
+[    1.024112] Modules: 511328 pages in range for PLT usage
+[    1.028627] HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+[    1.036468] HugeTLB: 0 KiB vmemmap can be freed for a 1.00 GiB page
+[    1.040340] HugeTLB: registered 32.0 MiB page size, pre-allocated 0 pages
+[    1.048455] HugeTLB: 0 KiB vmemmap can be freed for a 32.0 MiB page
+[    1.052976] HugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+[    1.058057] HugeTLB: 0 KiB vmemmap can be freed for a 2.00 MiB page
+[    1.062414] HugeTLB: registered 64.0 KiB page size, pre-allocated 0 pages
+[    1.067040] HugeTLB: 0 KiB vmemmap can be freed for a 64.0 KiB page
+[    1.071387] fbcon: Taking over console
+[    1.074348] ACPI: Added _OSI(Module Device)
+[    1.077160] ACPI: Added _OSI(Processor Device)
+[    1.080441] ACPI: Added _OSI(3.0 _SCP Extensions)
+[    1.083753] ACPI: Added _OSI(Processor Aggregator Device)
+[    1.090243] ACPI: 1 ACPI AML tables successfully acquired and loaded
+[    1.094875] ACPI: Interpreter enabled
+[    1.097163] ACPI: Using GIC for interrupt routing
+[    1.101380] ARMH0011:00: ttyAMA0 at MMIO 0xeffec000 (irq = 12, base_baud = 0) is a SBSA
+[    1.106649] printk: console [ttyAMA0] enabled
+[    1.111447] printk: bootconsole [pl11] disabled
+[    1.116774] ARMH0011:01: ttyAMA1 at MMIO 0xeffeb000 (irq = 13, base_baud = 0) is a SBSA
+[    1.121295] iommu: Default domain type: Translated
+[    1.123427] iommu: DMA domain TLB invalidation policy: strict mode
+[    1.126382] SCSI subsystem initialized
+[    1.128181] libata version 3.00 loaded.
+[    1.129932] ACPI: bus type USB registered
+[    1.131761] usbcore: registered new interface driver usbfs
+[    1.134147] usbcore: registered new interface driver hub
+[    1.139917] usbcore: registered new device driver usb
+[    1.142287] pps_core: LinuxPPS API ver. 1 registered
+[    1.144501] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    1.148576] PTP clock support registered
+[    1.150380] EDAC MC: Ver: 3.0.0
+[    1.152025] scmi_core: SCMI protocol bus registered
+[    1.154665] efivars: Registered efivars operations
+[    1.159779] hv_vmbus: Vmbus version:5.3
+[    1.161575] cdx: vmbus_on_msg_dpc: offer relid=6, 57164f39-9115-4e78-ab55-382f3bd5422d, fd149e91-82e0-4a7d-afa6-2a4166cbd7c0
+[    1.167640] cdx: vmbus_on_msg_dpc: offer relid=8, 0e0b6031-5213-4934-818b-38d90ced39db, b6650ff7-33bc-4840-8048-e0676786f393
+[    1.177571] cdx: vmbus_on_msg_dpc: offer relid=9, 9527e630-d0ae-497b-adce-e80ab0175caf, 2dd1ce17-079e-403c-b352-a1921ee207ee
+[    1.185268] initcall arm_pmu_acpi_init blacklisted
+[    1.187995] NetLabel: Initializing
+[    1.193364] cdx: vmbus_on_msg_dpc: offer relid=18, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.199663] cdx: vmbus_on_msg_dpc: offer relid=19, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.206539] cdx: vmbus_on_msg_dpc: offer relid=2, c376c1c3-d276-48d2-90a9-c04748072c60, c4e5e7d1-d748-4afc-979d-683167910a55
+[    1.213924] cdx: vmbus_on_msg_dpc: offer relid=3, 525074dc-8985-46e2-8057-a307dc18a502, 1eccfd72-4b41-45ef-b73a-4a6e44c12924
+[    1.220926] cdx: vmbus_on_msg_dpc: offer relid=4, cfa8b69e-5b4a-4cc0-b98b-8ba1a1f3f95a, 58f75a6d-d949-4320-99e1-a2a2576d581c
+[    1.227476] cdx: vmbus_on_msg_dpc: offer relid=5, f912ad6d-2b17-48ea-bd65-f927a61c7684, d34b2567-b9b6-42b9-8778-0a4ec0b955bf
+[    1.233475] cdx: vmbus_on_msg_dpc: offer relid=7, da0a7802-e377-4aac-8e77-0558eb1073f8, 5620e0c7-8062-4dce-aeb7-520c7ef76171
+[    1.238620] cdx: vmbus_on_msg_dpc: offer relid=10, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    1.243656] cdx: vmbus_on_msg_dpc: offer relid=11, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    1.252075] cdx: vmbus_on_msg_dpc: offer relid=12, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    1.257303] cdx: vmbus_on_msg_dpc: offer relid=13, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    1.262735] cdx: vmbus_on_msg_dpc: offer relid=14, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    1.267997] cdx: vmbus_on_msg_dpc: offer relid=15, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    1.273313] cdx: vmbus_on_msg_dpc: offer relid=16, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    1.278774] cdx: vmbus_on_msg_dpc: offer relid=17, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    1.283795] cdx: vmbus_on_msg_dpc: offer relid=20, 44c4f61d-4444-4400-9d52-802e27ede19f, 4dca3f50-f28f-42b4-91fe-89f53730eb29
+[    1.288809] cdx: vmbus_on_msg_dpc: offer relid=21, 44c4f61d-4444-4400-9d52-802e27ede19f, 23fa122a-e42c-4f9d-9072-1968a301c93f
+[    1.297146] cdx: vmbus_on_msg_dpc: offer relid=22, 44c4f61d-4444-4400-9d52-802e27ede19f, 955bfbad-28ca-42bc-b299-47d14d76e0c3
+[    1.302438] cdx: vmbus_on_msg_dpc: offer relid=23, 44c4f61d-4444-4400-9d52-802e27ede19f, 84e4f1f3-4617-41a8-996b-549cedbabda4
+[    1.307765] cdx: vmbus_on_msg_dpc: offer relid=24, 44c4f61d-4444-4400-9d52-802e27ede19f, 83fa437d-2415-4b38-a4d1-432745571762
+[    1.313183] cdx: vmbus_on_msg_dpc: offer relid=25, 44c4f61d-4444-4400-9d52-802e27ede19f, 36c888f6-ae7b-4e51-b1fb-4a17ade49c3c
+[    1.318523] cdx: vmbus_on_msg_dpc: offer relid=1, a9a0f4e7-5a45-4d96-b827-8a841e8c03e6, 242ff919-07db-4180-9c2e-b86cb68c8c55
+[    1.324243] NetLabel:  domain hash size = 128
+[    1.326333] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    1.328946] NetLabel:  unlabeled traffic allowed by default
+[    1.331922] mctp: management component transport protocol core
+[    1.334681] NET: Registered PF_MCTP protocol family
+[    1.337079] vgaarb: loaded
+[    1.338668] clocksource: Switched to clocksource arch_sys_counter
+[    1.352572] VFS: Disk quotas dquot_6.6.0
+[    1.354416] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    1.358220] AppArmor: AppArmor Filesystem Enabled
+[    1.360509] pnp: PnP ACPI init
+[    1.362099] pnp: PnP ACPI: found 0 devices
+[    1.365526] NET: Registered PF_INET protocol family
+[    1.367915] IP idents hash table entries: 262144 (order: 9, 2097152 bytes, linear)
+[    1.373943] tcp_listen_portaddr_hash hash table entries: 65536 (order: 8, 1048576 bytes, linear)
+[    1.378151] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    1.381845] TCP established hash table entries: 524288 (order: 10, 4194304 bytes, linear)
+[    1.385842] TCP bind hash table entries: 65536 (order: 9, 2097152 bytes, linear)
+[    1.392622] TCP: Hash tables configured (established 524288 bind 65536)
+[    1.395859] MPTCP token hash table entries: 65536 (order: 8, 1572864 bytes, linear)
+[    1.399598] UDP hash table entries: 65536 (order: 9, 2097152 bytes, linear)
+[    1.403083] UDP-Lite hash table entries: 65536 (order: 9, 2097152 bytes, linear)
+[    1.406812] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    1.409475] NET: Registered PF_XDP protocol family
+[    1.411751] PCI: CLS 0 bytes, default 64
+[    1.413719] Unpacking initramfs...
+[    1.421172] kvm [1]: HYP mode not available
+[    1.425353] Initialise system trusted keyrings
+[    1.428965] Key type blacklist registered
+[    1.431177] workingset: timestamp_bits=40 max_order=25 bucket_order=0
+[    1.439856] zbud: loaded
+[    1.441310] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    1.446074] fuse: init (API version 7.38)
+[    1.448098] integrity: Platform Keyring initialized
+[    1.450661] integrity: Machine keyring initialized
+[    1.457676] Key type asymmetric registered
+[    1.459608] Asymmetric key parser 'x509' registered
+[    1.462452] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 242)
+[    1.465780] Freeing initrd memory: 16732K
+[    1.467843] io scheduler mq-deadline registered
+[    1.477934] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+[    1.483243] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    1.487567] SuperH (H)SCI(F) driver initialized
+[    1.489617] msm_serial: driver initialized
+[    1.500963] loop: module loaded
+[    1.502852] hv_vmbus: registering driver hv_storvsc
+[    1.506012] tun: Universal TUN/TAP device driver, 1.6
+[    1.506682] scsi host1: storvsc_host_t
+[    1.508400] cdx: vmbus_on_msg_dpc: offer relid=26, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.508406] scsi host0: storvsc_host_t
+[    1.517332] cdx: vmbus_on_msg_dpc: offer relid=27, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.518948] PPP generic driver version 2.4.2
+[    1.522843] cdx: vmbus_on_msg_dpc: offer relid=28, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.525036] mousedev: PS/2 mouse device common for all mice
+[    1.530162] cdx: vmbus_on_msg_dpc: offer relid=29, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.530181] scsi 0:0:0:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[    1.533548] rtc-efi rtc-efi.0: registered as rtc0
+[    1.537997] cdx: vmbus_on_msg_dpc: offer relid=30, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.538001] cdx: vmbus_on_msg_dpc: offer relid=31, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.541872] rtc-efi rtc-efi.0: setting system clock to 2024-08-24T21:18:53 UTC (1724534333)
+[    1.543840] cdx: vmbus_on_msg_dpc: offer relid=32, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.552213] i2c_dev: i2c /dev entries driver
+[    1.557170] cdx: vmbus_on_msg_dpc: offer relid=33, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.557173] cdx: vmbus_on_msg_dpc: offer relid=34, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.561144] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[    1.566025] cdx: vmbus_on_msg_dpc: offer relid=35, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.567960] device-mapper: uevent: version 1.0.3
+[    1.572823] cdx: vmbus_on_msg_dpc: offer relid=36, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.578399] device-mapper: ioctl: 4.48.0-ioctl (2023-03-01) initialised: dm-devel@redhat.com
+[    1.583726] cdx: vmbus_on_msg_dpc: offer relid=37, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.607817] cdx: vmbus_on_msg_dpc: offer relid=38, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.613092] ledtrig-cpu: registered to indicate activity on CPUs
+[    1.613117] cdx: vmbus_on_msg_dpc: offer relid=39, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.616138] SMCCC: SOC_ID: ARCH_SOC_ID not implemented, skipping ....
+[    1.621208] cdx: vmbus_on_msg_dpc: offer relid=40, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.624383] hv_utils: Registering HyperV Utility Driver
+[    1.629535] cdx: vmbus_on_msg_dpc: offer relid=41, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.632035] hv_vmbus: registering driver hv_utils
+[    1.637320] cdx: vmbus_on_msg_dpc: offer relid=42, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.642580] hv_vmbus: registering driver hv_balloon
+[    1.647977] cdx: vmbus_on_msg_dpc: offer relid=43, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.655555] cdx: vmbus_on_msg_dpc: offer relid=44, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781a-1e82-4818-a1c3-63d806ec15bb
+[    1.660573] cdx: vmbus_on_msg_dpc: offer relid=45, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.660836] hw perfevents: enabled with armv8_pmuv3_0 PMU driver, 7 counters available
+[    1.665712] cdx: vmbus_on_msg_dpc: offer relid=46, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.670529] watchdog: Delayed init of the lockup detector failed: -19
+[    1.674845] drop_monitor: Initializing network drop monitor service
+[    1.678335] cdx: vmbus_on_msg_dpc: offer relid=47, ba6163d9-04a1-4d29-b605-72e2ffb1dc7f, f8b3781b-1e82-4818-a1c3-63d806ec15bb
+[    1.681840] watchdog: Hard watchdog permanently disabled
+[    1.683223] NET: Registered PF_INET6 protocol family
+[    1.690894] hv_utils: Shutdown IC version 3.2
+[    1.705208] Segment Routing with IPv6
+[    1.705450] hv_utils: Heartbeat IC version 3.0
+[    1.707893] In-situ OAM (IOAM) with IPv6
+[    1.709631] hv_utils: TimeSync IC version 4.0
+[    1.711743] NET: Registered PF_PACKET protocol family
+[    1.715444] hv_balloon: Using Dynamic Memory protocol version 2.0
+[    1.718156] scsi 0:0:0:0: Attached scsi generic sg0 type 0
+[    1.718310] sd 0:0:0:0: [sda] 62916608 512-byte logical blocks: (32.2 GB/30.0 GiB)
+[    1.718311] sd 0:0:0:0: [sda] 4096-byte physical blocks
+[    1.718352] sd 0:0:0:0: [sda] Write Protect is off
+[    1.718353] sd 0:0:0:0: [sda] Mode Sense: 0f 00 10 00
+[    1.718432] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports DPO and FUA
+[    1.718701] Key type dns_resolver registered
+[    1.721328] hv_balloon: Memory hot add disabled on ARM64
+[    1.722088]  sda: sda1 sda15
+[    1.722196] sd 0:0:0:0: [sda] Attached SCSI disk
+[    1.727200] registered taskstats version 1
+[    1.763985] Loading compiled-in X.509 certificates
+[    1.766752] Loaded X.509 cert 'Build time autogenerated kernel key: d077e3630de1c6b669822a8b5830ed72611e1434'
+[    1.772445] Key type .fscrypt registered
+[    1.774291] Key type fscrypt-provisioning registered
+[    1.781018] Key type encrypted registered
+[    1.783001] AppArmor: AppArmor sha1 policy hashing enabled
+[    1.786033] integrity: Loading X.509 certificate: UEFI:db
+[    1.788595] integrity: Loaded X.509 cert 'Microsoft Windows Production PCA 2011: a92902398e16c49778cd90f99e4f9ae17c55af53'
+[    1.794038] integrity: Loading X.509 certificate: UEFI:db
+[    1.799741] integrity: Loaded X.509 cert 'Microsoft Corporation: Windows UEFI CA 2023: aefc5fbbbe055d8f8daa585473499417ab5a5272'
+[    1.805732] blacklist: Duplicate blacklisted hash bin:77dd190fa30d88ff5e3b011a0ae61e6209780c130b535ecb87e6f0888a0b6b2f
+[    1.811151] ima: secureboot mode disabled
+[    1.813147] ima: No TPM chip found, activating TPM-bypass!
+[    1.815760] Loading compiled-in module X.509 certificates
+[    1.818841] Loaded X.509 cert 'Build time autogenerated kernel key: d077e3630de1c6b669822a8b5830ed72611e1434'
+[    1.823574] ima: Allocated hash algorithm: sha1
+[    1.825716] ima: No architecture policies found
+[    1.827975] evm: Initialising EVM extended attributes:
+[    1.830589] evm: security.selinux
+[    1.832257] evm: security.SMACK64
+[    1.833929] evm: security.SMACK64EXEC
+[    1.835731] evm: security.SMACK64TRANSMUTE
+[    1.837713] evm: security.SMACK64MMAP
+[    1.839429] evm: security.apparmor
+[    1.841071] evm: security.ima
+[    1.842423] evm: security.capability
+[    1.846797] evm: HMAC attrs: 0x1
+[    1.851503] clk: Disabling unused clocks
+[    1.854981] Freeing unused kernel memory: 11648K
+[    1.984212] Checked W+X mappings: passed, no W+X pages found
+[    1.990042] Run /init as init process
+[    1.991810]   with arguments:
+[    1.993160]     /init
+[    1.994204]   with environment:
+[    1.995681]     HOME=/
+[    1.996717]     TERM=linux
+[    1.997930]     BOOT_IMAGE=/boot/vmlinuz-6.5.13-decui+
+[    2.100440] hv_vmbus: registering driver hv_pci
+[    2.100554] hid: raw HID events driver (C) Jiri Kosina
+[    2.100818] hv_vmbus: registering driver hv_netvsc
+[    2.103859] hv_pci 4dca3f50-f28f-42b4-91fe-89f53730eb29: PCI VMBus probing: Using version 0x10004
+[    2.113850] hv_vmbus: registering driver hyperv_keyboard
+[    2.114424] hv_pci 4dca3f50-f28f-42b4-91fe-89f53730eb29: PCI host bridge to bus f28f:00
+[    2.116449] hv_vmbus: registering driver hid_hyperv
+[    2.116817] ACPI: bus type drm_connector registered
+[    2.117086] input: Microsoft Vmbus HID-compliant Mouse as /devices/0006:045E:0621.0001/input/input0
+[    2.117168] input: AT Translated Set 2 keyboard as /devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/VMBUS:00/d34b2567-b9b6-42b9-8778-0a4ec0b955bf/serio0/input/input1
+[    2.121319] pci_bus f28f:00: root bus resource [mem 0xfc0000000-0xfc00fffff window]
+[    2.121322] pci_bus f28f:00: No busn resource found for root bus, will use [bus 00-ff]
+[    2.121948] pci f28f:00:00.0: [1414:b111] type 00 class 0x010802
+[    2.124213] hid 0006:045E:0621.0001: input: VIRTUAL HID v0.01 Mouse [Microsoft Vmbus HID-compliant Mouse] on 
+[    2.127044] pci f28f:00:00.0: reg 0x10: [mem 0xfc0000000-0xfc00fffff 64bit]
+[    2.132306] cdx: vmbus_on_msg_dpc: offer relid=48, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.143048] pci_bus f28f:00: busn_res: [bus 00-ff] end is updated to 00
+[    2.150636] cdx: vmbus_on_msg_dpc: offer relid=49, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.153618] pci f28f:00:00.0: BAR 0: assigned [mem 0xfc0000000-0xfc00fffff 64bit]
+[    2.158474] cdx: vmbus_on_msg_dpc: offer relid=50, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.162484] nvme nvme0: pci function f28f:00:00.0
+[    2.167295] cdx: vmbus_on_msg_dpc: offer relid=51, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.167304] cdx: vmbus_on_msg_dpc: offer relid=52, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.167311] cdx: vmbus_on_msg_dpc: offer relid=53, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.167315] cdx: vmbus_on_msg_dpc: offer relid=54, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-170f-7c1e-5207-170f7c1e5207
+[    2.175486] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[    2.178149] cdx: vmbus_on_msg_dpc: offer relid=55, 44c4f61d-4444-4400-9d52-802e27ede19f, 69172891-ef9a-48a2-982a-786ac7c8c711
+[    2.182786] nvme f28f:00:00.0: enabling device (0000 -> 0002)
+[    2.244992] hv_vmbus: registering driver hyperv_drm
+[    2.245219] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: PCI VMBus probing: Using version 0x10004
+[    2.252040] hyperv_drm 5620e0c7-8062-4dce-aeb7-520c7ef76171: [drm] Synthvid Version major 3, minor 5
+[    2.253258] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: PCI host bridge to bus ef9a:00
+[    2.260367] pci_bus ef9a:00: root bus resource [mem 0xfc0100000-0xfc01fffff window]
+[    2.263983] pci_bus ef9a:00: No busn resource found for root bus, will use [bus 00-ff]
+[    2.264112] [drm] Initialized hyperv_drm 1.0.0 2020 for 5620e0c7-8062-4dce-aeb7-520c7ef76171 on minor 0
+[    2.268827] pci ef9a:00:02.0: [15b3:101a] type 00 class 0x020000
+[    2.276598] Console: switching to colour frame buffer device 128x48
+[    2.277038] pci ef9a:00:02.0: reg 0x10: [mem 0xfc0100000-0xfc01fffff 64bit pref]
+[    2.278518] pci ef9a:00:02.0: enabling Extended Tags
+[    2.280238] hyperv_drm 5620e0c7-8062-4dce-aeb7-520c7ef76171: [drm] fb0: hyperv_drmdrmfb frame buffer device
+[    2.294056] pci ef9a:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at ef9a:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    2.305274] pci_bus ef9a:00: busn_res: [bus 00-ff] end is updated to 00
+[    2.307659] cma: cma_alloc: reserved: alloc failed, req-size: 4 pages, ret: -12
+[    2.312674] cma: cma_alloc: reserved: alloc failed, req-size: 16 pages, ret: -12
+[    2.315867] cdx: vmbus_on_msg_dpc: offer relid=56, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.316514] cma: cma_alloc: reserved: alloc failed, req-size: 4 pages, ret: -12
+[    2.321977] cdx: vmbus_on_msg_dpc: offer relid=57, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.325522] cma: cma_alloc: reserved: alloc failed, req-size: 16 pages, ret: -12
+[    2.330758] cdx: vmbus_on_msg_dpc: offer relid=58, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.334251] cma: cma_alloc: reserved: alloc failed, req-size: 4 pages, ret: -12
+[    2.339493] cdx: vmbus_on_msg_dpc: offer relid=59, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.343012] cma: cma_alloc: reserved: alloc failed, req-size: 16 pages, ret: -12
+[    2.351372] cdx: vmbus_on_msg_dpc: offer relid=60, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.354921] cma: cma_alloc: reserved: alloc failed, req-size: 4 pages, ret: -12
+[    2.360345] cdx: vmbus_on_msg_dpc: offer relid=61, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.363973] cma: cma_alloc: reserved: alloc failed, req-size: 16 pages, ret: -12
+[    2.369669] cdx: vmbus_on_msg_dpc: offer relid=62, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1889-7c1e-5207-18897c1e5207
+[    2.373131] cma: cma_alloc: reserved: alloc failed, req-size: 4 pages, ret: -12
+[    2.377030] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth1: VF slot 2 added
+[    2.378558] cdx: vmbus_on_msg_dpc: offer relid=63, 44c4f61d-4444-4400-9d52-802e27ede19f, 57524d70-c3e2-42df-99a4-a10c42645bd8
+[    2.403418] cdx: vmbus_on_msg_dpc: offer relid=64, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.409114] cdx: vmbus_on_msg_dpc: offer relid=65, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.414871] cdx: vmbus_on_msg_dpc: offer relid=66, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.420575] cdx: vmbus_on_msg_dpc: offer relid=67, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.427299] cdx: vmbus_on_msg_dpc: offer relid=68, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.436923] cdx: vmbus_on_msg_dpc: offer relid=69, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.448010] cdx: vmbus_on_msg_dpc: offer relid=70, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-17f4-7c1e-5207-17f47c1e5207
+[    2.464491] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth2: VF slot 3 added
+[    2.464714] cdx: vmbus_on_msg_dpc: offer relid=71, 44c4f61d-4444-4400-9d52-802e27ede19f, cfa808e0-4604-4f10-9c57-ec9270ab26a8
+[    2.483630] cdx: vmbus_on_msg_dpc: offer relid=72, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.493755] cdx: vmbus_on_msg_dpc: offer relid=73, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.499985] cdx: vmbus_on_msg_dpc: offer relid=74, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.506256] cdx: vmbus_on_msg_dpc: offer relid=75, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.512465] cdx: vmbus_on_msg_dpc: offer relid=76, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.518510] cdx: vmbus_on_msg_dpc: offer relid=77, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.524862] cdx: vmbus_on_msg_dpc: offer relid=78, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-185b-7c1e-5207-185b7c1e5207
+[    2.544321] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[    2.544557] cdx: vmbus_on_msg_dpc: offer relid=79, 44c4f61d-4444-4400-9d52-802e27ede19f, e7329dd2-ed86-43f7-93fa-514e6d821666
+[    2.559077] cdx: vmbus_on_msg_dpc: offer relid=80, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.565271] cdx: vmbus_on_msg_dpc: offer relid=81, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.571899] cdx: vmbus_on_msg_dpc: offer relid=82, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.572247] nvme nvme0: 6/0/0 default/read/poll queues
+[    2.577223] cdx: vmbus_on_msg_dpc: offer relid=83, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.589869] cdx: vmbus_on_msg_dpc: offer relid=84, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.595968] cdx: vmbus_on_msg_dpc: offer relid=85, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.602106] cdx: vmbus_on_msg_dpc: offer relid=86, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-199e-7c1e-5207-199e7c1e5207
+[    2.631486] hv_pci 4dca3f50-f28f-42b4-91fe-89f53730eb29: cdx: create_root_hv_pci_bus: done
+[    2.631501] pci ef9a:00:02.0: BAR 0: assigned [mem 0xfc0100000-0xfc01fffff 64bit pref]
+[    2.635551] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth4: VF slot 5 added
+[    2.645626] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: cdx: create_root_hv_pci_bus: done
+[    2.652635] cdx: vmbus_on_msg_dpc: offer relid=87, 44c4f61d-4444-4400-9d52-802e27ede19f, aa2881d9-449c-4d08-a293-4ed2a795a854
+[    2.658551] hv_pci 23fa122a-e42c-4f9d-9072-1968a301c93f: PCI VMBus probing: Using version 0x10004
+[    2.659393] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: PCI VMBus probing: Using version 0x10004
+[    2.668237] hv_pci 23fa122a-e42c-4f9d-9072-1968a301c93f: PCI host bridge to bus e42c:00
+[    2.672743] pci_bus e42c:00: root bus resource [mem 0xfc0200000-0xfc02fffff window]
+[    2.677339] pci_bus e42c:00: No busn resource found for root bus, will use [bus 00-ff]
+[    2.685794] pci e42c:00:00.0: [1414:b111] type 00 class 0x010802
+[    2.690843] pci e42c:00:00.0: reg 0x10: [mem 0xfc0200000-0xfc02fffff 64bit]
+[    2.692392] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: PCI host bridge to bus c3e2:00
+[    2.704119] pci_bus e42c:00: busn_res: [bus 00-ff] end is updated to 00
+[    2.704550] pci_bus c3e2:00: root bus resource [mem 0xfc0300000-0xfc03fffff window]
+[    2.708577] pci e42c:00:00.0: BAR 0: assigned [mem 0xfc0200000-0xfc02fffff 64bit]
+[    2.713541] pci_bus c3e2:00: No busn resource found for root bus, will use [bus 00-ff]
+[    2.719272] nvme nvme1: pci function e42c:00:00.0
+[    2.739698] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth5: VF slot 6 added
+[    2.740157] cdx: vmbus_on_msg_dpc: offer relid=88, 44c4f61d-4444-4400-9d52-802e27ede19f, c779b611-79f5-4c77-9be5-e7c959ce5ced
+[    2.752483] nvme e42c:00:00.0: enabling device (0000 -> 0002)
+[    2.753037] pci c3e2:00:02.0: [15b3:101a] type 00 class 0x020000
+[    2.778796] cdx: vmbus_on_msg_dpc: offer relid=89, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.816824] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth6: VF slot 7 added
+[    2.817216] cdx: vmbus_on_msg_dpc: offer relid=90, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.827902] pci c3e2:00:02.0: reg 0x10: [mem 0xfc0300000-0xfc03fffff 64bit pref]
+[    2.831340] cdx: vmbus_on_msg_dpc: offer relid=91, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.840011] cdx: vmbus_on_msg_dpc: offer relid=92, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.845493] cdx: vmbus_on_msg_dpc: offer relid=93, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.851033] cdx: vmbus_on_msg_dpc: offer relid=94, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.856972] cdx: vmbus_on_msg_dpc: offer relid=95, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1b61-7c1e-5207-1b617c1e5207
+[    2.862483] cdx: vmbus_on_msg_dpc: offer relid=96, 44c4f61d-4444-4400-9d52-802e27ede19f, 27cc3870-bcfb-496a-b6c4-047ab7963d24
+[    2.869927] pci c3e2:00:02.0: enabling Extended Tags
+[    2.879303] pci c3e2:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at c3e2:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    2.890962] pci_bus c3e2:00: busn_res: [bus 00-ff] end is updated to 00
+[    2.897219] cdx: vmbus_on_msg_dpc: offer relid=97, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.907354] cdx: vmbus_on_msg_dpc: offer relid=98, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.913111] cdx: vmbus_on_msg_dpc: offer relid=99, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.920432] cdx: vmbus_on_msg_dpc: offer relid=100, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.927370] cdx: vmbus_on_msg_dpc: offer relid=101, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.937406] cdx: vmbus_on_msg_dpc: offer relid=102, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.945173] cdx: vmbus_on_msg_dpc: offer relid=103, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-14d1-7c1e-5207-14d17c1e5207
+[    2.967192] cdx: vmbus_on_msg_dpc: offer relid=104, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    2.975909] cdx: vmbus_on_msg_dpc: offer relid=105, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    2.983739] cdx: vmbus_on_msg_dpc: offer relid=106, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    2.994569] cdx: vmbus_on_msg_dpc: offer relid=107, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    3.001131] cdx: vmbus_on_msg_dpc: offer relid=108, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    3.007364] cdx: vmbus_on_msg_dpc: offer relid=109, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    3.014098] cdx: vmbus_on_msg_dpc: offer relid=110, f8615163-df3e-46c5-913f-f2d2f965ed0e, 7c1e5207-1c19-7c1e-5207-1c197c1e5207
+[    3.029075] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth7: VF slot 8 added
+[    3.029299] cdx: vmbus_on_msg_dpc: offer relid=111, 44c4f61d-4444-4400-9d52-802e27ede19f, c722f47f-5b54-4913-89e6-30871d1ed4b2
+[    3.071037] nvme nvme1: 6/0/0 default/read/poll queues
+[    3.135345] hv_pci 23fa122a-e42c-4f9d-9072-1968a301c93f: cdx: create_root_hv_pci_bus: done
+[    3.135365] pci c3e2:00:02.0: BAR 0: assigned [mem 0xfc0300000-0xfc03fffff 64bit pref]
+[    3.145366] hv_pci 955bfbad-28ca-42bc-b299-47d14d76e0c3: PCI VMBus probing: Using version 0x10004
+[    3.147262] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: cdx: create_root_hv_pci_bus: done
+[    3.154624] hv_pci 955bfbad-28ca-42bc-b299-47d14d76e0c3: PCI host bridge to bus 28ca:00
+[    3.155163] hv_pci cfa808e0-4604-4f10-9c57-ec9270ab26a8: PCI VMBus probing: Using version 0x10004
+[    3.158283] pci_bus 28ca:00: root bus resource [mem 0xfc0400000-0xfc04fffff window]
+[    3.163373] hv_pci cfa808e0-4604-4f10-9c57-ec9270ab26a8: PCI host bridge to bus 4604:00
+[    3.166143] pci_bus 28ca:00: No busn resource found for root bus, will use [bus 00-ff]
+[    3.169862] pci_bus 4604:00: root bus resource [mem 0xfc0500000-0xfc05fffff window]
+[    3.174052] pci 28ca:00:00.0: [1414:b111] type 00 class 0x010802
+[    3.176987] pci_bus 4604:00: No busn resource found for root bus, will use [bus 00-ff]
+[    3.178019] pci 4604:00:02.0: [15b3:101a] type 00 class 0x020000
+[    3.180483] pci 28ca:00:00.0: reg 0x10: [mem 0xfc0400000-0xfc04fffff 64bit]
+[    3.186725] workqueue: vmbus_add_channel_work hogged CPU for >20000us 4 times, consider switching to WQ_UNBOUND
+[    3.189109] pci 4604:00:02.0: reg 0x10: [mem 0xfc0500000-0xfc05fffff 64bit pref]
+[    3.200044] pci_bus 28ca:00: busn_res: [bus 00-ff] end is updated to 00
+[    3.208685] pci 4604:00:02.0: enabling Extended Tags
+[    3.211939] pci 28ca:00:00.0: BAR 0: assigned [mem 0xfc0400000-0xfc04fffff 64bit]
+[    3.227376] pci 4604:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at 4604:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    3.228958] nvme nvme2: pci function 28ca:00:00.0
+[    3.239227] pci_bus 4604:00: busn_res: [bus 00-ff] end is updated to 00
+[    3.252506] nvme 28ca:00:00.0: enabling device (0000 -> 0002)
+[    3.559292] nvme nvme2: 6/0/0 default/read/poll queues
+[    3.623734] hv_pci 955bfbad-28ca-42bc-b299-47d14d76e0c3: cdx: create_root_hv_pci_bus: done
+[    3.623753] pci 4604:00:02.0: BAR 0: assigned [mem 0xfc0500000-0xfc05fffff 64bit pref]
+[    3.632173] hv_pci 84e4f1f3-4617-41a8-996b-549cedbabda4: PCI VMBus probing: Using version 0x10004
+[    3.634128] hv_pci cfa808e0-4604-4f10-9c57-ec9270ab26a8: cdx: create_root_hv_pci_bus: done
+[    3.644222] hv_pci 84e4f1f3-4617-41a8-996b-549cedbabda4: PCI host bridge to bus 4617:00
+[    3.644747] hv_pci e7329dd2-ed86-43f7-93fa-514e6d821666: PCI VMBus probing: Using version 0x10004
+[    3.648182] pci_bus 4617:00: root bus resource [mem 0xfc0600000-0xfc06fffff window]
+[    3.653482] hv_pci e7329dd2-ed86-43f7-93fa-514e6d821666: PCI host bridge to bus ed86:00
+[    3.656055] pci_bus 4617:00: No busn resource found for root bus, will use [bus 00-ff]
+[    3.659910] pci_bus ed86:00: root bus resource [mem 0xfc0700000-0xfc07fffff window]
+[    3.664272] pci 4617:00:00.0: [1414:b111] type 00 class 0x010802
+[    3.667256] pci_bus ed86:00: No busn resource found for root bus, will use [bus 00-ff]
+[    3.670937] pci 4617:00:00.0: reg 0x10: [mem 0xfc0600000-0xfc06fffff 64bit]
+[    3.675360] pci ed86:00:02.0: [15b3:101a] type 00 class 0x020000
+[    3.681361] pci_bus 4617:00: busn_res: [bus 00-ff] end is updated to 00
+[    3.683398] pci ed86:00:02.0: reg 0x10: [mem 0xfc0700000-0xfc07fffff 64bit pref]
+[    3.688496] pci 4617:00:00.0: BAR 0: assigned [mem 0xfc0600000-0xfc06fffff 64bit]
+[    3.696837] pci ed86:00:02.0: enabling Extended Tags
+[    3.700352] nvme nvme3: pci function 4617:00:00.0
+[    3.711510] pci ed86:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at ed86:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    3.722905] nvme 4617:00:00.0: enabling device (0000 -> 0002)
+[    3.725600] pci_bus ed86:00: busn_res: [bus 00-ff] end is updated to 00
+[    4.032075] nvme nvme3: 6/0/0 default/read/poll queues
+[    4.096327] hv_pci 84e4f1f3-4617-41a8-996b-549cedbabda4: cdx: create_root_hv_pci_bus: done
+[    4.096349] pci ed86:00:02.0: BAR 0: assigned [mem 0xfc0700000-0xfc07fffff 64bit pref]
+[    4.105671] hv_pci 83fa437d-2415-4b38-a4d1-432745571762: PCI VMBus probing: Using version 0x10004
+[    4.107612] hv_pci e7329dd2-ed86-43f7-93fa-514e6d821666: cdx: create_root_hv_pci_bus: done
+[    4.114718] hv_pci 83fa437d-2415-4b38-a4d1-432745571762: PCI host bridge to bus 2415:00
+[    4.115240] hv_pci aa2881d9-449c-4d08-a293-4ed2a795a854: PCI VMBus probing: Using version 0x10004
+[    4.118387] pci_bus 2415:00: root bus resource [mem 0xfc0800000-0xfc08fffff window]
+[    4.123545] hv_pci aa2881d9-449c-4d08-a293-4ed2a795a854: PCI host bridge to bus 449c:00
+[    4.126552] pci_bus 2415:00: No busn resource found for root bus, will use [bus 00-ff]
+[    4.130369] pci_bus 449c:00: root bus resource [mem 0xfc0900000-0xfc09fffff window]
+[    4.134577] pci 2415:00:00.0: [1414:b111] type 00 class 0x010802
+[    4.137586] pci_bus 449c:00: No busn resource found for root bus, will use [bus 00-ff]
+[    4.140980] pci 2415:00:00.0: reg 0x10: [mem 0xfc0800000-0xfc08fffff 64bit]
+[    4.148040] pci 449c:00:02.0: [15b3:101a] type 00 class 0x020000
+[    4.154473] pci_bus 2415:00: busn_res: [bus 00-ff] end is updated to 00
+[    4.156625] pci 449c:00:02.0: reg 0x10: [mem 0xfc0900000-0xfc09fffff 64bit pref]
+[    4.158000] pci 2415:00:00.0: BAR 0: assigned [mem 0xfc0800000-0xfc08fffff 64bit]
+[    4.163068] pci 449c:00:02.0: enabling Extended Tags
+[    4.165594] nvme nvme4: pci function 2415:00:00.0
+[    4.174245] pci 449c:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at 449c:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    4.183827] pci_bus 449c:00: busn_res: [bus 00-ff] end is updated to 00
+[    4.185534] nvme 2415:00:00.0: enabling device (0000 -> 0002)
+[    4.505763] nvme nvme4: 6/0/0 default/read/poll queues
+[    4.568753] hv_pci 83fa437d-2415-4b38-a4d1-432745571762: cdx: create_root_hv_pci_bus: done
+[    4.568776] pci 449c:00:02.0: BAR 0: assigned [mem 0xfc0900000-0xfc09fffff 64bit pref]
+[    4.577156] hv_pci 36c888f6-ae7b-4e51-b1fb-4a17ade49c3c: PCI VMBus probing: Using version 0x10004
+[    4.579172] hv_pci aa2881d9-449c-4d08-a293-4ed2a795a854: cdx: create_root_hv_pci_bus: done
+[    4.589304] hv_pci 36c888f6-ae7b-4e51-b1fb-4a17ade49c3c: PCI host bridge to bus ae7b:00
+[    4.589816] hv_pci c779b611-79f5-4c77-9be5-e7c959ce5ced: PCI VMBus probing: Using version 0x10004
+[    4.593383] pci_bus ae7b:00: root bus resource [mem 0xfc0a00000-0xfc0afffff window]
+[    4.593386] pci_bus ae7b:00: No busn resource found for root bus, will use [bus 00-ff]
+[    4.593952] pci ae7b:00:00.0: [1414:b111] type 00 class 0x010802
+[    4.598868] hv_pci c779b611-79f5-4c77-9be5-e7c959ce5ced: PCI host bridge to bus 79f5:00
+[    4.602145] pci ae7b:00:00.0: reg 0x10: [mem 0xfc0a00000-0xfc0afffff 64bit]
+[    4.605219] pci_bus 79f5:00: root bus resource [mem 0xfc0b00000-0xfc0bfffff window]
+[    4.611847] pci_bus ae7b:00: busn_res: [bus 00-ff] end is updated to 00
+[    4.612169] pci_bus 79f5:00: No busn resource found for root bus, will use [bus 00-ff]
+[    4.615484] pci ae7b:00:00.0: BAR 0: assigned [mem 0xfc0a00000-0xfc0afffff 64bit]
+[    4.620646] pci 79f5:00:02.0: [15b3:101a] type 00 class 0x020000
+[    4.622604] nvme nvme5: pci function ae7b:00:00.0
+[    4.627742] pci 79f5:00:02.0: reg 0x10: [mem 0xfc0b00000-0xfc0bfffff 64bit pref]
+[    4.641661] nvme ae7b:00:00.0: enabling device (0000 -> 0002)
+[    4.643018] pci 79f5:00:02.0: enabling Extended Tags
+[    4.657574] pci 79f5:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at 79f5:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    4.666900] pci_bus 79f5:00: busn_res: [bus 00-ff] end is updated to 00
+[    4.951531] nvme nvme5: 6/0/0 default/read/poll queues
+[    5.012858] hv_pci 36c888f6-ae7b-4e51-b1fb-4a17ade49c3c: cdx: create_root_hv_pci_bus: done
+[    5.012888] pci 79f5:00:02.0: BAR 0: assigned [mem 0xfc0b00000-0xfc0bfffff 64bit pref]
+[    5.025247] hv_pci c779b611-79f5-4c77-9be5-e7c959ce5ced: cdx: create_root_hv_pci_bus: done
+[    5.030886] hv_pci 27cc3870-bcfb-496a-b6c4-047ab7963d24: PCI VMBus probing: Using version 0x10004
+[    5.037354] hv_pci 27cc3870-bcfb-496a-b6c4-047ab7963d24: PCI host bridge to bus bcfb:00
+[    5.041341] pci_bus bcfb:00: root bus resource [mem 0xfc0c00000-0xfc0cfffff window]
+[    5.048723] pci_bus bcfb:00: No busn resource found for root bus, will use [bus 00-ff]
+[    5.055005] pci bcfb:00:02.0: [15b3:101a] type 00 class 0x020000
+[    5.058768] workqueue: vmbus_add_channel_work hogged CPU for >20000us 8 times, consider switching to WQ_UNBOUND
+[    5.059906] pci bcfb:00:02.0: reg 0x10: [mem 0xfc0c00000-0xfc0cfffff 64bit pref]
+[    5.070228] pci bcfb:00:02.0: enabling Extended Tags
+[    5.077424] mlx5_core ef9a:00:02.0: enabling device (0000 -> 0002)
+[    5.080763] pci bcfb:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at bcfb:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    5.084057] mlx5_core ef9a:00:02.0: firmware version: 16.30.1278
+[    5.089901] pci_bus bcfb:00: busn_res: [bus 00-ff] end is updated to 00
+[    5.099077] pci bcfb:00:02.0: BAR 0: assigned [mem 0xfc0c00000-0xfc0cfffff 64bit pref]
+[    5.105406] mlx5_core bcfb:00:02.0: enabling device (0000 -> 0002)
+[    5.115732] mlx5_core bcfb:00:02.0: firmware version: 16.30.1278
+[    5.247210] mlx5_core ef9a:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00010947b000, ctxt=ffff000127ae3e00, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    5.257871] mlx5_core ef9a:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00010947b000, ctxt=ffff000127ae3e00, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    5.267619] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.267621] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.267624] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.269580] mlx5_core bcfb:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00013e435000, ctxt=ffff00012caa2600, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    5.269647] mlx5_core bcfb:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00013e435000, ctxt=ffff00012caa2600, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    5.269698] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.269702] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.269706] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.269707] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, i=0
+[    5.269710] mlx5_core bcfb:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e435000, buf=ffff000106303b80, len=128, blk_id=0
+[    5.269912] mlx5_core bcfb:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e435000, buf=ffff000106303b80, len=128, blk_id=0, out_len=128, ret=0
+[    5.269914] mlx5_core bcfb:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e435000, buf=ffff000106303b80, len=128, blk_id=0
+[    5.270060] mlx5_core bcfb:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e435000, buf=ffff000106303b80, len=128, blk_id=0, ret=0
+[    5.270061] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, i=0
+[    5.270062] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.271708] mlx5_core bcfb:00:02.0: mlx5_load: success: hv_vhca=ffff00012caa2600
+[    5.271710] mlx5_core bcfb:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.271711] mlx5_core bcfb:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.271712] mlx5_core bcfb:00:02.0: delete_drivers: 1: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.271713] mlx5_core bcfb:00:02.0: delete_drivers: 6: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.271713] mlx5_core bcfb:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.271714] mlx5_core bcfb:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff0001411acd78, flag=0x0
+[    5.274878] mlx5_core ef9a:00:02.0: mlx5_load: success: hv_vhca=ffff000127ae3e00
+[    5.279466] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, i=0
+[    5.325415] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.325715] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth6: VF registering: eth8
+[    5.325759] mlx5_core bcfb:00:02.0 eth8: joined to eth6
+[    5.332018] mlx5_core bcfb:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    5.332184] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.332487] mlx5_core ef9a:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947b000, buf=ffff000104262c80, len=128, blk_id=0
+[    5.332663] mlx5_core ef9a:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00010947b000, buf=ffff000104262c80, len=128, blk_id=0, out_len=128, ret=0
+[    5.332665] mlx5_core ef9a:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00010947b000, buf=ffff000104262c80, len=128, blk_id=0
+[    5.332814] mlx5_core ef9a:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00010947b000, buf=ffff000104262c80, len=128, blk_id=0, ret=0
+[    5.332816] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, i=0
+[    5.332817] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.334990] hv_pci 27cc3870-bcfb-496a-b6c4-047ab7963d24: cdx: create_root_hv_pci_bus: done
+[    5.335463] hv_pci c722f47f-5b54-4913-89e6-30871d1ed4b2: PCI VMBus probing: Using version 0x10004
+[    5.336600] hv_pci c722f47f-5b54-4913-89e6-30871d1ed4b2: PCI host bridge to bus 5b54:00
+[    5.336601] pci_bus 5b54:00: root bus resource [mem 0xfc0d00000-0xfc0dfffff window]
+[    5.336603] pci_bus 5b54:00: No busn resource found for root bus, will use [bus 00-ff]
+[    5.337580] pci 5b54:00:02.0: [15b3:101a] type 00 class 0x020000
+[    5.338779] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.339430] pci 5b54:00:02.0: reg 0x10: [mem 0xfc0d00000-0xfc0dfffff 64bit pref]
+[    5.340861] pci 5b54:00:02.0: enabling Extended Tags
+[    5.348806] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.350499] pci 5b54:00:02.0: 0.000 Gb/s available PCIe bandwidth, limited by Unknown x0 link at 5b54:00:02.0 (capable of 252.048 Gb/s with 16.0 GT/s PCIe x16 link)
+[    5.352391] pci_bus 5b54:00: busn_res: [bus 00-ff] end is updated to 00
+[    5.352397] pci 5b54:00:02.0: BAR 0: assigned [mem 0xfc0d00000-0xfc0dfffff 64bit pref]
+[    5.354490] mlx5_core 5b54:00:02.0: enabling device (0000 -> 0002)
+[    5.355113] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, i=0
+[    5.357709] mlx5_core 5b54:00:02.0: firmware version: 16.30.1278
+[    5.361458] mlx5_core ef9a:00:02.0: delete_drivers: 1: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.361460] mlx5_core ef9a:00:02.0: delete_drivers: 6: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.367732] mlx5_core bcfb:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e435000, buf=ffff000127e16b00, len=128, blk_id=0
+[    5.373949] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.373951] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff00014152cd78, flag=0x0
+[    5.378196] mlx5_core bcfb:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e435000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    5.441833] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.442248] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF registering: eth9
+[    5.442273] mlx5_core ef9a:00:02.0 eth9: joined to eth0
+[    5.445139] mlx5_core bcfb:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e435000, buf=ffff000127e16b00, len=128, blk_id=0
+[    5.449091] mlx5_core ef9a:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    5.450317] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.452855] mlx5_core c3e2:00:02.0: enabling device (0000 -> 0002)
+[    5.457080] mlx5_core c3e2:00:02.0: firmware version: 16.30.1278
+[    5.459949] mlx5_core bcfb:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e435000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    5.470127] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, i=0
+[    5.470132] mlx5_core ef9a:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947b000, buf=ffff00012c443800, len=128, blk_id=0
+[    5.478297] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, i=0
+[    5.490903] mlx5_core ef9a:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00010947b000, buf=ffff00012c443800, len=128, blk_id=0, out_len=128, ret=0
+[    5.501213] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[    5.509194] mlx5_core ef9a:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00010947b000, buf=ffff00012c443800, len=128, blk_id=0
+[    5.519689] mlx5_core 5b54:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff000105482000, ctxt=ffff000141ece800, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    5.526718] mlx5_core ef9a:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00010947b000, buf=ffff00012c443800, len=128, blk_id=0, ret=0
+[    5.527183] mlx5_core 5b54:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff000105482000, ctxt=ffff000141ece800, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    5.530981] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, i=0
+[    5.530983] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[    5.704607] mlx5_core c3e2:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff000109479000, ctxt=ffff000127af9200, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    5.705391] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    5.705392] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    5.707703] mlx5_core 5b54:00:02.0: mlx5_load: success: hv_vhca=ffff000141ece800
+[    5.707705] mlx5_core 5b54:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.707706] mlx5_core 5b54:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.707707] mlx5_core 5b54:00:02.0: delete_drivers: 1: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.707708] mlx5_core 5b54:00:02.0: delete_drivers: 6: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.707709] mlx5_core 5b54:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.707709] mlx5_core 5b54:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff00014242cd78, flag=0x0
+[    5.716757] mlx5_core c3e2:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff000109479000, ctxt=ffff000127af9200, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    5.724812] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    5.734581] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    5.734588] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    5.734592] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    5.734593] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[    5.734596] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000109479000, buf=ffff00012c443800, len=128, blk_id=0
+[    5.734840] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff000109479000, buf=ffff00012c443800, len=128, blk_id=0, out_len=128, ret=0
+[    5.734842] mlx5_core c3e2:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff000109479000, buf=ffff00012c443800, len=128, blk_id=0
+[    5.734982] mlx5_core c3e2:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff000109479000, buf=ffff00012c443800, len=128, blk_id=0, ret=0
+[    5.734984] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[    5.734985] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    5.745540] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, i=0
+[    5.757014] mlx5_core c3e2:00:02.0: mlx5_load: success: hv_vhca=ffff000127af9200
+[    5.762720] mlx5_core 5b54:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000105482000, buf=ffff000104262c80, len=128, blk_id=0
+[    5.762971] mlx5_core 5b54:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff000105482000, buf=ffff000104262c80, len=128, blk_id=0, out_len=128, ret=0
+[    5.964479] mlx5_core 5b54:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff000105482000, buf=ffff000104262c80, len=128, blk_id=0
+[    5.974071] mlx5_core 5b54:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff000105482000, buf=ffff000104262c80, len=128, blk_id=0, ret=0
+[    5.982158] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, i=0
+[    5.994561] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    5.995090] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth7: VF registering: eth10
+[    6.003030] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    6.007519] mlx5_core 5b54:00:02.0 eth10: joined to eth7
+[    6.015335] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    6.023782] mlx5_core 5b54:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    6.024070] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, i=0
+[    6.028276] mlx5_core c3e2:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.031023] hv_pci c722f47f-5b54-4913-89e6-30871d1ed4b2: cdx: create_root_hv_pci_bus: done
+[    6.034853] mlx5_core 5b54:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000105482000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.035041] mlx5_core 5b54:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff000105482000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    6.042780] mlx5_core c3e2:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.046509] mlx5_core 5b54:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff000105482000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.046746] mlx5_core 5b54:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff000105482000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    6.052271] mlx5_core c3e2:00:02.0: delete_drivers: 1: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.058755] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, i=0
+[    6.063414] mlx5_core c3e2:00:02.0: delete_drivers: 6: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.069343] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[    6.075430] mlx5_core c3e2:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.116335] mlx5_core c3e2:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff00014296cd78, flag=0x0
+[    6.170948] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    6.171194] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth1: VF registering: eth11
+[    6.177611] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    6.181246] mlx5_core c3e2:00:02.0 eth11: joined to eth1
+[    6.187100] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[    6.195254] mlx5_core c3e2:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    6.198543] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000109479000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.206808] mlx5_core 4604:00:02.0: enabling device (0000 -> 0002)
+[    6.211245] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff000109479000, buf=ffff0001058e4f00, len=128, blk_id=0, out_len=128, ret=0
+[    6.219953] mlx5_core 4604:00:02.0: firmware version: 16.30.1278
+[    6.226243] mlx5_core c3e2:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff000109479000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.226444] mlx5_core c3e2:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff000109479000, buf=ffff0001058e4f00, len=128, blk_id=0, ret=0
+[    6.255133] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[    6.263570] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[    6.367486] mlx5_core 4604:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00010947f000, ctxt=ffff000109512600, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    6.375969] mlx5_core 4604:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00010947f000, ctxt=ffff000109512600, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    6.387613] mlx5_core 4604:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.387615] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.389849] mlx5_core 4604:00:02.0: mlx5_load: success: hv_vhca=ffff000109512600
+[    6.394166] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.394167] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, i=0
+[    6.394169] mlx5_core 4604:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.400571] mlx5_core 4604:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.404133] mlx5_core 4604:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    6.409951] mlx5_core 4604:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.409952] mlx5_core 4604:00:02.0: delete_drivers: 1: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.416451] mlx5_core 4604:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.422047] mlx5_core 4604:00:02.0: delete_drivers: 6: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.426645] mlx5_core 4604:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    6.433607] mlx5_core 4604:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.433608] mlx5_core 4604:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff0001438ecd78, flag=0x0
+[    6.438102] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, i=0
+[    6.497023] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.497489] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth2: VF registering: eth12
+[    6.506040] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.510747] mlx5_core 4604:00:02.0 eth12: joined to eth2
+[    6.518255] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.527232] mlx5_core 4604:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    6.527630] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, i=0
+[    6.542428] mlx5_core 4604:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.545473] mlx5_core ed86:00:02.0: enabling device (0000 -> 0002)
+[    6.548823] mlx5_core 4604:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    6.554609] mlx5_core ed86:00:02.0: firmware version: 16.30.1278
+[    6.558212] mlx5_core 4604:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0
+[    6.569887] mlx5_core 4604:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00010947f000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    6.576985] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, i=0
+[    6.584292] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[    6.697549] mlx5_core ed86:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00013e433000, ctxt=ffff0001040b6000, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    6.707827] mlx5_core ed86:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00013e433000, ctxt=ffff0001040b6000, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    6.719804] mlx5_core ed86:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.719807] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.730632] mlx5_core ed86:00:02.0: mlx5_load: success: hv_vhca=ffff0001040b6000
+[    6.737030] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.737032] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, i=0
+[    6.737034] mlx5_core ed86:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.737290] mlx5_core ed86:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0, out_len=128, ret=0
+[    6.742006] mlx5_core ed86:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.754435] mlx5_core ed86:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.764215] mlx5_core ed86:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.764217] mlx5_core ed86:00:02.0: delete_drivers: 1: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.771273] mlx5_core ed86:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0, ret=0
+[    6.777938] mlx5_core ed86:00:02.0: delete_drivers: 6: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.777939] mlx5_core ed86:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.777940] mlx5_core ed86:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff00014432cd78, flag=0x0
+[    6.782992] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, i=0
+[    6.782994] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.841126] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF registering: eth13
+[    6.841591] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.845396] mlx5_core ed86:00:02.0 eth13: joined to eth3
+[    6.851754] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    6.851756] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, i=0
+[    6.851758] mlx5_core ed86:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.859691] mlx5_core ed86:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0, out_len=128, ret=0
+[    6.867879] mlx5_core ed86:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    6.874285] mlx5_core ed86:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    6.884700] mlx5_core 449c:00:02.0: enabling device (0000 -> 0002)
+[    6.887102] mlx5_core ed86:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e433000, buf=ffff0001058e4f00, len=128, blk_id=0, ret=0
+[    6.896312] mlx5_core 449c:00:02.0: firmware version: 16.30.1278
+[    6.896550] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, i=0
+[    6.923904] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[    7.040053] mlx5_core 449c:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00013e431000, ctxt=ffff0001396a1000, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    7.051231] mlx5_core 449c:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00013e431000, ctxt=ffff0001396a1000, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    7.060729] mlx5_core 449c:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.060733] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.070031] mlx5_core 449c:00:02.0: mlx5_load: success: hv_vhca=ffff0001396a1000
+[    7.074630] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.078889] mlx5_core 449c:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.086849] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, i=0
+[    7.094637] mlx5_core 449c:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.101401] mlx5_core 449c:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e431000, buf=ffff000127e16b00, len=128, blk_id=0
+[    7.106473] mlx5_core 449c:00:02.0: delete_drivers: 1: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.120052] mlx5_core 449c:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e431000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    7.120669] mlx5_core 449c:00:02.0: delete_drivers: 6: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.127799] mlx5_core 449c:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e431000, buf=ffff000127e16b00, len=128, blk_id=0
+[    7.131902] mlx5_core 449c:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e431000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    7.132256] mlx5_core 449c:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.141123] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, i=0
+[    7.147337] mlx5_core 449c:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff000144cacd78, flag=0x0
+[    7.152022] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.211404] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.211749] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth4: VF registering: eth14
+[    7.220846] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.220848] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, i=0
+[    7.227508] mlx5_core 449c:00:02.0 eth14: joined to eth4
+[    7.236452] mlx5_core 449c:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e431000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    7.251328] mlx5_core 449c:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    7.252103] mlx5_core 449c:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e431000, buf=ffff0001058e4f00, len=128, blk_id=0, out_len=128, ret=0
+[    7.265187] mlx5_core 79f5:00:02.0: enabling device (0000 -> 0002)
+[    7.266590] mlx5_core 449c:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e431000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    7.278201] mlx5_core 79f5:00:02.0: firmware version: 16.30.1278
+[    7.278671] mlx5_core 449c:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e431000, buf=ffff0001058e4f00, len=128, blk_id=0, ret=0
+[    7.305222] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, i=0
+[    7.313497] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[    7.427591] mlx5_core 79f5:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff00013e437000, ctxt=ffff0001396acc00, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core]
+[    7.436707] mlx5_core 79f5:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff00013e437000, ctxt=ffff0001396acc00, func=mlx5_hv_vhca_invalidate+0x0/0x88 [mlx5_core], ret=0
+[    7.448468] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_init: success: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.448471] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.448473] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.457535] mlx5_core 79f5:00:02.0: mlx5_load: success: hv_vhca=ffff0001396acc00
+[    7.461859] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, i=0
+[    7.468372] mlx5_core 79f5:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.475095] mlx5_core 79f5:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e437000, buf=ffff000127e16b00, len=128, blk_id=0
+[    7.489857] mlx5_core 79f5:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.497334] mlx5_core 79f5:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e437000, buf=ffff000127e16b00, len=128, blk_id=0, out_len=128, ret=0
+[    7.504544] mlx5_core 79f5:00:02.0: delete_drivers: 1: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.504545] mlx5_core 79f5:00:02.0: delete_drivers: 6: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.511266] mlx5_core 79f5:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e437000, buf=ffff000127e16b00, len=128, blk_id=0
+[    7.511488] mlx5_core 79f5:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e437000, buf=ffff000127e16b00, len=128, blk_id=0, ret=0
+[    7.520603] mlx5_core 79f5:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.525737] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, i=0
+[    7.530374] mlx5_core 79f5:00:02.0: mlx5_rescan_drivers_locked: 4: intf_state_mutex=ffff0001456ecd78, flag=0x0
+[    7.536641] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.595590] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.595972] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth5: VF registering: eth15
+[    7.605920] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.610107] mlx5_core 79f5:00:02.0 eth15: joined to eth5
+[    7.617096] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, i=0
+[    7.625920] mlx5_core 79f5:00:02.0: MLX5E: StrdRq(1) RqSz(8) StrdSz(256) RxCqeCmprss(0 basic)
+[    7.626610] mlx5_core 79f5:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e437000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    7.643871] mlx5_core 79f5:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff00013e437000, buf=ffff0001058e4f00, len=128, blk_id=0, out_len=128, ret=0
+[    7.655019] mlx5_core 79f5:00:02.0: cdx: hyperv_write_cfg_blk: line 44: 1: pdev=ffff00013e437000, buf=ffff0001058e4f00, len=128, blk_id=0
+[    7.663497] mlx5_core 79f5:00:02.0: cdx: hyperv_write_cfg_blk: line 46: 2: pdev=ffff00013e437000, buf=ffff0001058e4f00, len=128, blk_id=0, ret=0
+[    7.671060] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, i=0
+[    7.678890] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[    7.695722] mlx5_core bcfb:00:02.0 enP48379s7: renamed from eth8
+[    7.758740] mlx5_core 5b54:00:02.0 enP23380s8: renamed from eth10
+[    7.842691] mlx5_core 79f5:00:02.0 enP31221s6: renamed from eth15
+[    7.886746] mlx5_core 4604:00:02.0 enP17924s3: renamed from eth12
+[    7.958744] mlx5_core ed86:00:02.0 enP60806s4: renamed from eth13
+[    7.978953] mlx5_core c3e2:00:02.0 enP50146s2: renamed from eth11
+[    8.022814] mlx5_core ef9a:00:02.0 enP61338s1: renamed from eth9
+[    8.122736] mlx5_core 449c:00:02.0 enP17564s5: renamed from eth14
+[    8.304833] EXT4-fs (sda1): mounted filesystem 59c7d2d8-9b48-490d-b35a-6a8cb3aebca4 ro with ordered data mode. Quota mode: none.
+[    8.418369] systemd[1]: Inserted module 'autofs4'
+[    8.431153] systemd[1]: systemd 249.11-0ubuntu3.12 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT +GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY -P11KIT -QRENCODE +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified)
+[    8.447453] systemd[1]: Detected virtualization microsoft.
+[    8.451821] systemd[1]: Detected architecture arm64.
+[    8.458712] systemd[1]: Hostname set to <lisa--526-e0-n0>.
+[    8.511203] systemd[1]: memfd_create() called without MFD_EXEC or MFD_NOEXEC_SEAL set
+[    8.551032] block sda: the capability attribute has been deprecated.
+[    8.600248] systemd[1]: Configuration file /run/systemd/system/netplan-ovs-cleanup.service is marked world-inaccessible. This has no effect as configuration data is accessible via APIs without restrictions. Proceeding anyway.
+[    8.650976] systemd[1]: Queued start job for default target Graphical Interface.
+[    8.655619] systemd[1]: Unnecessary job was removed for /sys/devices/virtual/misc/vmbus!hv_vss.
+[    8.660534] systemd[1]: Unnecessary job was removed for /sys/devices/virtual/misc/vmbus!hv_fcopy.
+[    8.683192] systemd[1]: Created slice Slice for Azure VM Agent and Extensions.
+[    8.695008] systemd[1]: Created slice Slice /system/modprobe.
+[    8.702199] systemd[1]: Created slice Slice /system/serial-getty.
+[    8.709520] systemd[1]: Created slice Slice /system/systemd-fsck.
+[    8.717072] systemd[1]: Created slice User and Session Slice.
+[    8.724004] systemd[1]: Started Forward Password Requests to Wall Directory Watch.
+[    8.734950] systemd[1]: Set up automount Arbitrary Executable File Formats File System Automount Point.
+[    8.748788] systemd[1]: Reached target Slice Units.
+[    8.756495] systemd[1]: Reached target Mounting snaps.
+[    8.766549] systemd[1]: Reached target Swaps.
+[    8.772782] systemd[1]: Reached target System Time Set.
+[    8.781903] systemd[1]: Reached target Local Verity Protected Volumes.
+[    8.791638] systemd[1]: Listening on Device-mapper event daemon FIFOs.
+[    8.802184] systemd[1]: Listening on LVM2 poll daemon socket.
+[    8.808890] systemd[1]: Listening on multipathd control socket.
+[    8.815598] systemd[1]: Listening on Syslog Socket.
+[    8.821337] systemd[1]: Listening on fsck to fsckd communication Socket.
+[    8.828890] systemd[1]: Listening on initctl Compatibility Named Pipe.
+[    8.836629] systemd[1]: Listening on Journal Audit Socket.
+[    8.844987] systemd[1]: Listening on Journal Socket (/dev/log).
+[    8.851754] systemd[1]: Listening on Journal Socket.
+[    8.857765] systemd[1]: Listening on Network Service Netlink Socket.
+[    8.864955] systemd[1]: Listening on udev Control Socket.
+[    8.871525] systemd[1]: Listening on udev Kernel Socket.
+[    8.894788] systemd[1]: Mounting Huge Pages File System...
+[    8.901797] systemd[1]: Mounting POSIX Message Queue File System...
+[    8.910135] systemd[1]: Mounting Kernel Debug File System...
+[    8.917358] systemd[1]: Mounting Kernel Trace File System...
+[    8.926450] systemd[1]: Starting Journal Service...
+[    8.933391] systemd[1]: Starting Set the console keyboard layout...
+[    8.943817] systemd[1]: Starting Create List of Static Device Nodes...
+[    8.952601] systemd[1]: Starting Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling...
+[    8.961782] systemd[1]: Condition check resulted in LXD - agent being skipped.
+[    8.966817] systemd[1]: Starting Load Kernel Module configfs...
+[    8.974317] systemd[1]: Starting Load Kernel Module drm...
+[    8.981534] systemd[1]: Starting Load Kernel Module efi_pstore...
+[    8.989396] pstore: Using crash dump compression: deflate
+[    9.002928] systemd[1]: Starting Load Kernel Module fuse...
+[    9.006574] pstore: Registered efi_pstore as persistent store backend
+[    9.015697] systemd[1]: Condition check resulted in OpenVSwitch configuration for cleanup being skipped.
+[    9.022711] systemd[1]: Condition check resulted in File System Check on Root Device being skipped.
+[    9.030531] systemd[1]: Starting Load Kernel Modules...
+[    9.038580] systemd[1]: Starting Remount Root and Kernel File Systems...
+[    9.051170] systemd[1]: Starting Coldplug All udev Devices...
+[    9.059317] systemd[1]: Starting Setup network rules for WALinuxAgent...
+[    9.069017] systemd[1]: Started Journal Service.
+[    9.096864] EXT4-fs (sda1): re-mounted 59c7d2d8-9b48-490d-b35a-6a8cb3aebca4 r/w. Quota mode: none.
+[    9.150505] alua: device handler registered
+[    9.155562] systemd-journald[819]: Received client request to flush runtime journal.
+[    9.160560] emc: device handler registered
+[    9.166052] rdac: device handler registered
+[    9.637772] loop0: detected capacity change from 0 to 122368
+[    9.652707] loop1: detected capacity change from 0 to 158472
+[    9.660395] loop2: detected capacity change from 0 to 69032
+[    9.988311] audit: type=1400 audit(1724534341.825:2): apparmor="STATUS" operation="profile_load" profile="unconfined" name="lsb_release" pid=1139 comm="apparmor_parser"
+[   10.002546] audit: type=1400 audit(1724534341.825:3): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe" pid=1140 comm="apparmor_parser"
+[   10.016216] audit: type=1400 audit(1724534341.825:4): apparmor="STATUS" operation="profile_load" profile="unconfined" name="nvidia_modprobe//kmod" pid=1140 comm="apparmor_parser"
+[   10.027591] audit: type=1400 audit(1724534341.825:5): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/bin/man" pid=1144 comm="apparmor_parser"
+[   10.040106] audit: type=1400 audit(1724534341.825:6): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_filter" pid=1144 comm="apparmor_parser"
+[   10.055368] audit: type=1400 audit(1724534341.825:7): apparmor="STATUS" operation="profile_load" profile="unconfined" name="man_groff" pid=1144 comm="apparmor_parser"
+[   10.068582] audit: type=1400 audit(1724534341.825:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=1146 comm="apparmor_parser"
+[   10.078194] audit: type=1400 audit(1724534341.825:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=1146 comm="apparmor_parser"
+[   10.093103] audit: type=1400 audit(1724534341.825:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="/usr/sbin/chronyd" pid=1147 comm="apparmor_parser"
+[   10.101542] audit: type=1400 audit(1724534341.825:11): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ubuntu_pro_apt_news" pid=1142 comm="apparmor_parser"
+[   10.595218] /dev/sr0: Can't open blockdev
+[   10.849863] mlx5_core ef9a:00:02.0 enP61338s1: Link up
+[   10.888714] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: Data path switched to VF: enP61338s1
+[   11.027613] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: Data path switched from VF: enP61338s1
+[   11.323917] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 cirename0: renamed from eth1
+[   11.376559] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: renamed from eth5
+[   11.412478] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 cirename1: renamed from eth2
+[   11.448709] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: renamed from eth6
+[   11.500573] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 cirename2: renamed from eth4
+[   11.532754] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: renamed from cirename0
+[   11.576683] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: renamed from eth7
+[   11.600689] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: renamed from cirename1
+[   11.624650] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: renamed from cirename2
+[   12.053549] mlx5_core 5b54:00:02.0 enP23380s8: Link up
+[   12.090513] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: Data path switched to VF: enP23380s8
+[   12.294603] mlx5_core bcfb:00:02.0 enP48379s7: Link up
+[   12.332006] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: Data path switched to VF: enP48379s7
+[   12.541756] mlx5_core 79f5:00:02.0 enP31221s6: Link up
+[   12.579301] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: Data path switched to VF: enP31221s6
+[   12.785629] mlx5_core 449c:00:02.0 enP17564s5: Link up
+[   12.823632] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: Data path switched to VF: enP17564s5
+[   13.029212] mlx5_core ed86:00:02.0 enP60806s4: Link up
+[   13.069619] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: Data path switched to VF: enP60806s4
+[   13.282342] mlx5_core 4604:00:02.0 enP17924s3: Link up
+[   13.322056] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: Data path switched to VF: enP17924s3
+[   13.533577] mlx5_core c3e2:00:02.0 enP50146s2: Link up
+[   13.577338] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: Data path switched to VF: enP50146s2
+[   13.794253] mlx5_core ef9a:00:02.0 enP61338s1: Link up
+[   13.820474] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: Data path switched to VF: enP61338s1
+[   16.781595] loop3: detected capacity change from 0 to 8
+[   16.951261] kauditd_printk_skb: 32 callbacks suppressed
+[   16.951266] audit: type=1400 audit(1724534348.788:44): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=1456 comm="apparmor_parser"
+[   16.999112] audit: type=1400 audit(1724534348.836:45): apparmor="STATUS" operation="profile_replace" profile="unconfined" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=1456 comm="apparmor_parser"
+[   49.832421] hv_balloon: Max. dynamic memory size: 98304 MB
+[ 3503.437624] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: cdx: hv_eject_device_work: 1: 
+[ 3503.437633] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: cdx: hv_eject_device_work: 1: 
+[ 3503.437649] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: cdx: hv_eject_device_work: 2: pdev=ffff00010947b000
+[ 3503.437652] hv_pci 69172891-ef9a-48a2-982a-786ac7c8c711: cdx: hv_eject_device_work: 3.1: pdev=ffff00010947b000
+[ 3503.437731] mlx5_core ef9a:00:02.0: mlx5_uninit_one: mlx5_uninit_one: 1: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3503.437734] mlx5_core ef9a:00:02.0: mlx5_uninit_one: mlx5_uninit_one: 2: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3503.437735] mlx5_core ef9a:00:02.0: mlx5_uninit_one: mlx5_uninit_one: 3: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3503.437736] mlx5_core ef9a:00:02.0: mlx5_unregister_device: 1: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3503.437737] mlx5_core ef9a:00:02.0: mlx5_unregister_device: 2: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78, global mlx5_intf_mutex=ffffd52ef49563d0
+[ 3503.437739] mlx5_core ef9a:00:02.0: mlx5_unregister_device: 3: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78, global mlx5_intf_mutex=ffffd52ef49563d0
+[ 3503.437743] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 1: intf_state_mutex=ffff00014152cd78, flag=0x2
+[ 3503.437744] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 2: intf_state_mutex=ffff00014152cd78, flag=0x2
+[ 3503.437745] mlx5_core ef9a:00:02.0: delete_drivers: 1: intf_state_mutex=ffff00014152cd78, flag=0x2
+[ 3503.437746] mlx5_core ef9a:00:02.0: delete_drivers: 2.1: intf_state_mutex=ffff00014152cd78, flag=0x2, i=2, del_all=1
+[ 3503.437748] mlx5_core ef9a:00:02.0: delete_drivers: 2.1.1: intf_state_mutex=ffff00014152cd78, flag=0x2, i=2
+[ 3503.437749] mlx5_core ef9a:00:02.0: delete_drivers: 2.1.2: intf_state_mutex=ffff00014152cd78, flag=0x2, i=2, enabled=1
+[ 3503.437750] mlx5_core ef9a:00:02.0: delete_drivers: 4: intf_state_mutex=ffff00014152cd78, flag=0x2, i=2
+[ 3503.437825] mlx5_core ef9a:00:02.0: cdx_work_func: 1: intf_state_mutex=ffff00014152cd78: sleep 5s...
+[ 3503.438284] hv_pci e7329dd2-ed86-43f7-93fa-514e6d821666: cdx: hv_eject_device_work: 1: 
+[ 3503.438551] hv_pci aa2881d9-449c-4d08-a293-4ed2a795a854: cdx: hv_eject_device_work: 1: 
+[ 3503.438570] hv_pci aa2881d9-449c-4d08-a293-4ed2a795a854: cdx: hv_eject_device_work: 2: pdev=ffff00013e431000
+[ 3503.438811] hv_pci 27cc3870-bcfb-496a-b6c4-047ab7963d24: cdx: hv_eject_device_work: 1: 
+[ 3503.438826] hv_pci 27cc3870-bcfb-496a-b6c4-047ab7963d24: cdx: hv_eject_device_work: 2: pdev=ffff00013e435000
+[ 3503.439055] hv_pci cfa808e0-4604-4f10-9c57-ec9270ab26a8: cdx: hv_eject_device_work: 1: 
+[ 3503.439063] hv_pci cfa808e0-4604-4f10-9c57-ec9270ab26a8: cdx: hv_eject_device_work: 2: pdev=ffff00010947f000
+[ 3503.439302] hv_pci c779b611-79f5-4c77-9be5-e7c959ce5ced: cdx: hv_eject_device_work: 1: 
+[ 3503.439313] hv_pci c779b611-79f5-4c77-9be5-e7c959ce5ced: cdx: hv_eject_device_work: 2: pdev=ffff00013e437000
+[ 3503.439550] hv_pci c722f47f-5b54-4913-89e6-30871d1ed4b2: cdx: hv_eject_device_work: 1: 
+[ 3503.439564] hv_pci c722f47f-5b54-4913-89e6-30871d1ed4b2: cdx: hv_eject_device_work: 2: pdev=ffff000105482000
+[ 3503.453941] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: cdx: hv_eject_device_work: 2: pdev=ffff000109479000
+[ 3504.000896] hv_pci e7329dd2-ed86-43f7-93fa-514e6d821666: cdx: hv_eject_device_work: 2: pdev=ffff00013e433000
+[ 3508.555296] mlx5_core ef9a:00:02.0: cdx_work_func: 2: intf_state_mutex=ffff00014152cd78: sleep 5s... done: doing sysrq_w
+[ 3508.563720] task:kworker/u96:0   state:D stack:0     pid:10    ppid:2      flags:0x00000008
+[ 3508.578056] Workqueue: hv_pci_c3e2 hv_eject_device_work [pci_hyperv]
+[ 3508.591178] Call trace:
+[ 3508.592724]  __switch_to+0xe8/0x168
+[ 3508.603971]  __schedule+0x3c4/0x15e0
+[ 3508.606944]  schedule+0x58/0x120
+[ 3508.618146]  schedule_preempt_disabled+0x18/0x30
+[ 3508.621508]  __mutex_lock.constprop.0+0x240/0x880
+[ 3508.634067]  __mutex_lock_slowpath+0x1c/0x30
+[ 3508.646184]  mutex_lock+0x6c/0x88
+[ 3508.657687]  pci_lock_rescan_remove+0x24/0x38
+[ 3508.669722]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3508.682401]  process_one_work+0x21c/0x440
+[ 3508.685889]  worker_thread+0x168/0x500
+[ 3508.697760]  kthread+0xec/0xf8
+[ 3508.709143]  ret_from_fork+0x10/0x20
+[ 3508.720783] task:kworker/u96:3   state:D stack:0     pid:296   ppid:2      flags:0x00000008
+[ 3508.735376] Workqueue: hv_pci_ed86 hv_eject_device_work [pci_hyperv]
+[ 3508.748707] Call trace:
+[ 3508.759502]  __switch_to+0xe8/0x168
+[ 3508.772121]  __schedule+0x3c4/0x15e0
+[ 3508.774577]  schedule+0x58/0x120
+[ 3508.785925]  schedule_preempt_disabled+0x18/0x30
+[ 3508.798117]  __mutex_lock.constprop.0+0x240/0x880
+[ 3508.803419]  __mutex_lock_slowpath+0x1c/0x30
+[ 3508.815498]  mutex_lock+0x6c/0x88
+[ 3508.826971]  pci_lock_rescan_remove+0x24/0x38
+[ 3508.839177]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3508.842679]  process_one_work+0x21c/0x440
+[ 3508.854511]  worker_thread+0x168/0x500
+[ 3508.866613]  kthread+0xec/0xf8
+[ 3508.868668]  ret_from_fork+0x10/0x20
+[ 3508.880299] task:kworker/u96:8   state:D stack:0     pid:1267  ppid:2      flags:0x00000008
+[ 3508.903968] Workqueue: hv_pci_ef9a hv_eject_device_work [pci_hyperv]
+[ 3508.918568] Call trace:
+[ 3508.920754]  __switch_to+0xe8/0x168
+[ 3508.932342]  __schedule+0x3c4/0x15e0
+[ 3508.934765]  schedule+0x58/0x120
+[ 3508.946071]  schedule_timeout+0xa0/0x198
+[ 3508.957706]  __wait_for_common+0xc8/0x260
+[ 3508.960427]  wait_for_completion_timeout+0x28/0x40
+[ 3508.972997]  cmd_exec+0x89c/0xbf8 [mlx5_core]
+[ 3508.985053]  mlx5_cmd_do+0x38/0x80 [mlx5_core]
+[ 3508.997330]  mlx5_cmd_exec+0x2c/0x60 [mlx5_core]
+[ 3509.009632]  mlx5_ib_devx_cleanup+0x144/0x230 [mlx5_ib]
+[ 3509.013159]  mlx5r_remove+0x7c/0xd8 [mlx5_ib]
+[ 3509.025282]  auxiliary_bus_remove+0x2c/0x50
+[ 3509.037159]  device_remove+0x54/0x90
+[ 3509.048596]  device_release_driver_internal+0x1f4/0x2b8
+[ 3509.055370]  device_release_driver+0x20/0x38
+[ 3509.068425]  bus_remove_device+0xd8/0x158
+[ 3509.080341]  device_del+0x168/0x3d0
+[ 3509.091918]  mlx5_rescan_drivers_locked+0x208/0x510 [mlx5_core]
+[ 3509.095929]  mlx5_unregister_device+0x17c/0x1e8 [mlx5_core]
+[ 3509.108911]  mlx5_uninit_one+0xac/0x230 [mlx5_core]
+[ 3509.121392]  remove_one+0x84/0x188 [mlx5_core]
+[ 3509.133426]  pci_device_remove+0x44/0xf0
+[ 3509.145235]  device_remove+0x54/0x90
+[ 3509.147706]  device_release_driver_internal+0x1f4/0x2b8
+[ 3509.160266]  device_release_driver+0x20/0x38
+[ 3509.173545]  pci_stop_bus_device+0x8c/0xf8
+[ 3509.185407]  pci_stop_and_remove_bus_device+0x20/0x40
+[ 3509.188833]  hv_eject_device_work+0xc0/0x268 [pci_hyperv]
+[ 3509.201378]  process_one_work+0x21c/0x440
+[ 3509.213324]  worker_thread+0x168/0x500
+[ 3509.224818]  kthread+0xec/0xf8
+[ 3509.226980]  ret_from_fork+0x10/0x20
+[ 3509.238613] task:kworker/u96:1   state:D stack:0     pid:2101  ppid:2      flags:0x00000008
+[ 3509.254402] Workqueue: hv_pci_449c hv_eject_device_work [pci_hyperv]
+[ 3509.269708] Call trace:
+[ 3509.280733]  __switch_to+0xe8/0x168
+[ 3509.283133]  __schedule+0x3c4/0x15e0
+[ 3509.294784]  schedule+0x58/0x120
+[ 3509.297293]  schedule_preempt_disabled+0x18/0x30
+[ 3509.310470]  __mutex_lock.constprop.0+0x240/0x880
+[ 3509.323214]  __mutex_lock_slowpath+0x1c/0x30
+[ 3509.335177]  mutex_lock+0x6c/0x88
+[ 3509.337419]  pci_lock_rescan_remove+0x24/0x38
+[ 3509.350087]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3509.363054]  process_one_work+0x21c/0x440
+[ 3509.375805]  worker_thread+0x168/0x500
+[ 3509.378549]  kthread+0xec/0xf8
+[ 3509.389753]  ret_from_fork+0x10/0x20
+[ 3509.392470] task:kworker/u96:2   state:D stack:0     pid:2103  ppid:2      flags:0x00000008
+[ 3509.417944] Workqueue: hv_pci_bcfb hv_eject_device_work [pci_hyperv]
+[ 3509.431166] Call trace:
+[ 3509.433163]  __switch_to+0xe8/0x168
+[ 3509.444704]  __schedule+0x3c4/0x15e0
+[ 3509.447088]  schedule+0x58/0x120
+[ 3509.458349]  schedule_preempt_disabled+0x18/0x30
+[ 3509.471269]  __mutex_lock.constprop.0+0x240/0x880
+[ 3509.474363]  __mutex_lock_slowpath+0x1c/0x30
+[ 3509.486715]  mutex_lock+0x6c/0x88
+[ 3509.498263]  pci_lock_rescan_remove+0x24/0x38
+[ 3509.510132]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3509.513725]  process_one_work+0x21c/0x440
+[ 3509.525599]  worker_thread+0x168/0x500
+[ 3509.537274]  kthread+0xec/0xf8
+[ 3509.539648]  ret_from_fork+0x10/0x20
+[ 3509.551651] task:kworker/u96:4   state:D stack:0     pid:2104  ppid:2      flags:0x00000008
+[ 3509.570052] Workqueue: hv_pci_4604 hv_eject_device_work [pci_hyperv]
+[ 3509.583648] Call trace:
+[ 3509.594574]  __switch_to+0xe8/0x168
+[ 3509.597208]  __schedule+0x3c4/0x15e0
+[ 3509.608759]  schedule+0x58/0x120
+[ 3509.611044]  schedule_preempt_disabled+0x18/0x30
+[ 3509.623390]  __mutex_lock.constprop.0+0x240/0x880
+[ 3509.635769]  __mutex_lock_slowpath+0x1c/0x30
+[ 3509.647830]  mutex_lock+0x6c/0x88
+[ 3509.650266]  pci_lock_rescan_remove+0x24/0x38
+[ 3509.662425]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3509.675995]  process_one_work+0x21c/0x440
+[ 3509.687698]  worker_thread+0x168/0x500
+[ 3509.690301]  kthread+0xec/0xf8
+[ 3509.701511]  ret_from_fork+0x10/0x20
+[ 3509.703957] task:kworker/u96:5   state:D stack:0     pid:2105  ppid:2      flags:0x00000008
+[ 3509.727650] Workqueue: hv_pci_79f5 hv_eject_device_work [pci_hyperv]
+[ 3509.740799] Call trace:
+[ 3509.742529]  __switch_to+0xe8/0x168
+[ 3509.754359]  __schedule+0x3c4/0x15e0
+[ 3509.756674]  schedule+0x58/0x120
+[ 3509.767990]  schedule_preempt_disabled+0x18/0x30
+[ 3509.780554]  __mutex_lock.constprop.0+0x240/0x880
+[ 3509.792808]  __mutex_lock_slowpath+0x1c/0x30
+[ 3509.795802]  mutex_lock+0x6c/0x88
+[ 3509.808673]  pci_lock_rescan_remove+0x24/0x38
+[ 3509.821661]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3509.825556]  process_one_work+0x21c/0x440
+[ 3509.837440]  worker_thread+0x168/0x500
+[ 3509.849082]  kthread+0xec/0xf8
+[ 3509.851122]  ret_from_fork+0x10/0x20
+[ 3509.862583] task:kworker/u96:6   state:D stack:0     pid:2106  ppid:2      flags:0x00000008
+[ 3509.877201] Workqueue: hv_pci_5b54 hv_eject_device_work [pci_hyperv]
+[ 3509.890457] Call trace:
+[ 3509.901232]  __switch_to+0xe8/0x168
+[ 3509.903759]  __schedule+0x3c4/0x15e0
+[ 3509.915256]  schedule+0x58/0x120
+[ 3509.926974]  schedule_preempt_disabled+0x18/0x30
+[ 3509.930721]  __mutex_lock.constprop.0+0x240/0x880
+[ 3509.943346]  __mutex_lock_slowpath+0x1c/0x30
+[ 3509.955289]  mutex_lock+0x6c/0x88
+[ 3509.957557]  pci_lock_rescan_remove+0x24/0x38
+[ 3509.969764]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3509.982424]  process_one_work+0x21c/0x440
+[ 3509.994215]  worker_thread+0x168/0x500
+[ 3509.997216]  kthread+0xec/0xf8
+[ 3510.008424]  ret_from_fork+0x10/0x20
+[ 3510.020020] mlx5_core ef9a:00:02.0: cdx_work_func: 3: intf_state_mutex=ffff00014152cd78: sleep 5s... done: doing sysrq_w: done
+[ 3533.451951] cdx: vmbus_on_msg_dpc: rescinding relid=63
+[ 3533.452288] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[ 3533.455480] cdx: vmbus_on_msg_dpc: rescinding relid=79
+[ 3533.478260] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: cdx: hv_pci_remove: 1, state=2, chan.rescind=1
+[ 3533.493312] cdx: vmbus_on_msg_dpc: rescinding relid=88
+[ 3533.505843] hv_pci 57524d70-c3e2-42df-99a4-a10c42645bd8: cdx: hv_pci_remove: 2, state=2, chan.rescind=1
+[ 3533.521131] cdx: vmbus_on_msg_dpc: rescinding relid=87
+[ 3533.533684] cdx: vmbus_on_msg_dpc: rescinding relid=111
+[ 3533.546260] cdx: vmbus_on_msg_dpc: rescinding relid=71
+[ 3533.558699] cdx: vmbus_on_msg_dpc: rescinding relid=96
+[ 3533.571506] cdx: vmbus_on_msg_dpc: rescinding relid=55
+[ 3533.574047] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[ 3533.646161] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[ 3533.728289] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[ 3533.813407] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[ 3533.908596] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[ 3533.980622] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[ 3534.066512] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[ 3534.162042] mlx5_core 449c:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3534.176395] mlx5_core 449c:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3534.181746] hv_utils: Heartbeat IC version 3.0
+[ 3534.186637] mlx5_core 449c:00:02.0: mlx5_health_try_recover:341:(pid 2108): handling bad device here
+[ 3534.189394] hv_utils: Shutdown IC version 3.2
+[ 3534.195880] mlx5_core 449c:00:02.0: mlx5_error_sw_reset:245:(pid 2108): start
+[ 3534.198592] hv_utils: TimeSync IC version 4.0
+[ 3534.409507] mlx5_core ed86:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3534.410641] mlx5_core c3e2:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3534.414140] mlx5_core ed86:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3534.419086] mlx5_core c3e2:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3534.423947] mlx5_core ed86:00:02.0: mlx5_health_try_recover:341:(pid 2112): handling bad device here
+[ 3534.428337] mlx5_core c3e2:00:02.0: mlx5_health_try_recover:341:(pid 2113): handling bad device here
+[ 3534.435007] mlx5_core ed86:00:02.0: mlx5_error_sw_reset:245:(pid 2112): start
+[ 3534.440442] mlx5_core c3e2:00:02.0: mlx5_error_sw_reset:245:(pid 2113): start
+[ 3534.921937] mlx5_core 5b54:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3534.928492] mlx5_core 5b54:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3534.934792] mlx5_core bcfb:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3534.935035] mlx5_core 5b54:00:02.0: mlx5_health_try_recover:341:(pid 2107): handling bad device here
+[ 3534.940738] mlx5_core bcfb:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3534.946446] mlx5_core 5b54:00:02.0: mlx5_error_sw_reset:245:(pid 2107): start
+[ 3534.951126] mlx5_core bcfb:00:02.0: mlx5_health_try_recover:341:(pid 2114): handling bad device here
+[ 3534.962463] mlx5_core bcfb:00:02.0: mlx5_error_sw_reset:245:(pid 2114): start
+[ 3535.177484] mlx5_core ef9a:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3535.182606] mlx5_core ef9a:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3535.413612] hv_balloon: Max. dynamic memory size: 98304 MB
+[ 3535.945488] mlx5_core 4604:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3535.950536] mlx5_core 4604:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3535.956884] mlx5_core 79f5:00:02.0: poll_health:825:(pid 0): Fatal error 1 detected
+[ 3535.957078] mlx5_core 4604:00:02.0: mlx5_health_try_recover:341:(pid 2111): handling bad device here
+[ 3535.962072] mlx5_core 79f5:00:02.0: print_health_info:429:(pid 0): PCI slot is unavailable
+[ 3535.968596] mlx5_core 4604:00:02.0: mlx5_error_sw_reset:245:(pid 2111): start
+[ 3535.973745] mlx5_core 79f5:00:02.0: mlx5_health_try_recover:341:(pid 2116): handling bad device here
+[ 3535.984693] mlx5_core 79f5:00:02.0: mlx5_error_sw_reset:245:(pid 2116): start
+[ 3536.216802] mlx5_core 449c:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3536.221828] mlx5_core 449c:00:02.0: mlx5_error_sw_reset:278:(pid 2108): end
+[ 3536.457519] mlx5_core ed86:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3536.461897] mlx5_core ed86:00:02.0: mlx5_error_sw_reset:278:(pid 2112): end
+[ 3536.464751] mlx5_core c3e2:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3536.469921] mlx5_core c3e2:00:02.0: mlx5_error_sw_reset:278:(pid 2113): end
+[ 3536.968714] mlx5_core 5b54:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3536.972069] mlx5_core 5b54:00:02.0: mlx5_error_sw_reset:278:(pid 2107): end
+[ 3536.984715] mlx5_core bcfb:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3536.987914] mlx5_core bcfb:00:02.0: mlx5_error_sw_reset:278:(pid 2114): end
+[ 3537.481833] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[ 3537.531441] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[ 3537.795114] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[ 3537.973529] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[ 3537.992905] mlx5_core 4604:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3537.997222] mlx5_core 4604:00:02.0: mlx5_error_sw_reset:278:(pid 2111): end
+[ 3538.004696] mlx5_core 79f5:00:02.0: NIC IFC still 7 after 2000ms.
+[ 3538.011169] mlx5_core 79f5:00:02.0: mlx5_error_sw_reset:278:(pid 2116): end
+[ 3538.021505] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[ 3538.079991] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[ 3538.136799] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[ 3538.208477] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[ 3569.991936] mlx5_core ef9a:00:02.0: wait_func_handle_exec_timeout:1126:(pid 1267): cmd[0]: DESTROY_UCTX(0xa06) No done completion
+[ 3569.998303] mlx5_core ef9a:00:02.0: wait_func:1153:(pid 1267): DESTROY_UCTX(0xa06) timeout. Will cause a leak of a command resource
+[ 3570.051831] mlx5_core ef9a:00:02.0: delete_drivers: 5: intf_state_mutex=ffff00014152cd78, flag=0x2, i=2
+[ 3570.056750] mlx5_core ef9a:00:02.0: delete_drivers: 2.1: intf_state_mutex=ffff00014152cd78, flag=0x2, i=0, del_all=1
+[ 3570.062325] mlx5_core ef9a:00:02.0: delete_drivers: 2.1.1: intf_state_mutex=ffff00014152cd78, flag=0x2, i=0
+[ 3570.066997] mlx5_core ef9a:00:02.0: delete_drivers: 2.1.2: intf_state_mutex=ffff00014152cd78, flag=0x2, i=0, enabled=1
+[ 3570.072088] mlx5_core ef9a:00:02.0: delete_drivers: 4: intf_state_mutex=ffff00014152cd78, flag=0x2, i=0
+[ 3570.078557] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: Data path switched from VF: enP61338s1
+[ 3570.090713] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF unregistering: enP61338s1
+[ 3570.131807] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.141016] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.148742] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.159260] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.169358] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.169353] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.177623] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.194717] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, i=0
+[ 3570.202863] mlx5_core ef9a:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947b000, buf=ffff000145ba4300, len=128, blk_id=0
+[ 3570.263843] mlx5_core ef9a:00:02.0: delete_drivers: 5: intf_state_mutex=ffff00014152cd78, flag=0x2, i=0
+[ 3570.268904] mlx5_core ef9a:00:02.0: delete_drivers: 6: intf_state_mutex=ffff00014152cd78, flag=0x2
+[ 3570.273347] mlx5_core ef9a:00:02.0: mlx5_rescan_drivers_locked: 3: intf_state_mutex=ffff00014152cd78, flag=0x2
+[ 3570.278255] mlx5_core ef9a:00:02.0: mlx5_unregister_device: 4: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78, global mlx5_intf_mutex=ffffd52ef49563d0
+[ 3570.286927] mlx5_core ef9a:00:02.0: mlx5_unregister_device: 5: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78, global mlx5_intf_mutex=ffffd52ef49563d0
+[ 3570.294203] mlx5_core ef9a:00:02.0: mlx5_uninit_one: mlx5_uninit_one: 4: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3570.300793] mlx5_core ef9a:00:02.0: mlx5_uninit_one: mlx5_uninit_one: 5: devlink=ffff000141500000, intf_state_mutex=ffff00014152cd78
+[ 3570.319792] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.326255] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10, agent=ffff000141b109c0
+[ 3570.334934] mlx5_core ef9a:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00010947b000, hv_vhca=ffff000127ae3e00, agents_lock=ffff000127ae3f10
+[ 3570.388099] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: Data path switched from VF: enP17564s5
+[ 3570.402231] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF unregistering: enP17564s5
+[ 3570.447802] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.455326] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.462270] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.473353] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.483055] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.483164] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.500255] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.507636] mlx5_core 449c:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, i=0
+[ 3570.515662] mlx5_core 449c:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e431000, buf=ffff000191903480, len=128, blk_id=0
+[ 3570.571810] mlx5_core 449c:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.580167] mlx5_core 449c:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110, agent=ffff0001451095c0
+[ 3570.587945] mlx5_core 449c:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e431000, hv_vhca=ffff0001396a1000, agents_lock=ffff0001396a1110
+[ 3570.640118] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: Data path switched from VF: enP60806s4
+[ 3570.651766] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF unregistering: enP60806s4
+[ 3570.683785] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.691539] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.698550] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.708546] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.718299] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.718420] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.738279] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.746209] mlx5_core ed86:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, i=0
+[ 3570.754564] mlx5_core ed86:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e433000, buf=ffff000191903300, len=128, blk_id=0
+[ 3570.811829] mlx5_core ed86:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.818463] mlx5_core ed86:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110, agent=ffff00014491a380
+[ 3570.826017] mlx5_core ed86:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e433000, hv_vhca=ffff0001040b6000, agents_lock=ffff0001040b6110
+[ 3570.892105] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: Data path switched from VF: enP50146s2
+[ 3570.905392] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF unregistering: enP50146s2
+[ 3570.943776] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3570.952245] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3570.959537] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.969615] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.982166] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3570.982279] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.001946] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.009137] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[ 3571.016407] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000109479000, buf=ffff000188217200, len=128, blk_id=0
+[ 3571.024486] mlx5_core c3e2:00:02.0: cdx: hyperv_read_cfg_blk: line 32: 2: pdev=ffff000109479000, buf=ffff000188217200, len=128, blk_id=0, out_len=-65535, ret=-19
+[ 3571.032602] mlx5_core c3e2:00:02.0: mlx5_hv_config_common:32:(pid 2115): Failed to read hv config, err = -19, len = 128, offset = 0
+[ 3571.039513] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, i=0
+[ 3571.047816] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.103917] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.110743] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, agent=ffff00014328e380
+[ 3571.118142] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.125194] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.136220] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=0x0
+[ 3571.144903] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=0x0
+[ 3571.152827] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310, cleanup=0x0
+[ 3571.152941] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.159227] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.159474] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.181595] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.181596] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 4: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.181601] mlx5_core c3e2:00:02.0: cdx: hyperv_reg_block_invalidate: line 59: 1: pdev=ffff000109479000, ctxt=0000000000000000, func=0x0
+[ 3571.187431] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_invalidate_work: 3.3: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.207411] mlx5_core c3e2:00:02.0: cdx: hyperv_reg_block_invalidate: line 62: 2: pdev=ffff000109479000, ctxt=0000000000000000, func=0x0, ret=0
+[ 3571.213939] mlx5_core c3e2:00:02.0: mlx5_hv_vhca_cleanup: 5: pdev=ffff000109479000, hv_vhca=ffff000127af9200, agents_lock=ffff000127af9310
+[ 3571.264356] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: Data path switched from VF: enP23380s8
+[ 3571.276350] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF unregistering: enP23380s8
+[ 3571.323789] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.331241] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.338729] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.349707] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.360654] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.360650] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.367835] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.367837] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, i=0
+[ 3571.367839] mlx5_core 5b54:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff000105482000, buf=ffff000105c62000, len=128, blk_id=0
+[ 3571.467900] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.475814] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910, agent=ffff000142e31300
+[ 3571.484167] mlx5_core 5b54:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff000105482000, hv_vhca=ffff000141ece800, agents_lock=ffff000141ece910
+[ 3571.552149] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: Data path switched from VF: enP48379s7
+[ 3571.564560] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF unregistering: enP48379s7
+[ 3571.607799] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.614956] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.623111] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.632924] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.646683] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.646678] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.654631] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.672662] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, i=0
+[ 3571.680489] mlx5_core bcfb:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e435000, buf=ffff000188217200, len=128, blk_id=0
+[ 3571.751789] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.758685] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710, agent=ffff000141a265c0
+[ 3571.766810] mlx5_core bcfb:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e435000, hv_vhca=ffff00012caa2600, agents_lock=ffff00012caa2710
+[ 3571.844080] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: Data path switched from VF: enP17924s3
+[ 3571.855503] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF unregistering: enP17924s3
+[ 3571.899773] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3571.908208] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3571.914906] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.926033] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.935411] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3571.935402] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3571.941334] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3571.941336] mlx5_core 4604:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, i=0
+[ 3571.941339] mlx5_core 4604:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00010947f000, buf=ffff000105c62c00, len=128, blk_id=0
+[ 3572.047775] mlx5_core 4604:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3572.054467] mlx5_core 4604:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710, agent=ffff000143d01440
+[ 3572.061775] mlx5_core 4604:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00010947f000, hv_vhca=ffff000109512600, agents_lock=ffff000109512710
+[ 3572.115934] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: Data path switched from VF: enP31221s6
+[ 3572.126656] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF unregistering: enP31221s6
+[ 3572.171764] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3572.180171] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3572.186683] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 3: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3572.196615] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 4: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3572.205581] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3572.205577] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 5: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, cleanup=mlx5e_hv_vhca_stats_cleanup+0x0/0x38 [mlx5_core]
+[ 3572.211799] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 2: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3572.229891] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_invalidate_work: 3.1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, i=0
+[ 3572.237099] mlx5_core 79f5:00:02.0: cdx: hyperv_read_cfg_blk: line 29: 1: pdev=ffff00013e437000, buf=ffff000145ba4900, len=128, blk_id=0
+[ 3572.331771] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3572.339164] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_cleanup: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10, agent=ffff000136b1ab40
+[ 3572.346966] mlx5_core 79f5:00:02.0: mlx5_hv_vhca_agent_destroy: 1: pdev=ffff00013e437000, hv_vhca=ffff0001396acc00, agents_lock=ffff0001396acd10
+[ 3593.760657] cdx: vmbus_on_msg_dpc: rescinding relid=1
+[ 3626.310592] INFO: task kworker/u96:0:10 blocked for more than 120 seconds.
+[ 3626.314539]       Not tainted 6.5.13-decui+ #5
+[ 3626.317006] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.321046] task:kworker/u96:0   state:D stack:0     pid:10    ppid:2      flags:0x00000008
+[ 3626.325163] Workqueue: hv_pci_c3e2 hv_eject_device_work [pci_hyperv]
+[ 3626.328458] Call trace:
+[ 3626.332180]  __switch_to+0xe8/0x168
+[ 3626.334272]  __schedule+0x3c4/0x15e0
+[ 3626.336220]  schedule+0x58/0x120
+[ 3626.338023]  schedule_preempt_disabled+0x18/0x30
+[ 3626.340442]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.342985]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.345569]  mutex_lock+0x6c/0x88
+[ 3626.347468]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.349715]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.352378]  process_one_work+0x21c/0x440
+[ 3626.354440]  worker_thread+0x168/0x500
+[ 3626.356376]  kthread+0xec/0xf8
+[ 3626.358011]  ret_from_fork+0x10/0x20
+[ 3626.359885] INFO: task kworker/u96:3:296 blocked for more than 120 seconds.
+[ 3626.363590]       Not tainted 6.5.13-decui+ #5
+[ 3626.365919] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.369967] task:kworker/u96:3   state:D stack:0     pid:296   ppid:2      flags:0x00000008
+[ 3626.373999] Workqueue: hv_pci_ed86 hv_eject_device_work [pci_hyperv]
+[ 3626.379797] Call trace:
+[ 3626.382156]  __switch_to+0xe8/0x168
+[ 3626.384163]  __schedule+0x3c4/0x15e0
+[ 3626.386179]  schedule+0x58/0x120
+[ 3626.388767]  schedule_preempt_disabled+0x18/0x30
+[ 3626.391555]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.394113]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.396617]  mutex_lock+0x6c/0x88
+[ 3626.398454]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.400710]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.403484]  process_one_work+0x21c/0x440
+[ 3626.405560]  worker_thread+0x168/0x500
+[ 3626.407664]  kthread+0xec/0xf8
+[ 3626.409257]  ret_from_fork+0x10/0x20
+[ 3626.411191] INFO: task kworker/u96:1:2101 blocked for more than 120 seconds.
+[ 3626.414533]       Not tainted 6.5.13-decui+ #5
+[ 3626.416755] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.420410] task:kworker/u96:1   state:D stack:0     pid:2101  ppid:2      flags:0x00000008
+[ 3626.425571] Workqueue: hv_pci_449c hv_eject_device_work [pci_hyperv]
+[ 3626.428760] Call trace:
+[ 3626.430065]  __switch_to+0xe8/0x168
+[ 3626.431765]  __schedule+0x3c4/0x15e0
+[ 3626.433481]  schedule+0x58/0x120
+[ 3626.435104]  schedule_preempt_disabled+0x18/0x30
+[ 3626.437273]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.440113]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.442207]  mutex_lock+0x6c/0x88
+[ 3626.443862]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.445996]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.448550]  process_one_work+0x21c/0x440
+[ 3626.450495]  worker_thread+0x168/0x500
+[ 3626.452641]  kthread+0xec/0xf8
+[ 3626.454224]  ret_from_fork+0x10/0x20
+[ 3626.456960] INFO: task kworker/u96:2:2103 blocked for more than 120 seconds.
+[ 3626.460455]       Not tainted 6.5.13-decui+ #5
+[ 3626.462681] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.466307] task:kworker/u96:2   state:D stack:0     pid:2103  ppid:2      flags:0x00000008
+[ 3626.471097] Workqueue: hv_pci_bcfb hv_eject_device_work [pci_hyperv]
+[ 3626.474185] Call trace:
+[ 3626.475554]  __switch_to+0xe8/0x168
+[ 3626.477275]  __schedule+0x3c4/0x15e0
+[ 3626.479053]  schedule+0x58/0x120
+[ 3626.480655]  schedule_preempt_disabled+0x18/0x30
+[ 3626.482879]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.485116]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.487374]  mutex_lock+0x6c/0x88
+[ 3626.488981]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.491097]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.493642]  process_one_work+0x21c/0x440
+[ 3626.495607]  worker_thread+0x168/0x500
+[ 3626.497413]  kthread+0xec/0xf8
+[ 3626.498958]  ret_from_fork+0x10/0x20
+[ 3626.500704] INFO: task kworker/u96:4:2104 blocked for more than 121 seconds.
+[ 3626.504435]       Not tainted 6.5.13-decui+ #5
+[ 3626.506688] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.510386] task:kworker/u96:4   state:D stack:0     pid:2104  ppid:2      flags:0x00000008
+[ 3626.514307] Workqueue: hv_pci_4604 hv_eject_device_work [pci_hyperv]
+[ 3626.518275] Call trace:
+[ 3626.519636]  __switch_to+0xe8/0x168
+[ 3626.521391]  __schedule+0x3c4/0x15e0
+[ 3626.523301]  schedule+0x58/0x120
+[ 3626.524952]  schedule_preempt_disabled+0x18/0x30
+[ 3626.527238]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.529511]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.531615]  mutex_lock+0x6c/0x88
+[ 3626.533330]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.535504]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.538147]  process_one_work+0x21c/0x440
+[ 3626.540108]  worker_thread+0x168/0x500
+[ 3626.541957]  kthread+0xec/0xf8
+[ 3626.543764]  ret_from_fork+0x10/0x20
+[ 3626.545529] INFO: task kworker/u96:5:2105 blocked for more than 121 seconds.
+[ 3626.549479]       Not tainted 6.5.13-decui+ #5
+[ 3626.551732] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.555797] task:kworker/u96:5   state:D stack:0     pid:2105  ppid:2      flags:0x00000008
+[ 3626.559800] Workqueue: hv_pci_79f5 hv_eject_device_work [pci_hyperv]
+[ 3626.562785] Call trace:
+[ 3626.564064]  __switch_to+0xe8/0x168
+[ 3626.566216]  __schedule+0x3c4/0x15e0
+[ 3626.568270]  schedule+0x58/0x120
+[ 3626.569967]  schedule_preempt_disabled+0x18/0x30
+[ 3626.572337]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.574670]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.576796]  mutex_lock+0x6c/0x88
+[ 3626.578506]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.581384]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.584135]  process_one_work+0x21c/0x440
+[ 3626.586320]  worker_thread+0x168/0x500
+[ 3626.588368]  kthread+0xec/0xf8
+[ 3626.589957]  ret_from_fork+0x10/0x20
+[ 3626.591805] INFO: task kworker/u96:6:2106 blocked for more than 121 seconds.
+[ 3626.595341]       Not tainted 6.5.13-decui+ #5
+[ 3626.597988] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3626.601806] task:kworker/u96:6   state:D stack:0     pid:2106  ppid:2      flags:0x00000008
+[ 3626.605903] Workqueue: hv_pci_5b54 hv_eject_device_work [pci_hyperv]
+[ 3626.608999] Call trace:
+[ 3626.610300]  __switch_to+0xe8/0x168
+[ 3626.612418]  __schedule+0x3c4/0x15e0
+[ 3626.614240]  schedule+0x58/0x120
+[ 3626.615910]  schedule_preempt_disabled+0x18/0x30
+[ 3626.618168]  __mutex_lock.constprop.0+0x240/0x880
+[ 3626.620437]  __mutex_lock_slowpath+0x1c/0x30
+[ 3626.622555]  mutex_lock+0x6c/0x88
+[ 3626.624167]  pci_lock_rescan_remove+0x24/0x38
+[ 3626.626277]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3626.631755]  process_one_work+0x21c/0x440
+[ 3626.634190]  worker_thread+0x168/0x500
+[ 3626.637010]  kthread+0xec/0xf8
+[ 3626.639564]  ret_from_fork+0x10/0x20
+[ 3632.673924] mlx5_core c3e2:00:02.0: mlx5_health_try_recover:344:(pid 2113): health recovery flow aborted, PCI reads still not working
+[ 3747.138656] INFO: task kworker/0:1:9 blocked for more than 120 seconds.
+[ 3747.142561]       Not tainted 6.5.13-decui+ #5
+[ 3747.144825] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3747.149096] task:kworker/0:1     state:D stack:0     pid:9     ppid:2      flags:0x00000008
+[ 3747.153493] Workqueue: hv_vmbus_rescind vmbus_onmessage_work
+[ 3747.156554] Call trace:
+[ 3747.157942]  __switch_to+0xe8/0x168
+[ 3747.159787]  __schedule+0x3c4/0x15e0
+[ 3747.161709]  schedule+0x58/0x120
+[ 3747.163485]  schedule_timeout+0x178/0x198
+[ 3747.166012]  __wait_for_common+0xc8/0x260
+[ 3747.168571]  wait_for_completion+0x28/0x40
+[ 3747.171032]  __flush_workqueue+0x10c/0x400
+[ 3747.173442]  drain_workqueue+0x70/0x1d8
+[ 3747.175650]  destroy_workqueue+0x64/0x380
+[ 3747.177743]  hv_pci_remove+0x1d0/0x308 [pci_hyperv]
+[ 3747.182508]  vmbus_remove+0x2c/0x48
+[ 3747.184524]  device_remove+0x54/0x90
+[ 3747.186613]  device_release_driver_internal+0x1f4/0x2b8
+[ 3747.189362]  device_release_driver+0x20/0x38
+[ 3747.191884]  bus_remove_device+0xd8/0x158
+[ 3747.194027]  device_del+0x168/0x3d0
+[ 3747.196487]  device_unregister+0x28/0x88
+[ 3747.198586]  vmbus_device_unregister+0x34/0xa8
+[ 3747.200900]  vmbus_onoffer_rescind+0x290/0x2f0
+[ 3747.203407]  vmbus_onmessage+0x48/0xb0
+[ 3747.205434]  vmbus_onmessage_work+0x30/0x50
+[ 3747.207856]  process_one_work+0x21c/0x440
+[ 3747.209973]  worker_thread+0x168/0x500
+[ 3747.212280]  kthread+0xec/0xf8
+[ 3747.213986]  ret_from_fork+0x10/0x20
+[ 3747.215900] INFO: task kworker/u96:0:10 blocked for more than 241 seconds.
+[ 3747.219696]       Not tainted 6.5.13-decui+ #5
+[ 3747.222140] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3747.226406] task:kworker/u96:0   state:D stack:0     pid:10    ppid:2      flags:0x00000008
+[ 3747.236726] Workqueue: hv_pci_c3e2 hv_eject_device_work [pci_hyperv]
+[ 3747.242457] Call trace:
+[ 3747.244707]  __switch_to+0xe8/0x168
+[ 3747.246724]  __schedule+0x3c4/0x15e0
+[ 3747.249376]  schedule+0x58/0x120
+[ 3747.251173]  schedule_preempt_disabled+0x18/0x30
+[ 3747.253767]  __mutex_lock.constprop.0+0x240/0x880
+[ 3747.256224]  __mutex_lock_slowpath+0x1c/0x30
+[ 3747.258629]  mutex_lock+0x6c/0x88
+[ 3747.261090]  pci_lock_rescan_remove+0x24/0x38
+[ 3747.263779]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3747.266888]  process_one_work+0x21c/0x440
+[ 3747.269105]  worker_thread+0x168/0x500
+[ 3747.271626]  kthread+0xec/0xf8
+[ 3747.273646]  ret_from_fork+0x10/0x20
+[ 3747.277977] INFO: task kworker/u96:3:296 blocked for more than 241 seconds.
+[ 3747.281948]       Not tainted 6.5.13-decui+ #5
+[ 3747.284338] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 3747.288546] task:kworker/u96:3   state:D stack:0     pid:296   ppid:2      flags:0x00000008
+[ 3747.293415] Workqueue: hv_pci_ed86 hv_eject_device_work [pci_hyperv]
+[ 3747.296736] Call trace:
+[ 3747.298096]  __switch_to+0xe8/0x168
+[ 3747.299901]  __schedule+0x3c4/0x15e0
+[ 3747.301973]  schedule+0x58/0x120
+[ 3747.303699]  schedule_preempt_disabled+0x18/0x30
+[ 3747.306222]  __mutex_lock.constprop.0+0x240/0x880
+[ 3747.308879]  __mutex_lock_slowpath+0x1c/0x30
+[ 3747.310973]  mutex_lock+0x6c/0x88
+[ 3747.312629]  pci_lock_rescan_remove+0x24/0x38
+[ 3747.314787]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 3747.317368]  process_one_work+0x21c/0x440
+[ 3747.319364]  worker_thread+0x168/0x500
+[ 3747.321182]  kthread+0xec/0xf8
+[ 3747.324376]  ret_from_fork+0x10/0x20
+[ 3747.326304] Future hung task reports are suppressed, see sysctl kernel.hung_task_warnings
+[ 8087.125415] sysrq: Show Blocked State
+[ 8087.127765] task:kworker/0:1     state:D stack:0     pid:9     ppid:2      flags:0x00000008
+[ 8087.131624] Workqueue: hv_vmbus_rescind vmbus_onmessage_work
+[ 8087.136409] Call trace:
+[ 8087.137767]  __switch_to+0xe8/0x168
+[ 8087.139529]  __schedule+0x3c4/0x15e0
+[ 8087.141372]  schedule+0x58/0x120
+[ 8087.142986]  schedule_timeout+0x178/0x198
+[ 8087.144923]  __wait_for_common+0xc8/0x260
+[ 8087.146850]  wait_for_completion+0x28/0x40
+[ 8087.149071]  __flush_workqueue+0x10c/0x400
+[ 8087.151157]  drain_workqueue+0x70/0x1d8
+[ 8087.153256]  destroy_workqueue+0x64/0x380
+[ 8087.155439]  hv_pci_remove+0x1d0/0x308 [pci_hyperv]
+[ 8087.157860]  vmbus_remove+0x2c/0x48
+[ 8087.159701]  device_remove+0x54/0x90
+[ 8087.161492]  device_release_driver_internal+0x1f4/0x2b8
+[ 8087.164438]  device_release_driver+0x20/0x38
+[ 8087.166451]  bus_remove_device+0xd8/0x158
+[ 8087.168474]  device_del+0x168/0x3d0
+[ 8087.170195]  device_unregister+0x28/0x88
+[ 8087.172167]  vmbus_device_unregister+0x34/0xa8
+[ 8087.174441]  vmbus_onoffer_rescind+0x290/0x2f0
+[ 8087.176628]  vmbus_onmessage+0x48/0xb0
+[ 8087.178412]  vmbus_onmessage_work+0x30/0x50
+[ 8087.182416]  process_one_work+0x21c/0x440
+[ 8087.184521]  worker_thread+0x168/0x500
+[ 8087.186365]  kthread+0xec/0xf8
+[ 8087.187963]  ret_from_fork+0x10/0x20
+[ 8087.189766] task:kworker/u96:0   state:D stack:0     pid:10    ppid:2      flags:0x00000008
+[ 8087.193725] Workqueue: hv_pci_c3e2 hv_eject_device_work [pci_hyperv]
+[ 8087.197139] Call trace:
+[ 8087.198382]  __switch_to+0xe8/0x168
+[ 8087.200115]  __schedule+0x3c4/0x15e0
+[ 8087.201832]  schedule+0x58/0x120
+[ 8087.203439]  schedule_preempt_disabled+0x18/0x30
+[ 8087.205650]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.207920]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.210342]  mutex_lock+0x6c/0x88
+[ 8087.212025]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.214201]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.216829]  process_one_work+0x21c/0x440
+[ 8087.218796]  worker_thread+0x168/0x500
+[ 8087.220593]  kthread+0xec/0xf8
+[ 8087.222076]  ret_from_fork+0x10/0x20
+[ 8087.224094] task:kworker/u96:3   state:D stack:0     pid:296   ppid:2      flags:0x00000008
+[ 8087.233067] Workqueue: hv_pci_ed86 hv_eject_device_work [pci_hyperv]
+[ 8087.236953] Call trace:
+[ 8087.239341]  __switch_to+0xe8/0x168
+[ 8087.241675]  __schedule+0x3c4/0x15e0
+[ 8087.243515]  schedule+0x58/0x120
+[ 8087.245079]  schedule_preempt_disabled+0x18/0x30
+[ 8087.247661]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.249967]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.252106]  mutex_lock+0x6c/0x88
+[ 8087.253792]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.255976]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.258807]  process_one_work+0x21c/0x440
+[ 8087.260809]  worker_thread+0x168/0x500
+[ 8087.262773]  kthread+0xec/0xf8
+[ 8087.264496]  ret_from_fork+0x10/0x20
+[ 8087.266432] task:systemd-journal state:D stack:0     pid:819   ppid:1      flags:0x00000804
+[ 8087.270358] Call trace:
+[ 8087.271606]  __switch_to+0xe8/0x168
+[ 8087.274957]  0xffff000100345400
+[ 8087.276764] task:kworker/u96:8   state:D stack:0     pid:1267  ppid:2      flags:0x00000008
+[ 8087.280827] Workqueue: hv_pci_ef9a hv_eject_device_work [pci_hyperv]
+[ 8087.283825] Call trace:
+[ 8087.285058]  __switch_to+0xe8/0x168
+[ 8087.286792]  __schedule+0x3c4/0x15e0
+[ 8087.288743]  schedule+0x58/0x120
+[ 8087.290387]  schedule_preempt_disabled+0x18/0x30
+[ 8087.292794]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.295248]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.297281]  mutex_lock+0x6c/0x88
+[ 8087.298887]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.301660]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.304300]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.306571]  mlx5_uninit_one+0x114/0x230 [mlx5_core]
+[ 8087.309071]  remove_one+0x84/0x188 [mlx5_core]
+[ 8087.311298]  pci_device_remove+0x44/0xf0
+[ 8087.313175]  device_remove+0x54/0x90
+[ 8087.314966]  device_release_driver_internal+0x1f4/0x2b8
+[ 8087.317495]  device_release_driver+0x20/0x38
+[ 8087.319542]  pci_stop_bus_device+0x8c/0xf8
+[ 8087.323202]  pci_stop_and_remove_bus_device+0x20/0x40
+[ 8087.325843]  hv_eject_device_work+0xc0/0x268 [pci_hyperv]
+[ 8087.328595]  process_one_work+0x21c/0x440
+[ 8087.330539]  worker_thread+0x168/0x500
+[ 8087.332386]  kthread+0xec/0xf8
+[ 8087.333883]  ret_from_fork+0x10/0x20
+[ 8087.336258] task:kworker/u96:1   state:D stack:0     pid:2101  ppid:2      flags:0x00000008
+[ 8087.340261] Workqueue: hv_pci_449c hv_eject_device_work [pci_hyperv]
+[ 8087.343196] Call trace:
+[ 8087.344528]  __switch_to+0xe8/0x168
+[ 8087.346237]  __schedule+0x3c4/0x15e0
+[ 8087.347985]  schedule+0x58/0x120
+[ 8087.349542]  schedule_preempt_disabled+0x18/0x30
+[ 8087.351996]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.354222]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.356283]  mutex_lock+0x6c/0x88
+[ 8087.357905]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.360022]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.362523]  process_one_work+0x21c/0x440
+[ 8087.364521]  worker_thread+0x168/0x500
+[ 8087.366630]  kthread+0xec/0xf8
+[ 8087.369885]  ret_from_fork+0x10/0x20
+[ 8087.371907] task:kworker/u96:2   state:D stack:0     pid:2103  ppid:2      flags:0x00000008
+[ 8087.376044] Workqueue: hv_pci_bcfb hv_eject_device_work [pci_hyperv]
+[ 8087.379060] Call trace:
+[ 8087.380337]  __switch_to+0xe8/0x168
+[ 8087.381978]  __schedule+0x3c4/0x15e0
+[ 8087.383965]  schedule+0x58/0x120
+[ 8087.385634]  schedule_preempt_disabled+0x18/0x30
+[ 8087.387867]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.390055]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.392090]  mutex_lock+0x6c/0x88
+[ 8087.393721]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.395829]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.398362]  process_one_work+0x21c/0x440
+[ 8087.400801]  worker_thread+0x168/0x500
+[ 8087.402663]  kthread+0xec/0xf8
+[ 8087.404260]  ret_from_fork+0x10/0x20
+[ 8087.406002] task:kworker/u96:4   state:D stack:0     pid:2104  ppid:2      flags:0x00000008
+[ 8087.410008] Workqueue: hv_pci_4604 hv_eject_device_work [pci_hyperv]
+[ 8087.413108] Call trace:
+[ 8087.414556]  __switch_to+0xe8/0x168
+[ 8087.416309]  __schedule+0x3c4/0x15e0
+[ 8087.418140]  schedule+0x58/0x120
+[ 8087.419792]  schedule_preempt_disabled+0x18/0x30
+[ 8087.422040]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.424298]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.426379]  mutex_lock+0x6c/0x88
+[ 8087.428055]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.431050]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.433748]  process_one_work+0x21c/0x440
+[ 8087.435792]  worker_thread+0x168/0x500
+[ 8087.437705]  kthread+0xec/0xf8
+[ 8087.439276]  ret_from_fork+0x10/0x20
+[ 8087.441000] task:kworker/u96:5   state:D stack:0     pid:2105  ppid:2      flags:0x00000008
+[ 8087.444869] Workqueue: hv_pci_79f5 hv_eject_device_work [pci_hyperv]
+[ 8087.448501] Call trace:
+[ 8087.449755]  __switch_to+0xe8/0x168
+[ 8087.451498]  __schedule+0x3c4/0x15e0
+[ 8087.453252]  schedule+0x58/0x120
+[ 8087.454867]  schedule_preempt_disabled+0x18/0x30
+[ 8087.457057]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.459332]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.461654]  mutex_lock+0x6c/0x88
+[ 8087.463412]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.465512]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.468127]  process_one_work+0x21c/0x440
+[ 8087.470089]  worker_thread+0x168/0x500
+[ 8087.471948]  kthread+0xec/0xf8
+[ 8087.473474]  ret_from_fork+0x10/0x20
+[ 8087.475279] task:kworker/u96:6   state:D stack:0     pid:2106  ppid:2      flags:0x00000008
+[ 8087.482715] Workqueue: hv_pci_5b54 hv_eject_device_work [pci_hyperv]
+[ 8087.486943] Call trace:
+[ 8087.489332]  __switch_to+0xe8/0x168
+[ 8087.491319]  __schedule+0x3c4/0x15e0
+[ 8087.493217]  schedule+0x58/0x120
+[ 8087.495507]  schedule_preempt_disabled+0x18/0x30
+[ 8087.498032]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.500413]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.502502]  mutex_lock+0x6c/0x88
+[ 8087.504209]  pci_lock_rescan_remove+0x24/0x38
+[ 8087.506332]  hv_eject_device_work+0xa0/0x268 [pci_hyperv]
+[ 8087.509234]  process_one_work+0x21c/0x440
+[ 8087.511250]  worker_thread+0x168/0x500
+[ 8087.513104]  kthread+0xec/0xf8
+[ 8087.514640]  ret_from_fork+0x10/0x20
+[ 8087.516476] task:kworker/u96:7   state:D stack:0     pid:2107  ppid:2      flags:0x00000008
+[ 8087.520435] Workqueue: mlx5_health5b54:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.525417] Call trace:
+[ 8087.526717]  __switch_to+0xe8/0x168
+[ 8087.528571]  __schedule+0x3c4/0x15e0
+[ 8087.530404]  schedule+0x58/0x120
+[ 8087.532088]  schedule_preempt_disabled+0x18/0x30
+[ 8087.534356]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.536732]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.538800]  mutex_lock+0x6c/0x88
+[ 8087.540671]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.543733]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.546473]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.548958]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.552109]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.554792]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.558246]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.561435]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.564144]  devlink_health_report+0xec/0x248
+[ 8087.566420]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.569668]  process_one_work+0x21c/0x440
+[ 8087.572963]  worker_thread+0x168/0x500
+[ 8087.575002]  kthread+0xec/0xf8
+[ 8087.576782]  ret_from_fork+0x10/0x20
+[ 8087.578775] task:kworker/u96:9   state:D stack:0     pid:2108  ppid:2      flags:0x00000008
+[ 8087.583090] Workqueue: mlx5_health449c:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.587652] Call trace:
+[ 8087.589044]  __switch_to+0xe8/0x168
+[ 8087.591100]  __schedule+0x3c4/0x15e0
+[ 8087.593081]  schedule+0x58/0x120
+[ 8087.594890]  schedule_preempt_disabled+0x18/0x30
+[ 8087.597668]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.600369]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.602643]  mutex_lock+0x6c/0x88
+[ 8087.604803]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.607844]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.610811]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.613418]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.616704]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.620991]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.624165]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.627479]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.630260]  devlink_health_report+0xec/0x248
+[ 8087.632756]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.636630]  process_one_work+0x21c/0x440
+[ 8087.638770]  worker_thread+0x168/0x500
+[ 8087.640726]  kthread+0xec/0xf8
+[ 8087.642350]  ret_from_fork+0x10/0x20
+[ 8087.644290] task:kworker/u96:10  state:D stack:0     pid:2111  ppid:2      flags:0x00000008
+[ 8087.648513] Workqueue: mlx5_health4604:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.653020] Call trace:
+[ 8087.654408]  __switch_to+0xe8/0x168
+[ 8087.656376]  __schedule+0x3c4/0x15e0
+[ 8087.658293]  schedule+0x58/0x120
+[ 8087.660077]  schedule_preempt_disabled+0x18/0x30
+[ 8087.662464]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.664956]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.667840]  mutex_lock+0x6c/0x88
+[ 8087.669624]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.672739]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.675581]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.677909]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.681022]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.684889]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.687990]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.691234]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.693884]  devlink_health_report+0xec/0x248
+[ 8087.696173]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.699663]  process_one_work+0x21c/0x440
+[ 8087.701735]  worker_thread+0x168/0x500
+[ 8087.703939]  kthread+0xec/0xf8
+[ 8087.705822]  ret_from_fork+0x10/0x20
+[ 8087.707797] task:kworker/u96:11  state:D stack:0     pid:2112  ppid:2      flags:0x00000008
+[ 8087.712322] Workqueue: mlx5_healthed86:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.716843] Call trace:
+[ 8087.718195]  __switch_to+0xe8/0x168
+[ 8087.720059]  __schedule+0x3c4/0x15e0
+[ 8087.722243]  schedule+0x58/0x120
+[ 8087.724148]  schedule_preempt_disabled+0x18/0x30
+[ 8087.726385]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.730822]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.734728]  mutex_lock+0x6c/0x88
+[ 8087.737678]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.741048]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.744397]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.747302]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.750242]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.752845]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.755589]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.758470]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.761273]  devlink_health_report+0xec/0x248
+[ 8087.763401]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.766442]  process_one_work+0x21c/0x440
+[ 8087.768460]  worker_thread+0x168/0x500
+[ 8087.770282]  kthread+0xec/0xf8
+[ 8087.771834]  ret_from_fork+0x10/0x20
+[ 8087.773624] task:kworker/u96:13  state:D stack:0     pid:2114  ppid:2      flags:0x00000008
+[ 8087.779194] Workqueue: mlx5_healthbcfb:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.783275] Call trace:
+[ 8087.784597]  __switch_to+0xe8/0x168
+[ 8087.786363]  __schedule+0x3c4/0x15e0
+[ 8087.788183]  schedule+0x58/0x120
+[ 8087.789787]  schedule_preempt_disabled+0x18/0x30
+[ 8087.792214]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.794584]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.796846]  mutex_lock+0x6c/0x88
+[ 8087.798687]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.801621]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.804211]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.806365]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.809446]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.811931]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.814593]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.817657]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.820089]  devlink_health_report+0xec/0x248
+[ 8087.822093]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.826879]  process_one_work+0x21c/0x440
+[ 8087.828895]  worker_thread+0x168/0x500
+[ 8087.830852]  kthread+0xec/0xf8
+[ 8087.832426]  ret_from_fork+0x10/0x20
+[ 8087.834383] task:kworker/u96:14  state:D stack:0     pid:2115  ppid:2      flags:0x00000008
+[ 8087.838695] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8087.842152] Call trace:
+[ 8087.843458]  __switch_to+0xe8/0x168
+[ 8087.845186]  __schedule+0x3c4/0x15e0
+[ 8087.847030]  schedule+0x58/0x120
+[ 8087.848649]  schedule_timeout+0xa0/0x198
+[ 8087.850557]  __wait_for_common+0xc8/0x260
+[ 8087.852542]  wait_for_completion_timeout+0x28/0x40
+[ 8087.855286]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8087.857872]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8087.860500]  hyperv_read_cfg_blk+0x98/0x108
+[ 8087.862572]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8087.865212]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8087.868510]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8087.872799]  process_one_work+0x21c/0x440
+[ 8087.875038]  worker_thread+0x168/0x500
+[ 8087.876884]  kthread+0xec/0xf8
+[ 8087.878400]  ret_from_fork+0x10/0x20
+[ 8087.880171] task:kworker/u96:15  state:D stack:0     pid:2116  ppid:2      flags:0x00000008
+[ 8087.883907] Workqueue: mlx5_health79f5:00:02.0 mlx5_fw_fatal_reporter_err_work [mlx5_core]
+[ 8087.888487] Call trace:
+[ 8087.889720]  __switch_to+0xe8/0x168
+[ 8087.891455]  __schedule+0x3c4/0x15e0
+[ 8087.893208]  schedule+0x58/0x120
+[ 8087.894808]  schedule_preempt_disabled+0x18/0x30
+[ 8087.896998]  __mutex_lock.constprop.0+0x240/0x880
+[ 8087.899291]  __mutex_lock_slowpath+0x1c/0x30
+[ 8087.901534]  mutex_lock+0x6c/0x88
+[ 8087.903263]  mlx5_hv_vhca_agent_destroy+0x64/0x1f0 [mlx5_core]
+[ 8087.906083]  mlx5_hv_vhca_cleanup+0x9c/0x1c0 [mlx5_core]
+[ 8087.908729]  mlx5_unload+0x80/0xd8 [mlx5_core]
+[ 8087.910955]  mlx5_unload_one_devl_locked+0x74/0x108 [mlx5_core]
+[ 8087.913820]  mlx5_disable_device+0x2c/0x48 [mlx5_core]
+[ 8087.916331]  mlx5_health_try_recover+0x88/0x1e8 [mlx5_core]
+[ 8087.919949]  mlx5_fw_fatal_reporter_recover+0x1c/0x30 [mlx5_core]
+[ 8087.923716]  devlink_health_reporter_recover+0x38/0x98
+[ 8087.926279]  devlink_health_report+0xec/0x248
+[ 8087.928665]  mlx5_fw_fatal_reporter_err_work+0xc0/0x1e0 [mlx5_core]
+[ 8087.931700]  process_one_work+0x21c/0x440
+[ 8087.933829]  worker_thread+0x168/0x500
+[ 8087.935948]  kthread+0xec/0xf8
+[ 8087.937448]  ret_from_fork+0x10/0x20
+[ 8087.939223] task:kworker/u96:16  state:D stack:0     pid:2117  ppid:2      flags:0x00000008
+[ 8087.943080] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8087.946405] Call trace:
+[ 8087.947834]  __switch_to+0xe8/0x168
+[ 8087.949842]  __schedule+0x3c4/0x15e0
+[ 8087.951922]  schedule+0x58/0x120
+[ 8087.953605]  schedule_timeout+0xa0/0x198
+[ 8087.955547]  __wait_for_common+0xc8/0x260
+[ 8087.957598]  wait_for_completion_timeout+0x28/0x40
+[ 8087.960125]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8087.963385]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8087.966368]  hyperv_read_cfg_blk+0x98/0x108
+[ 8087.968602]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8087.971582]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8087.974841]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8087.978228]  process_one_work+0x21c/0x440
+[ 8087.983384]  worker_thread+0x168/0x500
+[ 8087.987631]  kthread+0xec/0xf8
+[ 8087.990391]  ret_from_fork+0x10/0x20
+[ 8087.992441] task:kworker/u96:17  state:D stack:0     pid:2118  ppid:2      flags:0x00000008
+[ 8087.997687] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8088.001035] Call trace:
+[ 8088.002275]  __switch_to+0xe8/0x168
+[ 8088.003991]  __schedule+0x3c4/0x15e0
+[ 8088.005755]  schedule+0x58/0x120
+[ 8088.007363]  schedule_timeout+0xa0/0x198
+[ 8088.009215]  __wait_for_common+0xc8/0x260
+[ 8088.011329]  wait_for_completion_timeout+0x28/0x40
+[ 8088.013786]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8088.016291]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8088.018891]  hyperv_read_cfg_blk+0x98/0x108
+[ 8088.021032]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8088.023558]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8088.028118]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8088.031154]  process_one_work+0x21c/0x440
+[ 8088.033177]  worker_thread+0x168/0x500
+[ 8088.035135]  kthread+0xec/0xf8
+[ 8088.036690]  ret_from_fork+0x10/0x20
+[ 8088.038536] task:kworker/u96:18  state:D stack:0     pid:2119  ppid:2      flags:0x00000008
+[ 8088.043001] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8088.046644] Call trace:
+[ 8088.047909]  __switch_to+0xe8/0x168
+[ 8088.049599]  __schedule+0x3c4/0x15e0
+[ 8088.051343]  schedule+0x58/0x120
+[ 8088.052962]  schedule_timeout+0xa0/0x198
+[ 8088.054932]  __wait_for_common+0xc8/0x260
+[ 8088.057083]  wait_for_completion_timeout+0x28/0x40
+[ 8088.059710]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8088.062267]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8088.064884]  hyperv_read_cfg_blk+0x98/0x108
+[ 8088.066944]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8088.069503]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8088.072966]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8088.077318]  process_one_work+0x21c/0x440
+[ 8088.079381]  worker_thread+0x168/0x500
+[ 8088.081238]  kthread+0xec/0xf8
+[ 8088.082889]  ret_from_fork+0x10/0x20
+[ 8088.084749] task:kworker/u96:19  state:D stack:0     pid:2139  ppid:2      flags:0x00000008
+[ 8088.088931] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8088.092664] Call trace:
+[ 8088.094053]  __switch_to+0xe8/0x168
+[ 8088.095821]  __schedule+0x3c4/0x15e0
+[ 8088.097540]  schedule+0x58/0x120
+[ 8088.099116]  schedule_timeout+0xa0/0x198
+[ 8088.101005]  __wait_for_common+0xc8/0x260
+[ 8088.102915]  wait_for_completion_timeout+0x28/0x40
+[ 8088.105764]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8088.108343]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8088.110986]  hyperv_read_cfg_blk+0x98/0x108
+[ 8088.113004]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8088.115711]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8088.118968]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8088.123624]  process_one_work+0x21c/0x440
+[ 8088.125669]  worker_thread+0x168/0x500
+[ 8088.127588]  kthread+0xec/0xf8
+[ 8088.129145]  ret_from_fork+0x10/0x20
+[ 8088.130999] task:kworker/u96:20  state:D stack:0     pid:2152  ppid:2      flags:0x00000008
+[ 8088.134895] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8088.138622] Call trace:
+[ 8088.139920]  __switch_to+0xe8/0x168
+[ 8088.141700]  __schedule+0x3c4/0x15e0
+[ 8088.143589]  schedule+0x58/0x120
+[ 8088.145222]  schedule_timeout+0xa0/0x198
+[ 8088.147146]  __wait_for_common+0xc8/0x260
+[ 8088.149228]  wait_for_completion_timeout+0x28/0x40
+[ 8088.151553]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8088.154126]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8088.156807]  hyperv_read_cfg_blk+0x98/0x108
+[ 8088.158887]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8088.161746]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8088.165203]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8088.169473]  process_one_work+0x21c/0x440
+[ 8088.171504]  worker_thread+0x168/0x500
+[ 8088.173523]  kthread+0xec/0xf8
+[ 8088.175247]  ret_from_fork+0x10/0x20
+[ 8088.177089] task:kworker/u96:21  state:D stack:0     pid:2171  ppid:2      flags:0x00000008
+[ 8088.181032] Workqueue: mlx5_hv_vhca mlx5_hv_vhca_invalidate_work [mlx5_core]
+[ 8088.184667] Call trace:
+[ 8088.186155]  __switch_to+0xe8/0x168
+[ 8088.188021]  __schedule+0x3c4/0x15e0
+[ 8088.189795]  schedule+0x58/0x120
+[ 8088.191549]  schedule_timeout+0xa0/0x198
+[ 8088.193489]  __wait_for_common+0xc8/0x260
+[ 8088.195555]  wait_for_completion_timeout+0x28/0x40
+[ 8088.197772]  wait_for_response+0x38/0x108 [pci_hyperv]
+[ 8088.200430]  hv_read_config_block+0x110/0x170 [pci_hyperv]
+[ 8088.203080]  hyperv_read_cfg_blk+0x98/0x108
+[ 8088.205109]  mlx5_hv_read_config+0x68/0x110 [mlx5_core]
+[ 8088.207663]  mlx5_hv_vhca_control_agent_invalidate+0x58/0x210 [mlx5_core]
+[ 8088.210837]  mlx5_hv_vhca_invalidate_work+0x128/0x1d8 [mlx5_core]
+[ 8088.213692]  process_one_work+0x21c/0x440
+[ 8088.216572]  worker_thread+0x168/0x500
+[ 8088.219468]  kthread+0xec/0xf8
+[ 8088.221066]  ret_from_fork+0x10/0x20
+[ 8206.959506] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[ 8207.057183] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[ 8207.152441] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[ 8207.164758] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[ 8207.180089] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[ 8207.195020] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[ 8207.209867] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[ 8207.224423] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[ 8207.274844] hv_utils: Heartbeat IC version 3.0
+[ 8207.278351] hv_utils: Shutdown IC version 3.2
+[ 8207.281445] hv_utils: TimeSync IC version 4.0
+[ 8208.799926] hv_balloon: Max. dynamic memory size: 98304 MB
+[ 8211.036979] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[ 8211.084793] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[ 8211.175972] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[ 8211.239277] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[ 8211.285463] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[ 8211.349468] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[ 8211.397764] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[ 8211.461634] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[13004.457805] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[13004.613919] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[13004.625842] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[13004.640572] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[13004.655091] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[13004.669357] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[13004.683760] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[13004.698514] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[13004.743352] hv_utils: Heartbeat IC version 3.0
+[13004.746389] hv_utils: Shutdown IC version 3.2
+[13004.749238] hv_utils: TimeSync IC version 4.0
+[13006.048030] hv_balloon: Max. dynamic memory size: 98304 MB
+[13008.687195] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[13008.736821] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[13008.786323] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[13008.887451] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[13008.945148] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[13008.993545] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[13009.060447] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[13009.110184] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[22130.357026] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[22130.548257] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[22130.560968] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[22130.576216] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[22130.591320] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[22130.606051] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[22130.620052] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[22130.634503] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[22130.674812] hv_utils: Heartbeat IC version 3.0
+[22130.678634] hv_utils: Shutdown IC version 3.2
+[22130.681853] hv_utils: TimeSync IC version 4.0
+[22132.651249] hv_balloon: Max. dynamic memory size: 98304 MB
+[22134.486225] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[22134.534031] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[22134.629728] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[22134.684751] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[22134.731846] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[22134.795386] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[22134.843763] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[22134.907915] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[30594.049154] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.054186] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.099845] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.104984] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.132882] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.177828] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.182646] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.205124] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.215557] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[30594.251062] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: nvsp_rndis_pkt_complete error status: 2
+[31627.466665] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[31627.597584] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[31627.610095] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[31627.624881] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[31627.639743] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[31627.654151] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[31627.668673] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[31627.683441] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[31627.720572] hv_utils: Heartbeat IC version 3.0
+[31627.723941] hv_utils: Shutdown IC version 3.2
+[31627.727044] hv_utils: TimeSync IC version 4.0
+[31628.921055] hv_balloon: Max. dynamic memory size: 98304 MB
+[31630.717263] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[31630.801767] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[31631.010041] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[31631.055480] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[31631.261258] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[31631.307134] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[31631.358151] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[31631.447683] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[52110.028455] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[52110.126479] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[52110.141417] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[52110.156273] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[52110.171101] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[52110.186259] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[52110.200689] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[52110.215201] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[52110.251204] hv_utils: Heartbeat IC version 3.0
+[52110.254791] hv_utils: Shutdown IC version 3.2
+[52110.257956] hv_utils: TimeSync IC version 4.0
+[52111.364600] hv_balloon: Max. dynamic memory size: 98304 MB
+[52114.115205] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[52114.283074] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[52114.333300] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[52114.381279] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[52114.444355] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[52114.491465] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[52114.557382] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[52114.605333] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added
+[64973.885232] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 removed
+[64973.972199] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 removed
+[64973.997797] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 removed
+[64974.012650] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 removed
+[64974.027251] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 removed
+[64974.042008] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 removed
+[64974.056912] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 removed
+[64974.071681] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 removed
+[64974.107710] hv_utils: Heartbeat IC version 3.0
+[64974.111249] hv_utils: Shutdown IC version 3.2
+[64974.114279] hv_utils: TimeSync IC version 4.0
+[64975.373272] hv_balloon: Max. dynamic memory size: 98304 MB
+[64977.432813] hv_netvsc 7c1e5207-199e-7c1e-5207-199e7c1e5207 eth7: VF slot 5 added
+[64977.605438] hv_netvsc 7c1e5207-170f-7c1e-5207-170f7c1e5207 eth0: VF slot 1 added
+[64977.686287] hv_netvsc 7c1e5207-1c19-7c1e-5207-1c197c1e5207 eth5: VF slot 8 added
+[64977.732506] hv_netvsc 7c1e5207-1889-7c1e-5207-18897c1e5207 eth4: VF slot 2 added
+[64977.795226] hv_netvsc 7c1e5207-17f4-7c1e-5207-17f47c1e5207 eth6: VF slot 3 added
+[64977.908347] hv_netvsc 7c1e5207-185b-7c1e-5207-185b7c1e5207 eth3: VF slot 4 added
+[64977.955101] hv_netvsc 7c1e5207-14d1-7c1e-5207-14d17c1e5207 eth1: VF slot 6 added
+[64978.009688] hv_netvsc 7c1e5207-1b61-7c1e-5207-1b617c1e5207 eth2: VF slot 7 added

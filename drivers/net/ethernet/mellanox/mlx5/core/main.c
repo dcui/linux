@@ -1379,6 +1379,7 @@ static int mlx5_load(struct mlx5_core_dev *dev)
 	if (err)
 		goto err_traps_reg;
 
+	mlx5_core_info(dev, "%s: success: hv_vhca=%px\n",  __func__, dev->hv_vhca);
 	return 0;
 
 err_traps_reg:
@@ -1504,10 +1505,14 @@ void mlx5_uninit_one(struct mlx5_core_dev *dev)
 {
 	struct devlink *devlink = priv_to_devlink(dev);
 
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 1: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 	devl_lock(devlink);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 2: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 	mutex_lock(&dev->intf_state_mutex);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 3: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 
 	mlx5_unregister_device(dev);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 4: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 
 	if (!test_bit(MLX5_INTERFACE_STATE_UP, &dev->intf_state)) {
 		mlx5_core_warn(dev, "%s: interface is down, NOP\n",
@@ -1518,13 +1523,18 @@ void mlx5_uninit_one(struct mlx5_core_dev *dev)
 	}
 
 	clear_bit(MLX5_INTERFACE_STATE_UP, &dev->intf_state);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 5: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 	mlx5_unload(dev);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 6: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 	mlx5_devlink_params_unregister(priv_to_devlink(dev));
 	mlx5_cleanup_once(dev);
 	mlx5_function_teardown(dev, true);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 7: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 out:
 	mutex_unlock(&dev->intf_state_mutex);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 8: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 	devl_unlock(devlink);
+	mlx5_core_info(dev, "%s: mlx5_uninit_one: 9: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
 }
 
 int mlx5_load_one_devl_locked(struct mlx5_core_dev *dev, bool recovery)
@@ -1966,7 +1976,13 @@ static void remove_one(struct pci_dev *pdev)
 	mlx5_uninit_one(dev);
 	mlx5_pci_close(dev);
 	mlx5_mdev_uninit(dev);
+	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px: mlx5_mdev_uninit: done\n",  __func__, &dev->intf_state_mutex);
 	mlx5_adev_idx_free(dev->priv.adev_idx);
+
+	mlx5_core_info(dev, "%s: 2: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
+	flush_work(&dev->cdx_work);
+	mlx5_core_info(dev, "%s: 3: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
+
 	mlx5_devlink_free(devlink);
 }
 

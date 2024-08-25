@@ -806,6 +806,8 @@ struct mlx5_core_dev {
 	u32                      vsc_addr;
 	struct mlx5_hv_vhca	*hv_vhca;
 	struct mlx5_thermal	*thermal;
+
+	struct work_struct cdx_work;
 };
 
 struct mlx5_db {

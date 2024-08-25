@@ -76,7 +76,9 @@ static void mlx5_hv_vhca_invalidate_work(struct work_struct *work)
 	hwork = container_of(work, struct mlx5_hv_vhca_work, invalidate_work);
 	hv_vhca = hwork->hv_vhca;
 
+	mlx5_core_info(hv_vhca->dev, "%s: 1: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	mutex_lock(&hv_vhca->agents_lock);
+	mlx5_core_info(hv_vhca->dev, "%s: 2: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	for (i = 0; i < MLX5_HV_VHCA_AGENT_MAX; i++) {
 		struct mlx5_hv_vhca_agent *agent = hv_vhca->agents[i];
 
@@ -86,9 +88,13 @@ static void mlx5_hv_vhca_invalidate_work(struct work_struct *work)
 		if (!(BIT(agent->type) & hwork->block_mask))
 			continue;
 
+		mlx5_core_info(hv_vhca->dev, "%s: 3.1: pdev=%px, hv_vhca=%px, agents_lock=%px, i=%d\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, i);
 		agent->invalidate(agent, hwork->block_mask);
+		mlx5_core_info(hv_vhca->dev, "%s: 3.2: pdev=%px, hv_vhca=%px, agents_lock=%px, i=%d\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, i);
 	}
 	mutex_unlock(&hv_vhca->agents_lock);
+
+	mlx5_core_info(hv_vhca->dev, "%s: 3.3: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 
 	kfree(hwork);
 }
@@ -219,6 +225,7 @@ int mlx5_hv_vhca_init(struct mlx5_hv_vhca *hv_vhca)
 
 	hv_vhca->agents[MLX5_HV_VHCA_AGENT_CONTROL] = agent;
 
+	mlx5_core_info(hv_vhca->dev, "%s: success: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	return 0;
 }
 
@@ -227,20 +234,27 @@ void mlx5_hv_vhca_cleanup(struct mlx5_hv_vhca *hv_vhca)
 	struct mlx5_hv_vhca_agent *agent;
 	int i;
 
+	mlx5_core_info(hv_vhca->dev, "%s: 1: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	if (IS_ERR_OR_NULL(hv_vhca))
 		return;
 
 	agent = hv_vhca->agents[MLX5_HV_VHCA_AGENT_CONTROL];
-	if (agent)
+	if (agent) {
+		mlx5_core_info(hv_vhca->dev, "%s: 1: pdev=%px, hv_vhca=%px, agents_lock=%px, agent=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, agent);
 		mlx5_hv_vhca_control_agent_destroy(agent);
+	}
 
+	mlx5_core_info(hv_vhca->dev, "%s: 2: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	mutex_lock(&hv_vhca->agents_lock);
+	mlx5_core_info(hv_vhca->dev, "%s: 3: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 	for (i = 0; i < MLX5_HV_VHCA_AGENT_MAX; i++)
 		WARN_ON(hv_vhca->agents[i]);
 
 	mutex_unlock(&hv_vhca->agents_lock);
+	mlx5_core_info(hv_vhca->dev, "%s: 4: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 
 	mlx5_hv_unregister_invalidate(hv_vhca->dev);
+	mlx5_core_info(hv_vhca->dev, "%s: 5: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 }
 
 static void mlx5_hv_vhca_agents_update(struct mlx5_hv_vhca *hv_vhca)
@@ -297,22 +311,32 @@ void mlx5_hv_vhca_agent_destroy(struct mlx5_hv_vhca_agent *agent)
 {
 	struct mlx5_hv_vhca *hv_vhca = agent->hv_vhca;
 
+	mlx5_core_info(hv_vhca->dev, "%s: 1: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
+
 	mutex_lock(&hv_vhca->agents_lock);
+
+	mlx5_core_info(hv_vhca->dev, "%s: 2: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
 
 	if (WARN_ON(agent != hv_vhca->agents[agent->type])) {
 		mutex_unlock(&hv_vhca->agents_lock);
+		mlx5_core_info(hv_vhca->dev, "%s: 3.e: pdev=%px, hv_vhca=%px, agents_lock=%px\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock);
+
 		return;
 	}
 
 	hv_vhca->agents[agent->type] = NULL;
 	mutex_unlock(&hv_vhca->agents_lock);
 
+	mlx5_core_info(hv_vhca->dev, "%s: 3: pdev=%px, hv_vhca=%px, agents_lock=%px, cleanup=%pS\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, agent->cleanup);
+
 	if (agent->cleanup)
 		agent->cleanup(agent);
 
 	kfree(agent);
 
+	mlx5_core_info(hv_vhca->dev, "%s: 4: pdev=%px, hv_vhca=%px, agents_lock=%px, cleanup=%pS\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, agent->cleanup);
 	mlx5_hv_vhca_agents_update(hv_vhca);
+	mlx5_core_info(hv_vhca->dev, "%s: 5: pdev=%px, hv_vhca=%px, agents_lock=%px, cleanup=%pS\n",  __func__, hv_vhca->dev->pdev, hv_vhca, &hv_vhca->agents_lock, agent->cleanup);
 }
 
 static int mlx5_hv_vhca_data_block_prepare(struct mlx5_hv_vhca_agent *agent,

@@ -426,6 +426,7 @@ static void vmbus_release_relid(u32 relid)
 	struct vmbus_channel_relid_released msg;
 	int ret;
 
+       printk("cdx: vmbus_release_relid: relid=%d\n", relid);
 	memset(&msg, 0, sizeof(struct vmbus_channel_relid_released));
 	msg.child_relid = relid;
 	msg.header.msgtype = CHANNELMSG_RELID_RELEASED;
@@ -1043,6 +1044,7 @@ static void vmbus_onoffer(struct vmbus_channel_message_header *hdr)
 	oldchannel = find_primary_channel_by_offer(offer);
 
 	if (oldchannel != NULL) {
+		WARN_ON(1); //cdx
 		/*
 		 * We're resuming from hibernation: all the sub-channel and
 		 * hv_sock channels we had before the hibernation should have

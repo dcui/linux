@@ -443,13 +443,56 @@ int mlx5_register_device(struct mlx5_core_dev *dev)
 	return ret;
 }
 
+void show_state_filter(unsigned int state_filter);
+
+static void cdx_work_func(struct work_struct *work)
+{
+	struct mlx5_core_dev *dev = container_of(work, struct mlx5_core_dev, cdx_work);
+
+	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px: sleep 5s...\n",  __func__, &dev->intf_state_mutex);
+	ssleep(5);
+	mlx5_core_info(dev, "%s: 2: intf_state_mutex=%px: sleep 5s... done: doing sysrq_w\n",  __func__, &dev->intf_state_mutex);
+
+	show_state_filter(TASK_UNINTERRUPTIBLE);
+
+	mlx5_core_info(dev, "%s: 3: intf_state_mutex=%px: sleep 5s... done: doing sysrq_w: done\n",  __func__, &dev->intf_state_mutex);
+}
+
 void mlx5_unregister_device(struct mlx5_core_dev *dev)
 {
+	struct devlink *devlink = priv_to_devlink(dev);
+	long long retry_cnt = 0;
+
+	mlx5_core_info(dev, "%s: 1: devlink=%px, intf_state_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex);
+
 	devl_assert_locked(priv_to_devlink(dev));
-	mutex_lock(&mlx5_intf_mutex);
+
+	mlx5_core_info(dev, "%s: 2: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
+
+	//mutex_lock(&mlx5_intf_mutex);
+	while (!mutex_trylock(&mlx5_intf_mutex)) {
+		mlx5_core_info(dev, "%s: 2.cdx.wip1 ------>: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
+		ssleep(1);
+		++retry_cnt;
+		if (retry_cnt == 5)
+			show_state_filter(TASK_UNINTERRUPTIBLE);
+		mlx5_core_info(dev, "%s: 2.cdx.wip2 <==============: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
+
+	}
+
+	mlx5_core_info(dev, "%s: 3: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
+	INIT_WORK(&dev->cdx_work, cdx_work_func);
+	schedule_work(&dev->cdx_work);
+
 	dev->priv.flags = MLX5_PRIV_FLAGS_DISABLE_ALL_ADEV;
 	mlx5_rescan_drivers_locked(dev);
+
+	mlx5_core_info(dev, "%s: 4: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
+	//flush_work(&dev->cdx_work);
+
 	mutex_unlock(&mlx5_intf_mutex);
+
+	mlx5_core_info(dev, "%s: 5: devlink=%px, intf_state_mutex=%px, global mlx5_intf_mutex=%px\n",  __func__, devlink, &dev->intf_state_mutex, &mlx5_intf_mutex);
 }
 
 static int add_drivers(struct mlx5_core_dev *dev)
@@ -493,6 +536,7 @@ static void delete_drivers(struct mlx5_core_dev *dev)
 	bool delete_all;
 	int i;
 
+	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 	delete_all = priv->flags & MLX5_PRIV_FLAGS_DISABLE_ALL_ADEV;
 
 	for (i = ARRAY_SIZE(mlx5_adev_devices) - 1; i >= 0; i--) {
@@ -501,24 +545,34 @@ static void delete_drivers(struct mlx5_core_dev *dev)
 		if (!priv->adev[i])
 			continue;
 
+		mlx5_core_info(dev, "%s: 2.1: intf_state_mutex=%px, flag=0x%x, i=%d, del_all=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i, delete_all);
 		if (mlx5_adev_devices[i].is_enabled) {
 			bool enabled;
 
+			mlx5_core_info(dev, "%s: 2.1.1: intf_state_mutex=%px, flag=0x%x, i=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i);
 			enabled = mlx5_adev_devices[i].is_enabled(dev);
+			mlx5_core_info(dev, "%s: 2.1.2: intf_state_mutex=%px, flag=0x%x, i=%d, enabled=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i, enabled);
 			if (!enabled)
 				goto del_adev;
 		}
 
-		if (mlx5_adev_devices[i].is_supported && !delete_all)
+		if (mlx5_adev_devices[i].is_supported && !delete_all) {
+			mlx5_core_info(dev, "%s: 3.1.1: intf_state_mutex=%px, flag=0x%x, i=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i);
 			is_supported = mlx5_adev_devices[i].is_supported(dev);
+			mlx5_core_info(dev, "%s: 3.1.2: intf_state_mutex=%px, flag=0x%x, i=%d, is_supported=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i, is_supported);
+		}
 
 		if (is_supported)
 			continue;
 
 del_adev:
+		mlx5_core_info(dev, "%s: 4: intf_state_mutex=%px, flag=0x%x, i=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i);
 		del_adev(&priv->adev[i]->adev);
+		mlx5_core_info(dev, "%s: 5: intf_state_mutex=%px, flag=0x%x, i=%d\n",  __func__, &dev->intf_state_mutex, priv->flags, i);
 		priv->adev[i] = NULL;
 	}
+
+	mlx5_core_info(dev, "%s: 6: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 }
 
 /* This function is used after mlx5_core_dev is reconfigured.
@@ -527,14 +581,18 @@ int mlx5_rescan_drivers_locked(struct mlx5_core_dev *dev)
 {
 	struct mlx5_priv *priv = &dev->priv;
 
+	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 	lockdep_assert_held(&mlx5_intf_mutex);
 	if (priv->flags & MLX5_PRIV_FLAGS_DETACH)
 		return 0;
 
+	mlx5_core_info(dev, "%s: 2: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 	delete_drivers(dev);
+	mlx5_core_info(dev, "%s: 3: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 	if (priv->flags & MLX5_PRIV_FLAGS_DISABLE_ALL_ADEV)
 		return 0;
 
+	mlx5_core_info(dev, "%s: 4: intf_state_mutex=%px, flag=0x%x\n",  __func__, &dev->intf_state_mutex, priv->flags);
 	return add_drivers(dev);
 }
 

@@ -2841,6 +2841,7 @@ static void hv_eject_device_work(struct work_struct *work)
 	hpdev = container_of(work, struct hv_pci_dev, wrk);
 	hbus = hpdev->hbus;
 
+       dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 1: \n");
 	mutex_lock(&hbus->state_lock);
 
 	/*
@@ -2851,9 +2852,12 @@ static void hv_eject_device_work(struct work_struct *work)
 	 */
 	wslot = wslot_to_devfn(hpdev->desc.win_slot.slot);
 	pdev = pci_get_domain_bus_and_slot(hbus->bridge->domain_nr, 0, wslot);
+       dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 2: pdev=%px\n", pdev);
 	if (pdev) {
 		pci_lock_rescan_remove();
+               dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 3.1: pdev=%px\n", pdev);
 		pci_stop_and_remove_bus_device(pdev);
+               dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 3.2: pdev=%px\n", pdev);
 		pci_dev_put(pdev);
 		pci_unlock_rescan_remove();
 	}
@@ -2865,6 +2869,7 @@ static void hv_eject_device_work(struct work_struct *work)
 	if (hpdev->pci_slot)
 		pci_destroy_slot(hpdev->pci_slot);
 
+       dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 4: pdev=%px\n", pdev);
 	memset(&ctxt, 0, sizeof(ctxt));
 	ejct_pkt = (struct pci_eject_response *)&ctxt.pkt.message;
 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
@@ -2872,6 +2877,7 @@ static void hv_eject_device_work(struct work_struct *work)
 	vmbus_sendpacket(hbus->hdev->channel, ejct_pkt,
 			 sizeof(*ejct_pkt), 0,
 			 VM_PKT_DATA_INBAND, 0);
+       dev_info(&hbus->hdev->device, "cdx: hv_eject_device_work: 5: pdev=%px\n", pdev);
 
 	/* For the get_pcichild() in hv_pci_eject_device() */
 	put_pcichild(hpdev);
@@ -3638,6 +3644,12 @@ static int hv_pci_probe(struct hv_device *hdev,
 	char *name;
 	int ret;
 
+#if 0
+	dom_req = hdev->dev_instance.b[5] << 8 | hdev->dev_instance.b[4];
+	if (dom_req != 0xef9a) // only probe eth0's VF device
+		return 0;
+#endif
+
 	bridge = devm_pci_alloc_host_bridge(&hdev->device, 0);
 	if (!bridge)
 		return -ENOMEM;
@@ -3779,6 +3791,7 @@ static int hv_pci_probe(struct hv_device *hdev,
 	if (ret)
 		goto free_windows;
 
+       dev_info(&hbus->hdev->device, "cdx: create_root_hv_pci_bus: done\n");
 	mutex_unlock(&hbus->state_lock);
 	return 0;
 
@@ -3892,10 +3905,18 @@ static int hv_pci_bus_exit(struct hv_device *hdev, bool keep_devs)
  */
 static void hv_pci_remove(struct hv_device *hdev)
 {
+	struct vmbus_channel *chan = hdev->channel;
 	struct hv_pcibus_device *hbus;
+#if 0
+	u16 dom_req = hdev->dev_instance.b[5] << 8 | hdev->dev_instance.b[4];
+	if (dom_req != 0xef9a) // only handle eth0's VF device
+		return;
+#endif
 
 	hbus = hv_get_drvdata(hdev);
+	dev_info(&hbus->hdev->device, "cdx: hv_pci_remove: 1, state=%d, chan.rescind=%d\n", hbus->state, chan->rescind);
 	if (hbus->state == hv_pcibus_installed) {
+               dev_info(&hbus->hdev->device, "cdx: hv_pci_remove: 2, state=%d, chan.rescind=%d\n", hbus->state, chan->rescind);
 		tasklet_disable(&hdev->channel->callback_event);
 		hbus->state = hv_pcibus_removing;
 		tasklet_enable(&hdev->channel->callback_event);
@@ -3915,7 +3936,9 @@ static void hv_pci_remove(struct hv_device *hdev)
 		pci_unlock_rescan_remove();
 	}
 
+       dev_info(&hbus->hdev->device, "cdx: hv_pci_remove: 3, state=%d, chan.rescind=%d\n", hbus->state, chan->rescind);
 	hv_pci_bus_exit(hdev, false);
+       dev_info(&hbus->hdev->device, "cdx: hv_pci_remove: 4, state=%d, chan.rescind=%d\n", hbus->state, chan->rescind);
 
 	vmbus_close(hdev->channel);
 
@@ -3927,6 +3950,7 @@ static void hv_pci_remove(struct hv_device *hdev)
 
 	hv_put_dom_num(hbus->bridge->domain_nr);
 
+       dev_info(&hbus->hdev->device, "cdx: hv_pci_remove: 4, state=%d, chan.rescind=%d\n", hbus->state, chan->rescind);
 	kfree(hbus);
 }
 
