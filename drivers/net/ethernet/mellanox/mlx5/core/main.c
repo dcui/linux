@@ -2012,9 +2012,9 @@ static void remove_one(struct pci_dev *pdev)
 	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px: mlx5_mdev_uninit: done\n",  __func__, &dev->intf_state_mutex);
 	mlx5_adev_idx_free(dev->priv.adev_idx);
 
-	mlx5_core_info(dev, "%s: 2: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
-	flush_work(&dev->cdx_work);
-	mlx5_core_info(dev, "%s: 3: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
+	//mlx5_core_info(dev, "%s: 2: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
+	//flush_work(&dev->cdx_work);
+	//mlx5_core_info(dev, "%s: 3: intf_state_mutex=%px: flushing cdx_work\n",  __func__, &dev->intf_state_mutex);
 
 	mlx5_devlink_free(devlink);
 }
