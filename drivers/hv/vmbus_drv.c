@@ -1110,6 +1110,8 @@ void vmbus_on_msg_dpc(unsigned long data)
 			 * work queue: the RESCIND handler can not start to
 			 * run before the OFFER handler finishes.
 			 */
+                       printk("cdx: vmbus_on_msg_dpc: rescinding relid=%u\n",
+                               ((struct vmbus_channel_rescind_offer *)hdr)->child_relid);
 			if (vmbus_connection.ignore_any_offer_msg)
 				break;
 			queue_work(vmbus_connection.rescind_work_queue, &ctx->work);
@@ -1138,6 +1140,11 @@ void vmbus_on_msg_dpc(unsigned long data)
 			 * to the CPUs which will execute the offer & rescind
 			 * works by the time these works will start execution.
 			 */
+                       {
+                               struct vmbus_channel_offer_channel *o = (struct vmbus_channel_offer_channel *)hdr;
+                               printk("cdx: vmbus_on_msg_dpc: offer relid=%u, %pUl, %pUl\n", o->child_relid,
+                                       &o->offer.if_type, &o->offer.if_instance);
+                       }
 			if (vmbus_connection.ignore_any_offer_msg)
 				break;
 			atomic_inc(&vmbus_connection.offer_in_progress);

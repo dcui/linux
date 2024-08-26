@@ -1,0 +1,243 @@
+VMBUS ID  1: Class_ID = {a9a0f4e7-5a45-4d96-b827-8a841e8c03e6} - [Data Exchange]
+	Device_ID = {242ff919-07db-4180-9c2e-b86cb68c8c55}
+	Sysfs path: /sys/bus/vmbus/devices/242ff919-07db-4180-9c2e-b86cb68c8c55
+	Rel_ID=1, target_cpu=0
+
+VMBUS ID  2: Class_ID = {c376c1c3-d276-48d2-90a9-c04748072c60} - Unknown
+	Device_ID = {c4e5e7d1-d748-4afc-979d-683167910a55}
+	Sysfs path: /sys/bus/vmbus/devices/c4e5e7d1-d748-4afc-979d-683167910a55
+	Rel_ID=2, target_cpu=0
+
+VMBUS ID  3: Class_ID = {525074dc-8985-46e2-8057-a307dc18a502} - [Dynamic Memory]
+	Device_ID = {1eccfd72-4b41-45ef-b73a-4a6e44c12924}
+	Sysfs path: /sys/bus/vmbus/devices/1eccfd72-4b41-45ef-b73a-4a6e44c12924
+	Rel_ID=3, target_cpu=0
+
+VMBUS ID  4: Class_ID = {cfa8b69e-5b4a-4cc0-b98b-8ba1a1f3f95a} - Synthetic mouse
+	Device_ID = {58f75a6d-d949-4320-99e1-a2a2576d581c}
+	Sysfs path: /sys/bus/vmbus/devices/58f75a6d-d949-4320-99e1-a2a2576d581c
+	Rel_ID=4, target_cpu=0
+
+VMBUS ID  5: Class_ID = {f912ad6d-2b17-48ea-bd65-f927a61c7684} - Synthetic keyboard
+	Device_ID = {d34b2567-b9b6-42b9-8778-0a4ec0b955bf}
+	Sysfs path: /sys/bus/vmbus/devices/d34b2567-b9b6-42b9-8778-0a4ec0b955bf
+	Rel_ID=5, target_cpu=0
+
+VMBUS ID  6: Class_ID = {57164f39-9115-4e78-ab55-382f3bd5422d} - [Heartbeat]
+	Device_ID = {fd149e91-82e0-4a7d-afa6-2a4166cbd7c0}
+	Sysfs path: /sys/bus/vmbus/devices/fd149e91-82e0-4a7d-afa6-2a4166cbd7c0
+	Rel_ID=6, target_cpu=0
+
+VMBUS ID  7: Class_ID = {da0a7802-e377-4aac-8e77-0558eb1073f8} - Synthetic framebuffer adapter
+	Device_ID = {5620e0c7-8062-4dce-aeb7-520c7ef76171}
+	Sysfs path: /sys/bus/vmbus/devices/5620e0c7-8062-4dce-aeb7-520c7ef76171
+	Rel_ID=7, target_cpu=0
+
+VMBUS ID  8: Class_ID = {0e0b6031-5213-4934-818b-38d90ced39db} - [Operating system shutdown]
+	Device_ID = {b6650ff7-33bc-4840-8048-e0676786f393}
+	Sysfs path: /sys/bus/vmbus/devices/b6650ff7-33bc-4840-8048-e0676786f393
+	Rel_ID=8, target_cpu=0
+
+VMBUS ID  9: Class_ID = {9527e630-d0ae-497b-adce-e80ab0175caf} - [Time Synchronization]
+	Device_ID = {2dd1ce17-079e-403c-b352-a1921ee207ee}
+	Sysfs path: /sys/bus/vmbus/devices/2dd1ce17-079e-403c-b352-a1921ee207ee
+	Rel_ID=9, target_cpu=0
+
+VMBUS ID 10: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-170f-7c1e-5207-170f7c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-170f-7c1e-5207-170f7c1e5207
+	Rel_ID=10, target_cpu=2
+	Rel_ID=48, target_cpu=32
+	Rel_ID=49, target_cpu=33
+	Rel_ID=50, target_cpu=34
+	Rel_ID=51, target_cpu=35
+	Rel_ID=52, target_cpu=36
+	Rel_ID=53, target_cpu=37
+	Rel_ID=54, target_cpu=38
+
+VMBUS ID 11: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-1889-7c1e-5207-18897c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-1889-7c1e-5207-18897c1e5207
+	Rel_ID=11, target_cpu=3
+	Rel_ID=57, target_cpu=39
+	Rel_ID=58, target_cpu=40
+	Rel_ID=59, target_cpu=41
+	Rel_ID=60, target_cpu=42
+	Rel_ID=61, target_cpu=43
+	Rel_ID=62, target_cpu=44
+	Rel_ID=63, target_cpu=45
+
+VMBUS ID 12: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-17f4-7c1e-5207-17f47c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-17f4-7c1e-5207-17f47c1e5207
+	Rel_ID=12, target_cpu=4
+	Rel_ID=65, target_cpu=46
+	Rel_ID=66, target_cpu=47
+	Rel_ID=67, target_cpu=0
+	Rel_ID=68, target_cpu=1
+	Rel_ID=69, target_cpu=2
+	Rel_ID=70, target_cpu=3
+	Rel_ID=71, target_cpu=5
+
+VMBUS ID 13: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-185b-7c1e-5207-185b7c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-185b-7c1e-5207-185b7c1e5207
+	Rel_ID=13, target_cpu=5
+	Rel_ID=73, target_cpu=6
+	Rel_ID=74, target_cpu=7
+	Rel_ID=75, target_cpu=8
+	Rel_ID=76, target_cpu=9
+	Rel_ID=77, target_cpu=10
+	Rel_ID=78, target_cpu=11
+	Rel_ID=79, target_cpu=12
+
+VMBUS ID 14: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-199e-7c1e-5207-199e7c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-199e-7c1e-5207-199e7c1e5207
+	Rel_ID=14, target_cpu=6
+	Rel_ID=81, target_cpu=13
+	Rel_ID=82, target_cpu=14
+	Rel_ID=83, target_cpu=15
+	Rel_ID=84, target_cpu=16
+	Rel_ID=85, target_cpu=17
+	Rel_ID=86, target_cpu=18
+	Rel_ID=87, target_cpu=19
+
+VMBUS ID 15: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-14d1-7c1e-5207-14d17c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-14d1-7c1e-5207-14d17c1e5207
+	Rel_ID=15, target_cpu=7
+	Rel_ID=89, target_cpu=20
+	Rel_ID=90, target_cpu=21
+	Rel_ID=91, target_cpu=22
+	Rel_ID=92, target_cpu=23
+	Rel_ID=93, target_cpu=24
+	Rel_ID=94, target_cpu=25
+	Rel_ID=95, target_cpu=26
+
+VMBUS ID 16: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-1b61-7c1e-5207-1b617c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-1b61-7c1e-5207-1b617c1e5207
+	Rel_ID=16, target_cpu=8
+	Rel_ID=97, target_cpu=27
+	Rel_ID=98, target_cpu=28
+	Rel_ID=99, target_cpu=29
+	Rel_ID=100, target_cpu=30
+	Rel_ID=101, target_cpu=31
+	Rel_ID=102, target_cpu=32
+	Rel_ID=103, target_cpu=33
+
+VMBUS ID 17: Class_ID = {f8615163-df3e-46c5-913f-f2d2f965ed0e} - Synthetic network adapter
+	Device_ID = {7c1e5207-1c19-7c1e-5207-1c197c1e5207}
+	Sysfs path: /sys/bus/vmbus/devices/7c1e5207-1c19-7c1e-5207-1c197c1e5207
+	Rel_ID=17, target_cpu=9
+	Rel_ID=104, target_cpu=34
+	Rel_ID=105, target_cpu=35
+	Rel_ID=106, target_cpu=36
+	Rel_ID=107, target_cpu=37
+	Rel_ID=108, target_cpu=38
+	Rel_ID=109, target_cpu=39
+	Rel_ID=110, target_cpu=40
+
+VMBUS ID 18: Class_ID = {ba6163d9-04a1-4d29-b605-72e2ffb1dc7f} - Synthetic SCSI Controller
+	Device_ID = {f8b3781a-1e82-4818-a1c3-63d806ec15bb}
+	Sysfs path: /sys/bus/vmbus/devices/f8b3781a-1e82-4818-a1c3-63d806ec15bb
+	Rel_ID=18, target_cpu=0
+	Rel_ID=26, target_cpu=10
+	Rel_ID=28, target_cpu=12
+	Rel_ID=29, target_cpu=13
+	Rel_ID=30, target_cpu=14
+	Rel_ID=32, target_cpu=16
+	Rel_ID=33, target_cpu=17
+	Rel_ID=35, target_cpu=19
+	Rel_ID=36, target_cpu=20
+	Rel_ID=38, target_cpu=22
+	Rel_ID=40, target_cpu=24
+	Rel_ID=42, target_cpu=26
+
+VMBUS ID 19: Class_ID = {ba6163d9-04a1-4d29-b605-72e2ffb1dc7f} - Synthetic SCSI Controller
+	Device_ID = {f8b3781b-1e82-4818-a1c3-63d806ec15bb}
+	Sysfs path: /sys/bus/vmbus/devices/f8b3781b-1e82-4818-a1c3-63d806ec15bb
+	Rel_ID=19, target_cpu=1
+	Rel_ID=27, target_cpu=11
+	Rel_ID=31, target_cpu=15
+	Rel_ID=34, target_cpu=18
+	Rel_ID=37, target_cpu=21
+	Rel_ID=39, target_cpu=23
+	Rel_ID=41, target_cpu=25
+	Rel_ID=43, target_cpu=27
+	Rel_ID=44, target_cpu=28
+	Rel_ID=45, target_cpu=29
+	Rel_ID=46, target_cpu=30
+	Rel_ID=47, target_cpu=31
+
+VMBUS ID 20: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {4dca3f50-f28f-42b4-91fe-89f53730eb29}
+	Sysfs path: /sys/bus/vmbus/devices/4dca3f50-f28f-42b4-91fe-89f53730eb29
+	Rel_ID=20, target_cpu=0
+
+VMBUS ID 21: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {23fa122a-e42c-4f9d-9072-1968a301c93f}
+	Sysfs path: /sys/bus/vmbus/devices/23fa122a-e42c-4f9d-9072-1968a301c93f
+	Rel_ID=21, target_cpu=0
+
+VMBUS ID 22: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {955bfbad-28ca-42bc-b299-47d14d76e0c3}
+	Sysfs path: /sys/bus/vmbus/devices/955bfbad-28ca-42bc-b299-47d14d76e0c3
+	Rel_ID=22, target_cpu=0
+
+VMBUS ID 23: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {84e4f1f3-4617-41a8-996b-549cedbabda4}
+	Sysfs path: /sys/bus/vmbus/devices/84e4f1f3-4617-41a8-996b-549cedbabda4
+	Rel_ID=23, target_cpu=0
+
+VMBUS ID 24: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {83fa437d-2415-4b38-a4d1-432745571762}
+	Sysfs path: /sys/bus/vmbus/devices/83fa437d-2415-4b38-a4d1-432745571762
+	Rel_ID=24, target_cpu=0
+
+VMBUS ID 25: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {36c888f6-ae7b-4e51-b1fb-4a17ade49c3c}
+	Sysfs path: /sys/bus/vmbus/devices/36c888f6-ae7b-4e51-b1fb-4a17ade49c3c
+	Rel_ID=25, target_cpu=0
+
+VMBUS ID 55: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {69172891-ef9a-48a2-982a-786ac7c8c711}
+	Sysfs path: /sys/bus/vmbus/devices/69172891-ef9a-48a2-982a-786ac7c8c711
+	Rel_ID=55, target_cpu=0
+
+VMBUS ID 56: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {57524d70-c3e2-42df-99a4-a10c42645bd8}
+	Sysfs path: /sys/bus/vmbus/devices/57524d70-c3e2-42df-99a4-a10c42645bd8
+	Rel_ID=56, target_cpu=0
+
+VMBUS ID 64: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {cfa808e0-4604-4f10-9c57-ec9270ab26a8}
+	Sysfs path: /sys/bus/vmbus/devices/cfa808e0-4604-4f10-9c57-ec9270ab26a8
+	Rel_ID=64, target_cpu=0
+
+VMBUS ID 72: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {e7329dd2-ed86-43f7-93fa-514e6d821666}
+	Sysfs path: /sys/bus/vmbus/devices/e7329dd2-ed86-43f7-93fa-514e6d821666
+	Rel_ID=72, target_cpu=0
+
+VMBUS ID 80: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {aa2881d9-449c-4d08-a293-4ed2a795a854}
+	Sysfs path: /sys/bus/vmbus/devices/aa2881d9-449c-4d08-a293-4ed2a795a854
+	Rel_ID=80, target_cpu=0
+
+VMBUS ID 88: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {c779b611-79f5-4c77-9be5-e7c959ce5ced}
+	Sysfs path: /sys/bus/vmbus/devices/c779b611-79f5-4c77-9be5-e7c959ce5ced
+	Rel_ID=88, target_cpu=0
+
+VMBUS ID 96: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {27cc3870-bcfb-496a-b6c4-047ab7963d24}
+	Sysfs path: /sys/bus/vmbus/devices/27cc3870-bcfb-496a-b6c4-047ab7963d24
+	Rel_ID=96, target_cpu=0
+
+VMBUS ID 111: Class_ID = {44c4f61d-4444-4400-9d52-802e27ede19f} - PCI Express pass-through
+	Device_ID = {c722f47f-5b54-4913-89e6-30871d1ed4b2}
+	Sysfs path: /sys/bus/vmbus/devices/c722f47f-5b54-4913-89e6-30871d1ed4b2
+	Rel_ID=111, target_cpu=0
+

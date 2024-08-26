@@ -7488,6 +7488,7 @@ void show_state_filter(unsigned int state_filter)
 	if (!state_filter)
 		debug_show_all_locks();
 }
+EXPORT_SYMBOL_GPL(show_state_filter);
 
 /**
  * init_idle - set up an idle thread for a given CPU

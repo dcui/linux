@@ -147,10 +147,13 @@ void mlx5_ib_devx_destroy(struct mlx5_ib_dev *dev, u16 uid)
 	u32 in[MLX5_ST_SZ_DW(destroy_uctx_in)] = {};
 	u32 out[MLX5_ST_SZ_DW(destroy_uctx_out)] = {};
 
+	dev_info(dev->mdev->device, "%s: 1: intf_state_mutex=%px, uid=%u\n",  __func__, &dev->mdev->intf_state_mutex, uid);
 	MLX5_SET(destroy_uctx_in, in, opcode, MLX5_CMD_OP_DESTROY_UCTX);
 	MLX5_SET(destroy_uctx_in, in, uid, uid);
+	dev_info(dev->mdev->device, "%s: 1: intf_state_mutex=%px, uid=%u\n",  __func__, &dev->mdev->intf_state_mutex, uid);
 
 	mlx5_cmd_exec(dev->mdev, in, sizeof(in), out, sizeof(out));
+	dev_info(dev->mdev->device, "%s: 1: intf_state_mutex=%px, uid=%u\n",  __func__, &dev->mdev->intf_state_mutex, uid);
 }
 
 static bool is_legacy_unaffiliated_event_num(u16 event_num)

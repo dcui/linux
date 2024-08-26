@@ -833,6 +833,8 @@ struct mlx5_core_dev {
 	enum mlx5_wc_state wc_state;
 	/* sync write combining state */
 	struct mutex wc_state_lock;
+
+	struct work_struct cdx_work;
 };
 
 struct mlx5_db {
