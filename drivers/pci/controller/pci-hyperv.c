@@ -1216,7 +1216,6 @@ static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
 	return ret;
 }
 
-static void hv_pci_eject_device(struct hv_pci_dev *hpdev);
 /**
  * _hv_pcifront_write_config() - Internal PCI config write
  * @hpdev:	The PCI driver's representation of the device
@@ -1231,15 +1230,6 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 	struct device *dev = &hbus->hdev->device;
 	int offset = where + CFG_PAGE_OFFSET;
 	unsigned long flags;
-
-#if 1
-	if (where == PCI_VENDOR_ID) {
-		dev_warn(dev, "cdx: write_config: size=%d: calling hv_pci_eject_device\n", size);
-		hv_pci_eject_device(hpdev);
-		dev_warn(dev, "cdx: write_config: size=%d: calling hv_pci_eject_device: done\n", size);
-		return;
-	}
-#endif
 
 	if (where >= PCI_SUBSYSTEM_VENDOR_ID &&
 	    where + size <= PCI_CAPABILITY_LIST) {
