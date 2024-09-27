@@ -461,7 +461,7 @@ int mlx5_register_device(struct mlx5_core_dev *dev)
 
 void show_state_filter(unsigned int state_filter);
 
-#if 0
+#if 1
 static void cdx_work_func(struct work_struct *work)
 {
        struct mlx5_core_dev *dev = container_of(work, struct mlx5_core_dev, cdx_work);
@@ -479,8 +479,8 @@ static void cdx_work_func(struct work_struct *work)
 void mlx5_unregister_device(struct mlx5_core_dev *dev)
 {
 	mlx5_core_info(dev, "%s: 0: intf_state_mutex=%px\n",  __func__, &dev->intf_state_mutex);
-	//INIT_WORK(&dev->cdx_work, cdx_work_func);
-	//schedule_work(&dev->cdx_work);
+	INIT_WORK(&dev->cdx_work, cdx_work_func);
+	schedule_work(&dev->cdx_work);
 
 	mlx5_core_info(dev, "%s: 1: intf_state_mutex=%px\n",  __func__, &dev->intf_state_mutex);
 	devl_assert_locked(priv_to_devlink(dev));

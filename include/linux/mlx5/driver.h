@@ -834,7 +834,7 @@ struct mlx5_core_dev {
 	/* sync write combining state */
 	struct mutex wc_state_lock;
 
-	//struct work_struct cdx_work;
+	struct work_struct cdx_work;
 };
 
 struct mlx5_db {
