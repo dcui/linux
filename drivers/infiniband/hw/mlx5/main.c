@@ -1935,7 +1935,9 @@ static int mlx5_ib_alloc_ucontext(struct ib_ucontext *uctx,
 		return -EINVAL;
 
 	if (req.flags & MLX5_IB_ALLOC_UCTX_DEVX) {
-		err = mlx5_ib_devx_create(dev, true);
+		//err = mlx5_ib_devx_create(dev, true);
+		err = -EINVAL;
+		printk("cdx: mlx5_ib_alloc_ucontext: not calling mlx5_ib_devx_create()\n");
 		if (err < 0)
 			goto out_ctx;
 		context->devx_uid = err;
@@ -4697,6 +4699,7 @@ static int __init mlx5_ib_init(void)
 {
 	int ret;
 
+	printk("cdx: mlx5_ib_init: 1\n");
 	xlt_emergency_page = (void *)__get_free_page(GFP_KERNEL);
 	if (!xlt_emergency_page)
 		return -ENOMEM;
@@ -4721,6 +4724,7 @@ static int __init mlx5_ib_init(void)
 	ret = auxiliary_driver_register(&mlx5r_driver);
 	if (ret)
 		goto drv_err;
+	printk("cdx: mlx5_ib_init: 2\n");
 	return 0;
 
 drv_err:
