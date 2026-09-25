@@ -835,6 +835,106 @@ static bool hv_vtom_cache_flush_required(void)
 	return false;
 }
 
+/*
+ * Dynamically registered private MMIO ranges. Some drivers (e.g. a
+ * paravisor-emulated device driver) need to tell the Hyper-V core code
+ * that a certain MMIO range must be treated as "private" (i.e. mapped
+ * encrypted/non-shared) even though it isn't one of the well-known,
+ * hardcoded ranges such as the IO-APIC or vTPM.
+ *
+ * This isn't a hot path: registration happens once at driver probe time,
+ * and lookups are infrequent enough.
+ */
+struct hv_dynamic_mmio_range {
+	struct list_head list;
+	u64 base_addr;
+	u64 size;
+};
+
+static LIST_HEAD(hv_dynamic_mmio_ranges);
+static DEFINE_SPINLOCK(hv_dynamic_mmio_lock);
+
+/**
+ * hv_register_private_mmio_range() - Register a dynamic private MMIO range.
+ * @base_addr: Physical base address of the MMIO range.
+ * @size:      Size, in bytes, of the MMIO range. Must be non-zero.
+ *
+ * After this call succeeds, hv_is_private_mmio() will return true for any
+ * address in [@base_addr, @base_addr + @size).
+ *
+ * Return: 0 on success, or a negative errno on failure.
+ */
+int hv_register_private_mmio_range(u64 base_addr, u64 size)
+{
+	struct hv_dynamic_mmio_range *range, *ent;
+
+	if (!size || base_addr + size < base_addr)
+		return -EINVAL;
+
+	range = kzalloc(sizeof(*range), GFP_KERNEL | __GFP_NOFAIL);
+	range->base_addr = base_addr;
+	range->size = size;
+
+	guard(spinlock_irqsave)(&hv_dynamic_mmio_lock);
+
+	/* Reject exact duplicates and overlapping ranges. */
+	list_for_each_entry(ent, &hv_dynamic_mmio_ranges, list) {
+		if (base_addr < ent->base_addr + ent->size &&
+		    ent->base_addr < base_addr + size) {
+			kfree(range);
+			return -EEXIST;
+		}
+	}
+
+	list_add(&range->list, &hv_dynamic_mmio_ranges);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(hv_register_private_mmio_range);
+
+/**
+ * hv_unregister_private_mmio_range() - Unregister a dynamic private MMIO
+ * range previously registered with hv_register_private_mmio_range().
+ * @base_addr: Physical base address of the MMIO range (must match the
+ *             value passed to hv_register_private_mmio_range()).
+ * @size:      Size of the MMIO range (must match the value passed to
+ *             hv_register_private_mmio_range()).
+ *
+ * Return: 0 on success, -ENOENT if no matching range was found.
+ */
+int hv_unregister_private_mmio_range(u64 base_addr, u64 size)
+{
+	struct hv_dynamic_mmio_range *ent;
+
+	guard(spinlock_irqsave)(&hv_dynamic_mmio_lock);
+
+	list_for_each_entry(ent, &hv_dynamic_mmio_ranges, list) {
+		if (ent->base_addr == base_addr && ent->size == size) {
+			list_del(&ent->list);
+			kfree(ent);
+			return 0;
+		}
+	}
+
+	return -ENOENT;
+}
+EXPORT_SYMBOL_GPL(hv_unregister_private_mmio_range);
+
+static bool hv_is_dynamic_private_mmio(u64 addr)
+{
+	struct hv_dynamic_mmio_range *ent;
+
+	guard(spinlock_irqsave)(&hv_dynamic_mmio_lock);
+
+	list_for_each_entry(ent, &hv_dynamic_mmio_ranges, list) {
+		if (addr >= ent->base_addr &&
+		    addr < ent->base_addr + ent->size)
+			return true;
+	}
+
+	return false;
+}
+
 static bool hv_is_private_mmio(u64 addr)
 {
 	/*
@@ -851,7 +951,7 @@ static bool hv_is_private_mmio(u64 addr)
 	    addr < (VTPM_BASE_ADDRESS + PAGE_SIZE))
 		return true;
 
-	return false;
+	return hv_is_dynamic_private_mmio(addr);
 }
 
 void __init hv_vtom_init(void)

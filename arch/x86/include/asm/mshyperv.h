@@ -46,6 +46,9 @@ extern u64 hv_tdx_hypercall(u64 control, u64 param1, u64 param2);
 extern u64 hv_snp_hypercall(u64 control, u64 param1, u64 param2);
 extern u64 hv_std_hypercall(u64 control, u64 param1, u64 param2);
 
+int hv_register_private_mmio_range(u64 base_addr, u64 size);
+int hv_unregister_private_mmio_range(u64 base_addr, u64 size);
+
 #if IS_ENABLED(CONFIG_HYPERV)
 extern void *hv_hypercall_pg;
 
