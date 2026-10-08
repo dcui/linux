@@ -35,6 +35,8 @@ typedef int (*hyperv_fill_flush_list_func)(
 
 void hyperv_vector_handler(struct pt_regs *regs);
 
+void hv_setup_global_dma_ops(void);
+
 static inline unsigned char hv_get_nmi_reason(void)
 {
 	return 0;

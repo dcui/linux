@@ -605,6 +605,10 @@ skip_hypercall_pg_init:
 	if (ms_hyperv.vtl > 0) /* non default VTL */
 		hv_vtl_early_init();
 
+	if (ms_hyperv.paravisor_present &&
+	    (hv_isolation_type_tdx() || hv_isolation_type_snp()))
+		hv_setup_global_dma_ops();
+
 	return;
 
 clean_guest_os_id:

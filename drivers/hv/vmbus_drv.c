@@ -1033,6 +1033,11 @@ static const struct bus_type  hv_bus = {
 	.pm =			&vmbus_pm,
 };
 
+bool dev_is_vmbus(struct device *dev)
+{
+	return dev->bus == &hv_bus;
+}
+
 struct onmessage_work_context {
 	struct work_struct work;
 	struct {

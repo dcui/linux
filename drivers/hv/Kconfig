@@ -14,6 +14,14 @@ config HYPERV
 	  Select this option to run Linux as a Hyper-V client operating
 	  system.
 
+config HYPERV_DMA_OPS
+	bool
+	depends on HYPERV && ARCH_HAS_DMA_OPS
+	select HYPERV_VMBUS
+	default HYPERV
+	help
+	  Select this option to use encrypted memory for DMA in CoCo VMs.
+
 config HYPERV_VTL_MODE
 	bool "Enable Linux to boot in VTL context"
 	depends on (X86_64 && HAVE_STATIC_CALL) || ARM64

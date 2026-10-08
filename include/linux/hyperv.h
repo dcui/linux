@@ -1750,6 +1750,10 @@ struct hyperv_pci_block_ops {
 
 extern struct hyperv_pci_block_ops hvpci_block_ops;
 
+/* The callback returns true if the PCI device requires private DMA memory. */
+void hv_register_dma_isolation_cb(bool (*cb)(struct pci_dev *pdev));
+void hv_unregister_dma_isolation_cb(void);
+
 static inline unsigned long virt_to_hvpfn(void *addr)
 {
 	phys_addr_t paddr;

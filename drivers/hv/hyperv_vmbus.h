@@ -356,6 +356,7 @@ extern const struct vmbus_channel_message_table_entry
 /* General vmbus interface */
 
 bool vmbus_is_confidential(void);
+bool dev_is_vmbus(struct device *dev);
 
 #if IS_ENABLED(CONFIG_HYPERV_VMBUS)
 /* Free the message slot and signal end-of-message if required */

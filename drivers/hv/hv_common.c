@@ -28,6 +28,7 @@
 #include <linux/slab.h>
 #include <linux/dma-map-ops.h>
 #include <linux/set_memory.h>
+#include <linux/hyperv.h>
 #include <hyperv/hvhdk.h>
 #include <asm/mshyperv.h>
 
@@ -738,6 +739,16 @@ void __weak hv_para_set_synic_register(unsigned int reg, u64 val)
 {
 }
 EXPORT_SYMBOL_GPL(hv_para_set_synic_register);
+
+void __weak hv_register_dma_isolation_cb(bool (*cb)(struct pci_dev *pdev))
+{
+}
+EXPORT_SYMBOL_GPL(hv_register_dma_isolation_cb);
+
+void __weak hv_unregister_dma_isolation_cb(void)
+{
+}
+EXPORT_SYMBOL_GPL(hv_unregister_dma_isolation_cb);
 
 void hv_identify_partition_type(void)
 {
