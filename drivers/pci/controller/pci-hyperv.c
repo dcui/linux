@@ -560,6 +560,8 @@ struct hv_pcibus_device {
 	struct hv_pci_priv_mmio_range priv_mmio_ranges[PCI_STD_NUM_BARS];
 	unsigned int priv_mmio_count;
 
+	u8 dma_isolation[256];  /* 256 possible devfns per bus */
+
 	struct completion *survey_event;
 	spinlock_t config_lock;	/* Avoid two threads writing index page */
 	spinlock_t device_list_lock;	/* Protect lists below */
@@ -602,7 +604,6 @@ struct hv_pcidev_description {
 
 	/* Isolation classification per BAR and DMA; filled by protocol >= 1.7. */
 	u32	bar_isolation[PCI_STD_NUM_BARS]; /* enum hv_vpci_resource_isolation */
-	u32	dma_isolation;                   /* enum hv_vpci_resource_isolation */
 };
 
 struct hv_dr_state {
@@ -2746,6 +2747,7 @@ static int hv_pci_query_isolated_resources(struct hv_pci_dev *hpdev)
 {
 	struct hv_pcibus_device *hbus = hpdev->hbus;
 	struct hv_pci_isolated_res_compl comp;
+	unsigned int devfn;
 	struct {
 		struct pci_packet pkt;
 		u8 buffer[sizeof(struct pci_query_isolated_resources)];
@@ -2763,7 +2765,9 @@ static int hv_pci_query_isolated_resources(struct hv_pci_dev *hpdev)
 	    hbus->protocol_version < PCI_PROTOCOL_VERSION_1_7) {
 		for (i = 0; i < PCI_STD_NUM_BARS; i++)
 			hpdev->desc.bar_isolation[i] = HV_VPCI_ISOLATION_SHARED;
-		hpdev->desc.dma_isolation = HV_VPCI_ISOLATION_SHARED;
+
+		devfn = wslot_to_devfn(hpdev->desc.win_slot.slot);
+		hbus->dma_isolation[devfn] = HV_VPCI_ISOLATION_SHARED;
 		return 0;
 	}
 
@@ -2795,8 +2799,9 @@ static int hv_pci_query_isolated_resources(struct hv_pci_dev *hpdev)
 
 	memcpy(hpdev->desc.bar_isolation, comp.bar_isolation,
 	       sizeof(hpdev->desc.bar_isolation));
-	hpdev->desc.dma_isolation = comp.dma_isolation;
 
+	devfn = wslot_to_devfn(hpdev->desc.win_slot.slot);
+	hbus->dma_isolation[devfn] = comp.dma_isolation;
 	return 0;
 }
 
@@ -3218,6 +3223,8 @@ static void hv_eject_device_work(struct work_struct *work)
 		pci_dev_put(pdev);
 		pci_unlock_rescan_remove();
 	}
+
+	hbus->dma_isolation[wslot] = HV_VPCI_ISOLATION_INVALID;
 
 	spin_lock_irqsave(&hbus->device_list_lock, flags);
 	list_del(&hpdev->list_entry);
@@ -4401,18 +4408,20 @@ static struct hv_driver hv_pci_drv = {
 static bool hv_pci_dma_via_priv_mem(struct pci_dev *pdev)
 {
 	struct hv_pcibus_device *hbus;
-	struct hv_pci_dev *hpdev;
-	bool ret;
+	u8 isolation;
 
-	hbus = container_of(pdev->bus->sysdata, struct hv_pcibus_device, sysdata);
-	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
-	if (WARN_ON_ONCE(!hpdev))
+	if (pdev->bus->ops != &hv_pcifront_ops)
 		return false;
 
-	ret = hpdev->desc.dma_isolation == HV_VPCI_ISOLATION_PRIVATE;
-	put_pcichild(hpdev);
+	hbus = container_of(pdev->bus->sysdata,
+			    struct hv_pcibus_device, sysdata);
+	isolation = READ_ONCE(hbus->dma_isolation[pdev->devfn]);
 
-	return ret;
+	if (WARN_ON_ONCE(isolation != HV_VPCI_ISOLATION_SHARED &&
+			 isolation != HV_VPCI_ISOLATION_PRIVATE))
+		return false;
+
+	return isolation == HV_VPCI_ISOLATION_PRIVATE;
 }
 
 static void __exit exit_hv_pci_drv(void)
