@@ -117,25 +117,29 @@ static void hv_dma_unmap_sg(struct device *dev, struct scatterlist *sgl,
 static void hv_dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle,
 				       size_t size, enum dma_data_direction dir)
 {
-	dma_direct_sync_single_for_cpu(dev, dma_handle, size, dir, true);
+	if (!hv_dma_via_priv_mem(dev))
+		dma_direct_sync_single_for_cpu(dev, dma_handle, size, dir, true);
 }
 
 static void hv_dma_sync_single_for_device(struct device *dev, dma_addr_t dma_handle,
 					  size_t size, enum dma_data_direction dir)
 {
-	dma_direct_sync_single_for_device(dev, dma_handle, size, dir);
+	if (!hv_dma_via_priv_mem(dev))
+		dma_direct_sync_single_for_device(dev, dma_handle, size, dir);
 }
 
 static void hv_dma_sync_sg_for_cpu(struct device *dev, struct scatterlist *sgl,
 				   int nelems, enum dma_data_direction dir)
 {
-	dma_direct_sync_sg_for_cpu(dev, sgl, nelems, dir);
+	if (!hv_dma_via_priv_mem(dev))
+		dma_direct_sync_sg_for_cpu(dev, sgl, nelems, dir);
 }
 
 static void hv_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sgl,
 			       int nelems, enum dma_data_direction dir)
 {
-	dma_direct_sync_sg_for_device(dev, sgl, nelems, dir);
+	if (!hv_dma_via_priv_mem(dev))
+		dma_direct_sync_sg_for_device(dev, sgl, nelems, dir);
 }
 
 static int hv_dma_supported(struct device *dev, u64 mask)
